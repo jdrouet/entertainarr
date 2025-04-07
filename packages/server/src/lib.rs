@@ -1,0 +1,46 @@
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+
+#[derive(Debug)]
+pub struct Config {
+    ip_addr: IpAddr,
+    port: u16,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            ip_addr: Self::default_ip_addr(),
+            port: Self::default_port(),
+        }
+    }
+}
+
+impl Config {
+    const fn default_ip_addr() -> IpAddr {
+        IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))
+    }
+
+    const fn default_port() -> u16 {
+        3000
+    }
+}
+
+impl Config {
+    pub fn build(&self) -> Server {
+        Server {
+            socket_addr: SocketAddr::new(self.ip_addr, self.port),
+        }
+    }
+}
+
+pub struct Server {
+    socket_addr: SocketAddr,
+}
+
+impl Server {
+    pub async fn listen(self) -> std::io::Result<()> {
+        let app = axum::Router::new();
+        let listener = tokio::net::TcpListener::bind(self.socket_addr).await?;
+        axum::serve(listener, app).await
+    }
+}
