@@ -6,7 +6,7 @@ async fn main() -> std::io::Result<()> {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "entertainarr_server=info".into()),
+                .unwrap_or_else(|_| "entertainarr_server=debug,tower_http=debug".into()),
         )
         .with(tracing_subscriber::fmt::layer())
         .init();

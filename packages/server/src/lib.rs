@@ -1,5 +1,7 @@
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
+mod handler;
+
 #[derive(Debug)]
 pub struct Config {
     ip_addr: IpAddr,
@@ -39,7 +41,7 @@ pub struct Server {
 
 impl Server {
     fn router(&self) -> axum::Router {
-        axum::Router::new().layer(tower_http::trace::TraceLayer::new_for_http())
+        handler::router().layer(tower_http::trace::TraceLayer::new_for_http())
     }
 
     pub async fn listen(self) -> std::io::Result<()> {
