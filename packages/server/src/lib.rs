@@ -38,9 +38,14 @@ pub struct Server {
 }
 
 impl Server {
+    fn router(&self) -> axum::Router {
+        axum::Router::new().layer(tower_http::trace::TraceLayer::new_for_http())
+    }
+
     pub async fn listen(self) -> std::io::Result<()> {
-        let app = axum::Router::new();
+        tracing::debug!("starting server on {}", self.socket_addr);
         let listener = tokio::net::TcpListener::bind(self.socket_addr).await?;
-        axum::serve(listener, app).await
+        tracing::info!("server listening on {}", self.socket_addr);
+        axum::serve(listener, self.router()).await
     }
 }
