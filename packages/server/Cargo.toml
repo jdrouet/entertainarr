@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 axum = { version = "0.8" }
+sqlx = { version = "0.8.3", features = ["runtime-tokio", "sqlite", "time"] }
 tokio = { version = "1.44", features = ["rt-multi-thread", "macros"] }
 tower-http = { version = "0.6.2", features = ["trace"] }
 tracing = { version = "0.1" }

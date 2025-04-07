@@ -12,6 +12,6 @@ async fn main() -> std::io::Result<()> {
         .init();
 
     let config = Config::default();
-    let server = config.build();
+    let server = config.build().await?;
     server.listen().await
 }

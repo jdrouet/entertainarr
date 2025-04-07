@@ -1,5 +1,12 @@
-use axum::http::StatusCode;
+use axum::{Extension, http::StatusCode};
 
-pub(super) async fn handle() -> StatusCode {
-    StatusCode::NO_CONTENT
+use crate::service::database::Database;
+
+use super::error::ApiError;
+
+pub(super) async fn handle(Extension(db): Extension<Database>) -> Result<StatusCode, ApiError> {
+    db.ping()
+        .await
+        .map(|_| StatusCode::NO_CONTENT)
+        .map_err(ApiError::from)
 }
