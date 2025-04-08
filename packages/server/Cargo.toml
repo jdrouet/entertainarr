@@ -4,9 +4,15 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+entertainarr-storage = { workspace = true }
+
 axum = { version = "0.8" }
-sqlx = { version = "0.8.3", features = ["runtime-tokio", "sqlite", "time"] }
+config = { version = "0.15", default-features = false, features = ["toml"] }
+regex = { version = "1.11" }
+serde = { version = "1.0", features = ["derive"] }
+sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite", "time"] }
 tokio = { version = "1.44", features = ["rt-multi-thread", "macros"] }
-tower-http = { version = "0.6.2", features = ["trace"] }
+toml = { version = "0.8" }
+tower-http = { version = "0.6", features = ["trace"] }
 tracing = { version = "0.1" }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

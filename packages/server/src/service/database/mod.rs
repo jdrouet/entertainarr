@@ -2,8 +2,9 @@ use std::borrow::Cow;
 
 use sqlx::SqlitePool;
 
-#[derive(Debug)]
+#[derive(Debug, serde::Deserialize)]
 pub struct Config {
+    #[serde(default = "Config::default_url")]
     url: Cow<'static, str>,
 }
 
@@ -16,6 +17,10 @@ impl Default for Config {
 }
 
 impl Config {
+    pub fn default_url() -> Cow<'static, str> {
+        Cow::Borrowed(":memory:")
+    }
+
     pub(crate) async fn build(&self) -> std::io::Result<Database> {
         SqlitePool::connect(&self.url)
             .await

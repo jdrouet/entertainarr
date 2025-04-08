@@ -1,3 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["packages/server"]
+members = ["packages/server", "packages/storage"]
+
+[workspace.dependencies]
+entertainarr-storage = { path = "packages/storage", version = "0.1" }

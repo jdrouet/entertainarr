@@ -1,11 +1,10 @@
-use axum::routing::head;
+use axum::routing::{get, head};
 
-mod error;
+mod list;
 mod status;
-mod storage;
 
 pub(crate) fn router() -> axum::Router {
     axum::Router::new()
         .route("/status", head(status::handle))
-        .nest("/storages", storage::router())
+        .route("/list/{name}/{*path}", get(list::handle))
 }

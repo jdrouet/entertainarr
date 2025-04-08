@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use entertainarr_server::Config;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -11,7 +13,10 @@ async fn main() -> std::io::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let config = Config::default();
+    let config_path = std::env::var("CONFIG_PATH").map(PathBuf::from).ok();
+    let config = Config::parse(config_path)?;
     let server = config.build().await?;
-    server.listen().await
+    server.prepare().await?;
+    server.listen().await?;
+    Ok(())
 }

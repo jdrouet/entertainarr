@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, io::ErrorKind};
 
 use axum::{Json, http::StatusCode, response::IntoResponse};
 
@@ -6,6 +6,30 @@ use axum::{Json, http::StatusCode, response::IntoResponse};
 pub struct ApiError {
     code: StatusCode,
     message: Cow<'static, str>,
+}
+
+impl ApiError {
+    pub fn not_found(message: impl Into<Cow<'static, str>>) -> Self {
+        Self {
+            code: StatusCode::NOT_FOUND,
+            message: message.into(),
+        }
+    }
+}
+
+impl From<std::io::Error> for ApiError {
+    fn from(value: std::io::Error) -> Self {
+        match value.kind() {
+            ErrorKind::InvalidInput => ApiError {
+                code: StatusCode::BAD_REQUEST,
+                message: value.to_string().into(),
+            },
+            _ => ApiError {
+                code: StatusCode::INTERNAL_SERVER_ERROR,
+                message: Cow::Borrowed("internal storage error"),
+            },
+        }
+    }
 }
 
 impl From<sqlx::Error> for ApiError {

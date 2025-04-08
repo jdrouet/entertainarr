@@ -1,0 +1,9 @@
+[package]
+name = "entertainarr-storage"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+async-fs = "2.1.2"
+futures-lite = "2.6.0"
+serde = { version = "1.0.219", features = ["derive"] }
