@@ -1,0 +1,10 @@
+[service.database]
+url = ":memory:"
+
+[service.storage.sources.migrations]
+type = "local"
+path = ".."
+
+[service.storage.sources.movies]
+type = "local"
+path = ".."

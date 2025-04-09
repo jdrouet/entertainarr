@@ -1,3 +1,0 @@
-[service.storage.sources.local]
-type = "local"
-path = ".."

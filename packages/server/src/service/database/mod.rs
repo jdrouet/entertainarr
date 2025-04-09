@@ -34,7 +34,7 @@ pub struct Database(SqlitePool);
 
 impl Database {
     pub async fn migrate(&self) -> std::io::Result<()> {
-        sqlx::migrate!("./migrations")
+        sqlx::migrate!()
             .run(&self.0)
             .await
             .map_err(std::io::Error::other)
