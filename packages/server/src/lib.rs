@@ -4,6 +4,7 @@ use std::{
 };
 
 use axum::Extension;
+use model::Dataset;
 
 pub mod prelude;
 
@@ -13,6 +14,8 @@ mod service;
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Config {
+    #[serde(default, alias = "data")]
+    pub dataset: model::Dataset,
     #[serde(default)]
     service: service::Config,
     #[serde(default = "Config::default_ip_addr")]
@@ -24,6 +27,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
+            dataset: model::Dataset::default(),
             service: service::Config::default(),
             ip_addr: Self::default_ip_addr(),
             port: Self::default_port(),
@@ -85,6 +89,13 @@ impl Server {
         self.database.migrate().await?;
         self.storage.healthcheck().await?;
         Ok(())
+    }
+
+    pub async fn preload(&self, dataset: &Dataset) -> std::io::Result<()> {
+        dataset
+            .preload(self.database.as_ref())
+            .await
+            .map_err(std::io::Error::other)
     }
 
     pub async fn listen(self) -> std::io::Result<()> {

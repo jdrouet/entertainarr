@@ -17,6 +17,7 @@ async fn main() -> std::io::Result<()> {
     let config = Config::parse(config_path)?;
     let server = config.build().await?;
     server.prepare().await?;
+    server.preload(&config.dataset).await?;
     server.listen().await?;
     Ok(())
 }

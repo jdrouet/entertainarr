@@ -1,6 +1,6 @@
 use sqlx::{FromRow, Row, sqlite::SqliteRow};
 
-#[derive(Debug)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct Entity {
     pub id: u64,
     pub name: Box<str>,
@@ -15,34 +15,17 @@ impl FromRow<'_, SqliteRow> for Entity {
     }
 }
 
-pub async fn create<'a, X>(conn: X, name: &str) -> sqlx::Result<Entity>
-where
-    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
-{
-    sqlx::query_as(r#"INSERT INTO users (name) VALUES (?, ?) RETURNING id, name"#)
-        .bind(name)
-        .fetch_one(conn)
-        .await
-}
-
-pub async fn get_by_id<'a, X>(conn: X, id: u64) -> sqlx::Result<Entity>
-where
-    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
-{
-    sqlx::query_as(r#"SELECT id, name FROM users WHERE id = ? LIMIT 1"#)
-        .bind(id as i64)
-        .fetch_one(conn)
-        .await
-}
-
-pub async fn find_by_name<'a, X>(conn: X, name: &str) -> sqlx::Result<Option<Entity>>
-where
-    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
-{
-    sqlx::query_as(r#"SELECT id, name FROM users WHERE name = ? LIMIT 1"#)
-        .bind(name)
-        .fetch_optional(conn)
-        .await
+impl Entity {
+    pub async fn persist<'a, X>(&self, conn: X) -> sqlx::Result<()>
+    where
+        X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+    {
+        sqlx::query_as(r#"INSERT INTO users (id, name) VALUES (?, ?) ON CONFLICT DO NOTHING RETURNING id, name"#)
+            .bind(&(self.id as i64))
+            .bind(&self.name)
+            .fetch_one(conn)
+            .await
+    }
 }
 
 pub async fn list<'a, X>(conn: X) -> sqlx::Result<Vec<Entity>>
