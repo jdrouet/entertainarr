@@ -12,6 +12,8 @@ async fn handle(
     name: &str,
     path: &str,
 ) -> Result<Json<Vec<EntryInfo>>, ApiError> {
+    let path = path.strip_prefix("/").unwrap_or(path);
+    let path = path.strip_suffix("/").unwrap_or(path);
     let source = storage
         .source(name)
         .ok_or_else(|| ApiError::not_found(format!("source {name:?} does not exist")))?;
