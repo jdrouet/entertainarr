@@ -17,6 +17,16 @@ impl ApiError {
     }
 }
 
+impl From<axum::http::Error> for ApiError {
+    fn from(value: axum::http::Error) -> Self {
+        tracing::error!(message = "http error", cause = ?value);
+        ApiError {
+            code: StatusCode::INTERNAL_SERVER_ERROR,
+            message: Cow::Borrowed("internal response error"),
+        }
+    }
+}
+
 impl From<std::io::Error> for ApiError {
     fn from(value: std::io::Error) -> Self {
         match value.kind() {
