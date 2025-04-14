@@ -42,6 +42,16 @@ impl From<sqlx::Error> for ApiError {
     }
 }
 
+impl From<tmdb_api::error::Error> for ApiError {
+    fn from(value: tmdb_api::error::Error) -> Self {
+        tracing::error!(message = "tmdb error", cause = ?value);
+        ApiError {
+            code: StatusCode::BAD_GATEWAY,
+            message: Cow::Borrowed("unable to fetch data from tmdb"),
+        }
+    }
+}
+
 impl IntoResponse for ApiError {
     fn into_response(self) -> axum::response::Response {
         (self.code, Json(self.message)).into_response()

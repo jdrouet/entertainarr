@@ -1,5 +1,6 @@
 pub mod database;
 pub mod storage;
+pub mod tmdb;
 
 #[derive(Debug, Default, serde::Deserialize)]
 pub struct Config {
@@ -7,4 +8,5 @@ pub struct Config {
     pub(crate) database: database::Config,
     #[serde(default)]
     pub(crate) storage: storage::Config,
+    pub(crate) tmdb: tmdb::Config,
 }

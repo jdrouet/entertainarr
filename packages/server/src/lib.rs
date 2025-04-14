@@ -65,6 +65,7 @@ impl Config {
         Ok(Server {
             database: self.service.database.build().await?,
             storage: self.service.storage.build()?,
+            tmdb: self.service.tmdb.build()?,
             socket_addr: SocketAddr::new(self.ip_addr, self.port),
         })
     }
@@ -73,6 +74,7 @@ impl Config {
 pub struct Server {
     database: crate::service::database::Database,
     storage: crate::service::storage::Storage,
+    tmdb: crate::service::tmdb::Tmdb,
     socket_addr: SocketAddr,
 }
 
@@ -82,6 +84,7 @@ impl Server {
             .layer(tower_http::trace::TraceLayer::new_for_http())
             .layer(Extension(self.database.clone()))
             .layer(Extension(self.storage.clone()))
+            .layer(Extension(self.tmdb.clone()))
     }
 
     pub async fn prepare(&self) -> std::io::Result<()> {
