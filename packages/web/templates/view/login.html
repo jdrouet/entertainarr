@@ -1,0 +1,14 @@
+<!doctype html>
+<html>
+    <head></head>
+    <body>
+        <main>
+            <h1>Authentication</h1>
+            <div>
+                {% for user in users %}
+                <a href="{{ user.login_url() | safe }}">{{ user.name() }}</a>
+                {% endfor %}
+            </div>
+        </main>
+    </body>
+</html>

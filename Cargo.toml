@@ -1,6 +1,7 @@
 [workspace]
 resolver = "3"
-members = ["packages/server", "packages/storage"]
+members = ["packages/server", "packages/storage", "packages/web"]
 
 [workspace.dependencies]
 entertainarr-storage = { path = "packages/storage", version = "0.1" }
+entertainarr-web = { path = "packages/web", version = "0.1" }

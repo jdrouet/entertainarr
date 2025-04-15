@@ -1,5 +1,6 @@
 mod api;
+mod view;
 
 pub(crate) fn router() -> axum::Router {
-    axum::Router::new().nest("/api", api::router())
+    view::router().nest("/api", api::router())
 }
