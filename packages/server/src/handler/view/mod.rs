@@ -4,10 +4,13 @@ use axum::{
 };
 
 mod error;
+mod home;
 mod login;
 
 pub(crate) fn router() -> axum::Router {
-    axum::Router::new().route("/login", get(login::handle))
+    axum::Router::new()
+        .route("/", get(home::handle))
+        .route("/login", get(login::handle))
 }
 
 struct View<T>(pub T);
