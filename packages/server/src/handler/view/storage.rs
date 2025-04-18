@@ -7,12 +7,7 @@ use entertainarr_web::storage::StorageView;
 use crate::handler::view::error::ViewError;
 use crate::service::storage::Storage;
 
-async fn handle(
-    storage: Storage,
-    name: String,
-    path: String,
-) -> Result<super::View<StorageView>, ViewError> {
-    println!("handling name={name:?} path={path:?}");
+async fn handle(storage: Storage, name: String, path: String) -> Result<super::View, ViewError> {
     let source: &AnySource = storage
         .source(name.as_str())
         .ok_or(ViewError::not_found("source not found"))?;
@@ -22,19 +17,19 @@ async fn handle(
 
     let view = StorageView::new(name, path, entries);
 
-    Ok(super::View(view))
+    Ok(super::View::from(view))
 }
 
 pub(super) async fn handle_root(
     Extension(storage): Extension<Storage>,
     Path(name): Path<String>,
-) -> Result<super::View<StorageView>, ViewError> {
+) -> Result<super::View, ViewError> {
     handle(storage, name, String::new()).await
 }
 
 pub(super) async fn handle_path(
     Extension(storage): Extension<Storage>,
     Path((name, path)): Path<(String, String)>,
-) -> Result<super::View<StorageView>, ViewError> {
+) -> Result<super::View, ViewError> {
     handle(storage, name, path).await
 }

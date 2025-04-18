@@ -10,7 +10,7 @@ use crate::service::storage::Storage;
 pub(super) async fn handle(
     Extension(storage): Extension<Storage>,
     Path((name, path)): Path<(String, String)>,
-) -> Result<super::View<WatchView>, ViewError> {
+) -> Result<super::View, ViewError> {
     let source: &AnySource = storage
         .source(name.as_str())
         .ok_or(ViewError::not_found("source not found"))?;
@@ -23,5 +23,5 @@ pub(super) async fn handle(
     )];
     let view = WatchView::new(sources);
 
-    Ok(super::View(view))
+    Ok(super::View::from(view))
 }

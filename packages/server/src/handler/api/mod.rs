@@ -1,5 +1,6 @@
 use axum::routing::head;
 
+mod authentication;
 mod error;
 mod movie;
 mod status;

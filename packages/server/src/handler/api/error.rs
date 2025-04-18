@@ -9,6 +9,13 @@ pub struct ApiError {
 }
 
 impl ApiError {
+    pub fn new(code: StatusCode, message: impl Into<Cow<'static, str>>) -> Self {
+        Self {
+            code,
+            message: message.into(),
+        }
+    }
+
     pub fn not_found(message: impl Into<Cow<'static, str>>) -> Self {
         Self {
             code: StatusCode::NOT_FOUND,

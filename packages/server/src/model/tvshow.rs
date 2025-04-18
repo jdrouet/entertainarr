@@ -87,3 +87,29 @@ DO UPDATE SET
     qb.build().execute(conn).await?;
     Ok(())
 }
+
+pub async fn follow<'a, X>(conn: X, user_id: u64, tvshow_id: u64) -> sqlx::Result<()>
+where
+    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+{
+    sqlx::query(
+        r#"INSERT INTO followed_tvshows (user_id, tvshow_id) VALUES (?,?) ON CONFLICT DO NOTHING"#,
+    )
+    .bind(user_id as i64)
+    .bind(tvshow_id as i64)
+    .execute(conn)
+    .await?;
+    Ok(())
+}
+
+pub async fn unfollow<'a, X>(conn: X, user_id: u64, tvshow_id: u64) -> sqlx::Result<()>
+where
+    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+{
+    sqlx::query(r#"DELETE FROM followed_tvshows WHERE user_id = ? AND tvshow_id = ?"#)
+        .bind(user_id as i64)
+        .bind(tvshow_id as i64)
+        .execute(conn)
+        .await?;
+    Ok(())
+}

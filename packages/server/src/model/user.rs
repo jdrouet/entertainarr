@@ -36,3 +36,13 @@ where
         .fetch_all(conn)
         .await
 }
+
+pub async fn get_by_name<'a, X>(conn: X, name: &str) -> sqlx::Result<Option<Entity>>
+where
+    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+{
+    sqlx::query_as(r#"SELECT id, name FROM users WHERE name = ? LIMIT 1"#)
+        .bind(name)
+        .fetch_optional(conn)
+        .await
+}

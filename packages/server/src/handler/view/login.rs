@@ -1,5 +1,7 @@
-use axum::Extension;
+use axum::{Extension, Form};
+use axum_extra::extract::cookie::{Cookie, CookieJar};
 use entertainarr_web::login::LoginView;
+use entertainarr_web::redirect::RedirectView;
 
 use crate::handler::view::error::ViewError;
 use crate::service::database::Database;
@@ -14,9 +16,27 @@ impl entertainarr_web::login::User for crate::model::user::Entity {
     }
 }
 
-pub(super) async fn handle(
+pub(super) async fn view() -> Result<super::View, ViewError> {
+    Ok(super::View::from(LoginView::default()))
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct Payload {
+    name: String,
+}
+
+pub(super) async fn redirect(
     Extension(database): Extension<Database>,
-) -> Result<super::View<LoginView<crate::model::user::Entity>>, ViewError> {
-    let list = crate::model::user::list(database.as_ref()).await?;
-    Ok(super::View(LoginView::new(list)))
+    jar: CookieJar,
+    Form(payload): Form<Payload>,
+) -> Result<(CookieJar, super::View), ViewError> {
+    let Some(user) =
+        crate::model::user::get_by_name(database.as_ref(), payload.name.as_str()).await?
+    else {
+        tracing::warn!(message = "user not found");
+        return Ok((jar, super::View::from(LoginView::default())));
+    };
+
+    let jar = jar.add(Cookie::new("user_id", user.id.to_string()));
+    Ok((jar, super::View::from(RedirectView::new("/"))))
 }

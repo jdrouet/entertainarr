@@ -3,6 +3,7 @@ use axum::{
     routing::get,
 };
 
+mod authentication;
 mod error;
 mod home;
 mod login;
@@ -12,16 +13,22 @@ mod watch;
 pub(crate) fn router() -> axum::Router {
     axum::Router::new()
         .route("/", get(home::handle))
-        .route("/login", get(login::handle))
+        .route("/login", get(login::view).post(login::redirect))
         .route("/storage/{source}/", get(storage::handle_root))
         .route("/storage/{source}/{*path}", get(storage::handle_path))
         .route("/watch/{source}/{*path}", get(watch::handle))
 }
 
-struct View<T>(pub T);
+struct View(String);
 
-impl<T: entertainarr_web::Template> IntoResponse for View<T> {
+impl<T: entertainarr_web::Template> From<T> for View {
+    fn from(value: T) -> Self {
+        Self(value.render().unwrap())
+    }
+}
+
+impl IntoResponse for View {
     fn into_response(self) -> axum::response::Response {
-        Html(self.0.render().unwrap()).into_response()
+        Html(self.0).into_response()
     }
 }

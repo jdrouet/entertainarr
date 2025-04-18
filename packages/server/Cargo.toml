@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 axum = { version = "0.8", features = ["macros"] }
-axum-extra = { version = "0.10.1", features = ["typed-header"] }
+axum-extra = { version = "0.10.1", features = ["cookie", "typed-header"] }
 config = { version = "0.15", default-features = false, features = ["toml"] }
 entertainarr-storage = { workspace = true }
 entertainarr-web = { workspace = true }
