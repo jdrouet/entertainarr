@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{ops::Bound, path::Path};
 
 use tokio::io::AsyncRead;
 
@@ -22,7 +22,10 @@ pub trait File {
     }
     fn size(&self) -> u64;
 
-    fn reader(&self) -> impl Future<Output = std::io::Result<Self::Reader>>;
+    fn reader(
+        &self,
+        range: (Bound<u64>, Bound<u64>),
+    ) -> impl Future<Output = std::io::Result<Self::Reader>>;
 }
 
 pub trait FileReader: AsyncRead {}

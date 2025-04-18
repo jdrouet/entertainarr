@@ -1,4 +1,4 @@
-use std::pin::Pin;
+use std::{ops::Bound, pin::Pin};
 
 use tokio::io::AsyncRead;
 
@@ -76,10 +76,10 @@ impl crate::source::prelude::File for AnyFile {
         }
     }
 
-    async fn reader(&self) -> std::io::Result<Self::Reader> {
+    async fn reader(&self, range: (Bound<u64>, Bound<u64>)) -> std::io::Result<Self::Reader> {
         match self {
-            Self::Local(inner) => inner.reader().await.map(AnyFileReader::Local),
-            Self::PCloud(inner) => inner.reader().await.map(AnyFileReader::PCloud),
+            Self::Local(inner) => inner.reader(range).await.map(AnyFileReader::Local),
+            Self::PCloud(inner) => inner.reader(range).await.map(AnyFileReader::PCloud),
         }
     }
 }

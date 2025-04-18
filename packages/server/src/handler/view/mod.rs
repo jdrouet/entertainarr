@@ -6,11 +6,16 @@ use axum::{
 mod error;
 mod home;
 mod login;
+mod storage;
+mod watch;
 
 pub(crate) fn router() -> axum::Router {
     axum::Router::new()
         .route("/", get(home::handle))
         .route("/login", get(login::handle))
+        .route("/storage/{source}/", get(storage::handle_root))
+        .route("/storage/{source}/{*path}", get(storage::handle_path))
+        .route("/watch/{source}/{*path}", get(watch::handle))
 }
 
 struct View<T>(pub T);

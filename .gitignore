@@ -1,2 +1,3 @@
-target
-packages/server/config.toml
+/target
+/packages/server/config.toml
+/assets

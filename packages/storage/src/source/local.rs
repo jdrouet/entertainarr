@@ -1,8 +1,13 @@
 use std::{
+    ops::Bound,
     path::{Path, PathBuf},
+    pin::Pin,
     sync::Arc,
+    task::{Context, Poll},
     time::SystemTime,
 };
+
+use tokio::io::{AsyncSeekExt, ReadBuf};
 
 use crate::entry::{DirectoryInfo, EntryInfo, FileInfo};
 
@@ -123,14 +128,167 @@ impl crate::source::prelude::File for LocalFile {
         self.size
     }
 
-    async fn reader(&self) -> std::io::Result<Self::Reader> {
-        tokio::fs::OpenOptions::new()
+    async fn reader(&self, range: (Bound<u64>, Bound<u64>)) -> std::io::Result<Self::Reader> {
+        let mut file = tokio::fs::OpenOptions::new()
             .read(true)
             .open(self.real_path())
-            .await
+            .await?;
+
+        let start = match range.0 {
+            Bound::Unbounded => 0,
+            Bound::Included(start) => {
+                file.seek(std::io::SeekFrom::Start(start)).await?;
+                start
+            }
+            Bound::Excluded(start) => {
+                file.seek(std::io::SeekFrom::Start(start + 1)).await?;
+                start + 1
+            }
+        };
+        let end = match range.1 {
+            Bound::Unbounded => self.size,
+            Bound::Included(start) => start,
+            Bound::Excluded(start) => start - 1,
+        };
+
+        Ok(LocalFileReader {
+            file,
+            end,
+            pos: start,
+        })
     }
 }
 
-pub type LocalFileReader = tokio::fs::File;
+pub struct LocalFileReader {
+    file: tokio::fs::File,
+    end: u64,
+    pos: u64,
+}
 
 impl crate::source::prelude::FileReader for LocalFileReader {}
+
+impl tokio::io::AsyncRead for LocalFileReader {
+    fn poll_read(
+        mut self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        buf: &mut ReadBuf<'_>,
+    ) -> Poll<std::io::Result<()>> {
+        let this = &mut *self;
+
+        // EOF: nothing left to read
+        if this.pos >= this.end {
+            return Poll::Ready(Ok(()));
+        }
+
+        let max_bytes = (this.end - this.pos) as usize;
+        let available = buf.remaining().min(max_bytes);
+
+        let unfilled = buf.initialize_unfilled();
+        let (to_fill, _) = unfilled.split_at_mut(available);
+
+        let mut temp_buf = ReadBuf::new(to_fill);
+        let poll = Pin::new(&mut this.file).poll_read(cx, &mut temp_buf);
+
+        if let Poll::Ready(Ok(())) = &poll {
+            let n = temp_buf.filled().len();
+            this.pos += n as u64;
+            buf.advance(n);
+        }
+
+        poll
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    // YOU NEED TO DOWNLOAD
+    // https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_1080p_surround.avi
+    // https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4
+
+    use std::ops::Bound;
+    use std::path::PathBuf;
+
+    use tokio::io::AsyncReadExt;
+
+    use crate::source::prelude::{File, Source};
+
+    async fn read_size(mut reader: impl AsyncReadExt + Unpin) -> usize {
+        let mut buf = [0u8; 8192]; // 8KB buffer
+        let mut total = 0;
+
+        loop {
+            match reader.read(&mut buf).await {
+                Ok(0) | Err(_) => break,
+                Ok(n) => total += n,
+            }
+        }
+
+        total
+    }
+
+    #[tokio::test]
+    async fn should_download_entire_file() -> std::io::Result<()> {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..")
+            .join("assets");
+        let source = super::Source::new(path);
+        let file = source.file("BigBuckBunny_320x180.mp4").await?;
+        let reader = file.reader((Bound::Unbounded, Bound::Unbounded)).await?;
+
+        let size = read_size(reader).await;
+        assert_eq!(size, 64_657_027);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn should_download_only_end() -> std::io::Result<()> {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..")
+            .join("assets");
+        let source = super::Source::new(path);
+        let file = source.file("BigBuckBunny_320x180.mp4").await?;
+        let reader = file
+            .reader((Bound::Included(4_000_000), Bound::Unbounded))
+            .await?;
+
+        let size = read_size(reader).await;
+        assert_eq!(size, 60_657_027);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn should_download_only_start() -> std::io::Result<()> {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..")
+            .join("assets");
+        let source = super::Source::new(path);
+        let file = source.file("BigBuckBunny_320x180.mp4").await?;
+        let reader = file
+            .reader((Bound::Unbounded, Bound::Included(4_000_000)))
+            .await?;
+
+        let size = read_size(reader).await;
+        assert_eq!(size, 4_000_000);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn should_download_only_middle() -> std::io::Result<()> {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..")
+            .join("assets");
+        let source = super::Source::new(path);
+        let file = source.file("BigBuckBunny_320x180.mp4").await?;
+        let reader = file
+            .reader((Bound::Included(2_000_000), Bound::Excluded(4_000_001)))
+            .await?;
+
+        let size = read_size(reader).await;
+        assert_eq!(size, 2_000_000);
+        Ok(())
+    }
+}

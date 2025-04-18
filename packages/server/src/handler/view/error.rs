@@ -8,6 +8,15 @@ pub struct ViewError {
     message: Cow<'static, str>,
 }
 
+impl ViewError {
+    pub fn not_found(message: impl Into<Cow<'static, str>>) -> Self {
+        Self {
+            code: StatusCode::NOT_FOUND,
+            message: message.into(),
+        }
+    }
+}
+
 impl From<axum::http::Error> for ViewError {
     fn from(value: axum::http::Error) -> Self {
         tracing::error!(message = "http error", cause = ?value);

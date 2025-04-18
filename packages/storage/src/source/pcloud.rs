@@ -7,7 +7,8 @@ use pcloud::{
     prelude::HttpCommand,
     region::Region,
 };
-use std::{path::PathBuf, sync::Arc};
+use reqwest::header::RANGE;
+use std::{ops::Bound, path::PathBuf, sync::Arc};
 use tokio::io::AsyncRead;
 use tokio_util::io::StreamReader;
 
@@ -147,6 +148,24 @@ impl crate::source::prelude::Source for Source {
     }
 }
 
+fn range_header_value(range: (Bound<u64>, Bound<u64>)) -> String {
+    match range {
+        (Bound::Included(start), Bound::Included(end)) => format!("bytes={}-{}", start, end),
+        (Bound::Included(start), Bound::Excluded(end)) => {
+            format!("bytes={}-{}", start, end - 1)
+        }
+        (Bound::Included(start), Bound::Unbounded) => format!("bytes={}-", start),
+        (Bound::Unbounded, Bound::Included(end)) => format!("bytes=-{}", end),
+        (Bound::Unbounded, Bound::Excluded(end)) => format!("bytes=-{}", end - 1),
+        (Bound::Unbounded, Bound::Unbounded) => format!("bytes=-"),
+        (Bound::Excluded(start), Bound::Included(end)) => format!("bytes={}-{}", start + 1, end),
+        (Bound::Excluded(start), Bound::Excluded(end)) => {
+            format!("bytes={}-{}", start + 1, end - 1)
+        }
+        (Bound::Excluded(start), Bound::Unbounded) => format!("bytes={}-", start + 1),
+    }
+}
+
 #[derive(Debug)]
 pub struct PCloudFile {
     source: Source,
@@ -165,7 +184,7 @@ impl crate::source::prelude::File for PCloudFile {
         self.size
     }
 
-    async fn reader(&self) -> std::io::Result<Self::Reader> {
+    async fn reader(&self, range: (Bound<u64>, Bound<u64>)) -> std::io::Result<Self::Reader> {
         let path = self
             .source
             .0
@@ -177,7 +196,13 @@ impl crate::source::prelude::File for PCloudFile {
             .execute(&self.source.0.client)
             .await
             .map_err(std::io::Error::other)?;
-        let res = reqwest::get(link).await.map_err(std::io::Error::other)?;
+        let client = reqwest::Client::new();
+        let res = client
+            .get(link)
+            .header(RANGE, range_header_value(range))
+            .send()
+            .await
+            .map_err(std::io::Error::other)?;
 
         let byte_stream = res.bytes_stream();
 
