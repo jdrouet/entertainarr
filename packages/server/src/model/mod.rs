@@ -1,3 +1,4 @@
+pub(crate) mod tvshow;
 pub(crate) mod user;
 
 #[derive(Clone, Debug, Default, serde::Deserialize)]

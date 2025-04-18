@@ -20,7 +20,7 @@ impl Entity {
     where
         X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
     {
-        sqlx::query_as(r#"INSERT INTO users (id, name) VALUES (?, ?) ON CONFLICT DO NOTHING RETURNING id, name"#)
+        sqlx::query_as(r#"INSERT INTO users (id, name) VALUES (?, ?) ON CONFLICT DO UPDATE SET name = excluded.name RETURNING id, name"#)
             .bind(&(self.id as i64))
             .bind(&self.name)
             .fetch_one(conn)
