@@ -1,32 +1,80 @@
 use std::sync::Arc;
 
+use entertainarr_api::tvshow::TVShow;
 use yew::prelude::*;
 use yew_hooks::prelude::*;
 
-async fn fetch_tvshows() -> Result<u16, Arc<gloo_net::Error>> {
-    gloo_net::http::Request::get("/api/tvshows")
+use crate::component::header::Header;
+use crate::component::tvshow_cardlet::TVShowCardlet;
+
+async fn fetch_tvshows() -> Result<Vec<TVShow>, Arc<gloo_net::Error>> {
+    let res = gloo_net::http::Request::get("/api/tvshows")
         .credentials(web_sys::RequestCredentials::Include)
         .send()
         .await
-        .map(|res| res.status())
-        .map_err(Arc::new)
+        .map_err(Arc::new)?;
+    res.json().await.map_err(Arc::new)
 }
 
-#[function_component]
-pub fn Home() -> Html {
+#[function_component(Home)]
+pub fn home() -> Html {
     let tvshows = use_async_with_options(fetch_tvshows(), UseAsyncOptions::enable_auto());
 
     html! {
-        <>
-            <h1>{"Home"}</h1>
-
-            <div>
-                {if tvshows.loading {
-                    html! { <p>{"LOADING"}</p>}
-                } else {
-                    html! { <p>{"LOADED"}</p>}
-                }}
-            </div>
-        </>
+        <div class="bg-gray-100 min-h-screen">
+            <Header />
+            <main class="max-w-4xl mx-auto p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">{"TV Shows"}</h2>
+                {
+                    if tvshows.loading {
+                        html! {
+                            <div class="flex justify-center py-16">
+                                <div class="flex flex-col items-center space-y-2 text-gray-500">
+                                    <svg class="animate-spin h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                                    </svg>
+                                    <p class="text-sm mt-2">{"Loading TV shows..."}</p>
+                                </div>
+                            </div>
+                        }
+                    } else if let Some(err) = &tvshows.error {
+                        html! {
+                            <div class="flex flex-col items-center justify-center text-center text-red-500 py-16 space-y-3">
+                                <svg class="w-12 h-12 text-red-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M12 6a9 9 0 110 18 9 9 0 010-18z" />
+                                </svg>
+                                <h3 class="text-lg font-semibold">{"Oops! Something went wrong."}</h3>
+                                <p class="text-sm text-red-400 max-w-md">
+                                    { format!("We couldn’t load your TV shows: {}", err) }
+                                </p>
+                            </div>
+                        }
+                    } else if let Some(shows) = &tvshows.data {
+                        if shows.is_empty() {
+                            html! {
+                                <div class="flex flex-col items-center justify-center text-center text-gray-500 py-16">
+                                    <svg class="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16h16M4 12h8m-8-4h16" />
+                                    </svg>
+                                    <p class="text-lg font-medium">{"No TV shows found"}</p>
+                                    <p class="text-sm mt-1">{"Add shows or check back later."}</p>
+                                </div>
+                            }
+                        } else {
+                            html! {
+                                <div class="grid gap-4">
+                                    { for shows.iter().map(|show| html! {
+                                        <TVShowCardlet show={show.clone()} />
+                                    }) }
+                                </div>
+                            }
+                        }
+                    } else {
+                        html! { <p>{"No shows found."}</p> }
+                    }
+                }
+            </main>
+        </div>
     }
 }

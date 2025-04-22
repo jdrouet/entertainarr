@@ -1,6 +1,13 @@
 [workspace]
 resolver = "3"
-members = ["packages/server", "packages/storage", "packages/web"]
+members = [
+    "packages/api",
+    "packages/server",
+    "packages/storage",
+    "packages/web",
+]
 
 [workspace.dependencies]
+entertainarr-api = { path = "packages/api", version = "0.1" }
 entertainarr-storage = { path = "packages/storage", version = "0.1" }
+tmdb-api = { version = "0.9", default-features = false }

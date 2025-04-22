@@ -6,15 +6,10 @@ use axum_extra::extract::{
 
 use crate::{handler::api::error::ApiError, service::database::Database};
 
-#[derive(Debug, serde::Deserialize)]
-pub struct LoginPayload {
-    username: String,
-}
-
 pub async fn handle(
     Extension(database): Extension<Database>,
     jar: CookieJar,
-    Json(payload): Json<LoginPayload>,
+    Json(payload): Json<entertainarr_api::user::LoginPayload>,
 ) -> Result<(CookieJar, StatusCode), ApiError> {
     let user = crate::model::user::get_by_name(database.as_ref(), &payload.username).await?;
     let Some(user) = user else {

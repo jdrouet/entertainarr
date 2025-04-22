@@ -476,12 +476,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "entertainarr-api"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "tmdb-api",
+]
+
+[[package]]
 name = "entertainarr-server"
 version = "0.1.0"
 dependencies = [
  "axum",
  "axum-extra",
  "config",
+ "entertainarr-api",
  "entertainarr-storage",
  "regex",
  "serde",
@@ -513,6 +522,7 @@ dependencies = [
 name = "entertainarr-web"
 version = "0.1.0"
 dependencies = [
+ "entertainarr-api",
  "gloo-net 0.4.0",
  "serde",
  "serde_json",

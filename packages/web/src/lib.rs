@@ -1,6 +1,7 @@
 use yew::prelude::*;
 use yew_router::prelude::*;
 
+mod component;
 mod view;
 
 #[derive(Clone, Debug, Default, PartialEq)]

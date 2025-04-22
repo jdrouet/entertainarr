@@ -1,16 +1,12 @@
 use std::sync::Arc;
 
+use entertainarr_api::user::LoginPayload;
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
 use yew_hooks::prelude::*;
 use yew_router::hooks::use_navigator;
 
 use crate::Route;
-
-#[derive(serde::Serialize)]
-struct LoginPayload {
-    username: String,
-}
 
 async fn post_login(username: String) -> Result<u16, Arc<gloo_net::Error>> {
     let payload = LoginPayload { username };
@@ -26,8 +22,8 @@ async fn post_login(username: String) -> Result<u16, Arc<gloo_net::Error>> {
         .map_err(Arc::new)
 }
 
-#[function_component]
-pub fn Login() -> Html {
+#[function_component(Login)]
+pub fn login() -> Html {
     let username = use_state(String::default);
     let username_value = (*username).clone();
 
@@ -67,11 +63,30 @@ pub fn Login() -> Html {
     });
 
     html! {
-        <form {onsubmit}>
-            <h1>{"Login"}</h1>
-            <label for="username">{"Username"}</label>
-            <input id="username" name="username" {onchange} placeholder="You username here..." value={username_value} />
-            <button type="submit">{"Login"}</button>
-        </form>
+        <div class="flex items-center justify-center min-h-screen bg-gray-100">
+            <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
+                <h1 class="text-2xl font-semibold text-gray-800 mb-6 text-center">{"Login"}</h1>
+                <form {onsubmit}>
+                    <div class="mb-4">
+                        <label for="username" class="block text-gray-700 mb-2">{"Username"}</label>
+                        <input
+                            id="username"
+                            type="text"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                            value={username_value}
+                            {onchange}
+                            placeholder="Enter your username"
+                            required=true
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        class="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition duration-200"
+                    >
+                        {"Sign In"}
+                    </button>
+                </form>
+            </div>
+        </div>
     }
 }
