@@ -113,3 +113,24 @@ where
         .await?;
     Ok(())
 }
+
+pub async fn followed<'a, X>(
+    conn: X,
+    user_id: u64,
+    offset: u32,
+    count: u32,
+) -> sqlx::Result<Vec<TVShowBase>>
+where
+    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+{
+    let list: Vec<Entity> = sqlx::query_as(r#"SELECT id, name, original_name, original_language, origin_country, overview, first_air_date, poster_path, backdrop_path, popularity, vote_count, vote_average, adult
+FROM tvshows
+WHERE id IN (SELECT tvshow_id FROM followed_tvshows WHERE user_id = ?)
+LIMIT ? OFFSET ?"#)
+        .bind(user_id as i64)
+        .bind(count)
+        .bind(offset)
+        .fetch_all(conn)
+        .await?;
+    Ok(list.into_iter().map(|item| item.0).collect())
+}
