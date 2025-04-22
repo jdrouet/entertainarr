@@ -15,6 +15,8 @@ enum Route {
     Home,
     #[at("/login")]
     Login,
+    #[at("/tvshows/search")]
+    TvshowSearch,
     #[not_found]
     #[at("/404")]
     NotFound,
@@ -29,6 +31,10 @@ fn switch(routes: Route) -> Html {
         Route::Login => {
             use view::login::Login;
             html! { <Login /> }
+        }
+        Route::TvshowSearch => {
+            use view::tvshow_search::TVShowSearch;
+            html! { <TVShowSearch /> }
         }
         Route::NotFound => html! { <h1>{ "404" }</h1> },
     }
