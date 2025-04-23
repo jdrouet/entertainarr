@@ -2,6 +2,7 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 
 mod component;
+mod hook;
 mod view;
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -17,6 +18,8 @@ enum Route {
     Login,
     #[at("/tvshows/search")]
     TvshowSearch,
+    #[at("/tvshows/:id")]
+    TvshowView { id: u64 },
     #[not_found]
     #[at("/404")]
     NotFound,
@@ -35,6 +38,10 @@ fn switch(routes: Route) -> Html {
         Route::TvshowSearch => {
             use view::tvshow_search::TVShowSearch;
             html! { <TVShowSearch /> }
+        }
+        Route::TvshowView { id } => {
+            use view::tvshow_view::TVShowView;
+            html! { <TVShowView tvshow_id={id} /> }
         }
         Route::NotFound => html! { <h1>{ "404" }</h1> },
     }

@@ -1,6 +1,3 @@
-use std::sync::Arc;
-
-use entertainarr_api::tvshow::TVShow;
 use yew::prelude::*;
 use yew_hooks::prelude::*;
 use yew_router::hooks::use_navigator;
@@ -8,20 +5,6 @@ use yew_router::hooks::use_navigator;
 use crate::Route;
 use crate::component::header::Header;
 use crate::component::tvshow_cardlet::TVShowCardlet;
-
-async fn fetch_tvshows(query: String) -> Result<Vec<TVShow>, Arc<gloo_net::Error>> {
-    if query.is_empty() {
-        return Ok(Vec::new());
-    }
-    let params = [("q", query)];
-    let res = gloo_net::http::Request::get("/api/tvshows/search")
-        .query(params)
-        .credentials(web_sys::RequestCredentials::Include)
-        .send()
-        .await
-        .map_err(Arc::new)?;
-    res.json().await.map_err(Arc::new)
-}
 
 #[derive(Debug, serde::Serialize)]
 struct QueryParams {
@@ -37,7 +20,10 @@ pub fn tvshow_search() -> Html {
 
     let list = {
         let query_value = (*query_value).clone();
-        use_async_with_options(fetch_tvshows(query_value), UseAsyncOptions::enable_auto())
+        use_async_with_options(
+            crate::hook::tvshow::search(query_value),
+            UseAsyncOptions::enable_auto(),
+        )
     };
 
     let on_input = {

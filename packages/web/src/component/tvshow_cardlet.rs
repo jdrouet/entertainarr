@@ -1,5 +1,8 @@
+use crate::Route;
+
 use entertainarr_api::tvshow::TVShow;
 use yew::prelude::*;
+use yew_router::prelude::*;
 
 #[derive(Properties, PartialEq)]
 pub struct Props {
@@ -16,7 +19,7 @@ pub fn tv_show_cardlet(props: &Props) -> Html {
         .map(|path| format!("https://image.tmdb.org/t/p/w185{}", path));
 
     html! {
-        <div class="flex bg-white shadow-sm rounded-md overflow-hidden hover:shadow-md transition">
+        <Link<Route> to={Route::TvshowView { id: props.show.id }} classes="flex bg-white shadow-sm rounded-md overflow-hidden hover:shadow-md transition">
             if let Some(url) = poster_url {
                 <img
                     src={url}
@@ -39,6 +42,6 @@ pub fn tv_show_cardlet(props: &Props) -> Html {
                     <span>{ format!("⭐ {:.1} ({})", show.vote_average, show.vote_count) }</span>
                 </div>
             </div>
-        </div>
+        </Link<Route>>
     }
 }
