@@ -3,7 +3,9 @@ use std::sync::Arc;
 use entertainarr_api::tvshow::TVShow;
 use yew::prelude::*;
 use yew_hooks::prelude::*;
+use yew_router::prelude::*;
 
+use crate::Route;
 use crate::component::header::Header;
 use crate::component::tvshow_cardlet::TVShowCardlet;
 
@@ -58,7 +60,9 @@ pub fn home() -> Html {
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16h16M4 12h8m-8-4h16" />
                                     </svg>
                                     <p class="text-lg font-medium">{"No TV shows found"}</p>
-                                    <p class="text-sm mt-1">{"Add shows or check back later."}</p>
+                                    <p class="text-sm mt-1">
+                                        <Link<Route> to={Route::TvshowSearch}>{"Add shows or check back later."}</Link<Route>>
+                                    </p>
                                 </div>
                             }
                         } else {
