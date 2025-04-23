@@ -479,6 +479,7 @@ dependencies = [
 name = "entertainarr-api"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "serde",
  "tmdb-api",
 ]
@@ -489,6 +490,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "axum-extra",
+ "chrono",
  "config",
  "entertainarr-api",
  "entertainarr-storage",
@@ -2736,6 +2738,7 @@ checksum = "55c4720d7d4cd3d5b00f61d03751c685ad09c33ae8290c8a2c11335e0604300b"
 dependencies = [
  "base64 0.22.1",
  "bytes",
+ "chrono",
  "crc",
  "crossbeam-queue",
  "either",
@@ -2813,6 +2816,7 @@ dependencies = [
  "bitflags",
  "byteorder",
  "bytes",
+ "chrono",
  "crc",
  "digest",
  "dotenvy",
@@ -2855,6 +2859,7 @@ dependencies = [
  "base64 0.22.1",
  "bitflags",
  "byteorder",
+ "chrono",
  "crc",
  "dotenvy",
  "etcetera",
@@ -2890,6 +2895,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c48291dac4e5ed32da0927a0b981788be65674aeb62666d19873ab4289febde"
 dependencies = [
  "atoi",
+ "chrono",
  "flume",
  "futures-channel",
  "futures-core",

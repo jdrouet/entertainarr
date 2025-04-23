@@ -10,5 +10,5 @@ pub(super) async fn handle(
     Authentication(user_id): Authentication,
 ) -> Result<Json<Vec<TVShow>>, ApiError> {
     let list = crate::model::tvshow::followed(db.as_ref(), user_id, 0, 50).await?;
-    Ok(Json(list))
+    Ok(Json(list.into_iter().map(From::from).collect()))
 }

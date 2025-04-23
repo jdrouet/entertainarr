@@ -1,12 +1,26 @@
 use sqlx::{FromRow, QueryBuilder, Row, Sqlite, sqlite::SqliteRow};
 use tmdb_api::tvshow::TVShowBase;
 
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-pub struct Entity(TVShowBase);
+#[derive(Clone, Debug)]
+pub struct Entity {
+    pub id: u64,
+    pub name: String,
+    pub original_name: String,
+    pub original_language: String,
+    pub origin_country: Vec<String>,
+    pub overview: Option<String>,
+    pub first_air_date: Option<chrono::NaiveDate>,
+    pub poster_path: Option<String>,
+    pub backdrop_path: Option<String>,
+    pub popularity: f64,
+    pub vote_count: u64,
+    pub vote_average: f64,
+    pub adult: bool,
+}
 
 impl FromRow<'_, SqliteRow> for Entity {
     fn from_row(row: &'_ SqliteRow) -> Result<Self, sqlx::Error> {
-        Ok(Self(TVShowBase {
+        Ok(Self {
             id: row.get(0),
             name: row.get(1),
             original_name: row.get(2),
@@ -19,27 +33,26 @@ impl FromRow<'_, SqliteRow> for Entity {
                     .collect::<Vec<_>>()
             },
             overview: row.get(5),
-            first_air_date: None, // row.get(6)
+            first_air_date: row.get(6),
             poster_path: row.get(7),
             backdrop_path: row.get(8),
             popularity: row.get(9),
             vote_count: row.get(10),
             vote_average: row.get(11),
             adult: row.get(12),
-        }))
+        })
     }
 }
 
-pub async fn find_by_id<'a, X>(conn: X, tvshow_id: u64) -> sqlx::Result<Option<TVShowBase>>
+pub async fn find_by_id<'a, X>(conn: X, tvshow_id: u64) -> sqlx::Result<Option<Entity>>
 where
     X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
 {
     let sql = "SELECT id, name, original_name, original_language, origin_country, overview, first_air_date, poster_path, backdrop_path, popularity, vote_count, vote_average, adult FROM tvshows WHERE id = ? LIMIT 1";
-    let entity: Option<Entity> = sqlx::query_as(sql)
+    sqlx::query_as(sql)
         .bind(tvshow_id as i64)
         .fetch_optional(conn)
-        .await?;
-    Ok(entity.map(|inner| inner.0))
+        .await
 }
 
 pub async fn upsert_all<'a, X>(conn: X, list: impl Iterator<Item = &TVShowBase>) -> sqlx::Result<()>
@@ -56,7 +69,7 @@ where
             .push_bind(item.original_language.as_str())
             .push_bind(item.origin_country.join(","))
             .push_bind(item.overview.as_ref())
-            .push_bind(Some(0))
+            .push_bind(item.first_air_date.as_ref())
             .push_bind(item.poster_path.as_ref())
             .push_bind(item.backdrop_path.as_ref())
             .push_bind(item.popularity)
@@ -119,11 +132,11 @@ pub async fn followed<'a, X>(
     user_id: u64,
     offset: u32,
     count: u32,
-) -> sqlx::Result<Vec<TVShowBase>>
+) -> sqlx::Result<Vec<Entity>>
 where
     X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
 {
-    let list: Vec<Entity> = sqlx::query_as(r#"SELECT id, name, original_name, original_language, origin_country, overview, first_air_date, poster_path, backdrop_path, popularity, vote_count, vote_average, adult
+    sqlx::query_as(r#"SELECT id, name, original_name, original_language, origin_country, overview, first_air_date, poster_path, backdrop_path, popularity, vote_count, vote_average, adult
 FROM tvshows
 WHERE id IN (SELECT tvshow_id FROM followed_tvshows WHERE user_id = ?)
 LIMIT ? OFFSET ?"#)
@@ -131,6 +144,5 @@ LIMIT ? OFFSET ?"#)
         .bind(count)
         .bind(offset)
         .fetch_all(conn)
-        .await?;
-    Ok(list.into_iter().map(|item| item.0).collect())
+        .await
 }
