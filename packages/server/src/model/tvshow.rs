@@ -1,6 +1,18 @@
 use sqlx::{FromRow, QueryBuilder, Row, Sqlite, sqlite::SqliteRow};
 use tmdb_api::tvshow::TVShowBase;
 
+// with left outer join
+const BASE_VIEW: &str = r#"SELECT
+    tvshows.id, tvshows.name, tvshows.original_name, tvshows.original_language, tvshows.origin_country, tvshows.overview, tvshows.first_air_date, tvshows.poster_path, tvshows.backdrop_path, tvshows.popularity, tvshows.vote_count, tvshows.vote_average, tvshows.adult, followed_tvshows.created_at is not null
+FROM tvshows
+LEFT OUTER JOIN followed_tvshows ON tvshows.id = followed_tvshows.tvshow_id AND followed_tvshows.user_id = ?"#;
+
+// with an inner join, won't show for unfollowed
+const FOLLOWED_VIEW: &str = r#"SELECT
+    tvshows.id, tvshows.name, tvshows.original_name, tvshows.original_language, tvshows.origin_country, tvshows.overview, tvshows.first_air_date, tvshows.poster_path, tvshows.backdrop_path, tvshows.popularity, tvshows.vote_count, tvshows.vote_average, tvshows.adult, followed_tvshows.created_at is not null
+FROM tvshows
+JOIN followed_tvshows ON tvshows.id = followed_tvshows.tvshow_id AND followed_tvshows.user_id = ?"#;
+
 #[derive(Clone, Debug)]
 pub struct Entity {
     pub id: u64,
@@ -16,6 +28,7 @@ pub struct Entity {
     pub vote_count: u64,
     pub vote_average: f64,
     pub adult: bool,
+    pub following: bool,
 }
 
 impl FromRow<'_, SqliteRow> for Entity {
@@ -40,16 +53,23 @@ impl FromRow<'_, SqliteRow> for Entity {
             vote_count: row.get(10),
             vote_average: row.get(11),
             adult: row.get(12),
+            following: row.get(13),
         })
     }
 }
 
-pub async fn find_by_id<'a, X>(conn: X, tvshow_id: u64) -> sqlx::Result<Option<Entity>>
+const FIND_BY_ID_SQL: &str = constcat::concat!(BASE_VIEW, " WHERE tvshows.id = ? LIMIT 1");
+
+pub async fn find_by_id<'a, X>(
+    conn: X,
+    user_id: u64,
+    tvshow_id: u64,
+) -> sqlx::Result<Option<Entity>>
 where
     X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
 {
-    let sql = "SELECT id, name, original_name, original_language, origin_country, overview, first_air_date, poster_path, backdrop_path, popularity, vote_count, vote_average, adult FROM tvshows WHERE id = ? LIMIT 1";
-    sqlx::query_as(sql)
+    sqlx::query_as(FIND_BY_ID_SQL)
+        .bind(user_id as i64)
         .bind(tvshow_id as i64)
         .fetch_optional(conn)
         .await
@@ -127,6 +147,8 @@ where
     Ok(())
 }
 
+const FOLLOWED_SQL: &str = constcat::concat!(FOLLOWED_VIEW, " LIMIT ? OFFSET ?");
+
 pub async fn followed<'a, X>(
     conn: X,
     user_id: u64,
@@ -136,10 +158,7 @@ pub async fn followed<'a, X>(
 where
     X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
 {
-    sqlx::query_as(r#"SELECT id, name, original_name, original_language, origin_country, overview, first_air_date, poster_path, backdrop_path, popularity, vote_count, vote_average, adult
-FROM tvshows
-WHERE id IN (SELECT tvshow_id FROM followed_tvshows WHERE user_id = ?)
-LIMIT ? OFFSET ?"#)
+    sqlx::query_as(FOLLOWED_SQL)
         .bind(user_id as i64)
         .bind(count)
         .bind(offset)

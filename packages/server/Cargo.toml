@@ -8,6 +8,7 @@ axum = { version = "0.8", features = ["macros"] }
 axum-extra = { version = "0.10.1", features = ["cookie", "typed-header"] }
 chrono = { version = "0.4.40", default-features = false, features = ["serde"] }
 config = { version = "0.15", default-features = false, features = ["toml"] }
+constcat = "0.6.0"
 entertainarr-api = { workspace = true }
 entertainarr-storage = { workspace = true }
 regex = { version = "1.11" }

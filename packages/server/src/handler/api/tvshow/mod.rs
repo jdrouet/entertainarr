@@ -35,7 +35,7 @@ impl From<crate::model::tvshow::Entity> for entertainarr_api::tvshow::TVShow {
             vote_average: value.vote_average,
             adult: value.adult,
 
-            following: false,
+            following: value.following,
         }
     }
 }

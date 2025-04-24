@@ -26,8 +26,9 @@ pub(super) async fn handle(
         .execute(tmdb.as_ref())
         .await?;
     let list: Vec<TVShowBase> = tvshows.results.into_iter().map(|item| item.inner).collect();
-    if !list.is_empty() {
-        crate::model::tvshow::upsert_all(db.as_ref(), list.iter()).await?;
+    if list.is_empty() {
+        return Ok(Json(Vec::new()));
     }
+    crate::model::tvshow::upsert_all(db.as_ref(), list.iter()).await?;
     Ok(Json(list))
 }
