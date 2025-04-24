@@ -499,6 +499,7 @@ dependencies = [
  "serde",
  "sqlx",
  "tmdb-api",
+ "tokio",
  "tracing",
 ]
 
@@ -510,7 +511,6 @@ dependencies = [
  "axum-extra",
  "chrono",
  "config",
- "constcat",
  "entertainarr-api",
  "entertainarr-database",
  "entertainarr-storage",

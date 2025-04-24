@@ -16,3 +16,6 @@ sqlx = { version = "0.8", features = [
 ] }
 tmdb-api = { workspace = true }
 tracing = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }

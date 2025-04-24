@@ -165,3 +165,109 @@ where
         .fetch_all(conn)
         .await
 }
+
+#[cfg(test)]
+mod tests {
+    use chrono::NaiveDate;
+    use tmdb_api::tvshow::TVShowBase;
+
+    async fn setup_db() -> crate::Database {
+        let db = crate::Config::default().build().await.unwrap();
+        db.migrate().await.unwrap();
+
+        let user = crate::model::user::Entity {
+            id: 1,
+            name: Box::from("alice"),
+        };
+        user.persist(db.as_ref()).await.unwrap();
+
+        let user = crate::model::user::Entity {
+            id: 2,
+            name: Box::from("bob"),
+        };
+        user.persist(db.as_ref()).await.unwrap();
+
+        db
+    }
+
+    fn sample_show(id: u64) -> TVShowBase {
+        TVShowBase {
+            id,
+            name: "Test Show".to_string(),
+            original_name: "Test Original".to_string(),
+            original_language: "en".to_string(),
+            origin_country: vec!["US".to_string()],
+            overview: Some("A test show".to_string()),
+            first_air_date: Some(NaiveDate::from_ymd_opt(2022, 1, 1).unwrap()),
+            poster_path: Some("/poster.jpg".to_string()),
+            backdrop_path: Some("/backdrop.jpg".to_string()),
+            popularity: 100.0,
+            vote_count: 123,
+            vote_average: 8.5,
+            adult: false,
+        }
+    }
+
+    #[tokio::test]
+    async fn test_upsert_and_find_by_id() {
+        let db = setup_db().await;
+
+        let show = sample_show(1);
+        super::upsert_all(db.as_ref(), std::iter::once(&show))
+            .await
+            .unwrap();
+
+        let found = super::find_by_id(db.as_ref(), 1, 1).await.unwrap().unwrap();
+        assert_eq!(found.id, 1);
+        assert_eq!(found.name, "Test Show");
+        assert!(!found.following);
+    }
+
+    #[tokio::test]
+    async fn test_follow_and_unfollow() {
+        let db = setup_db().await;
+        let user_id = 1;
+        let show = sample_show(2);
+        super::upsert_all(db.as_ref(), std::iter::once(&show))
+            .await
+            .unwrap();
+
+        super::follow(db.as_ref(), user_id, 2).await.unwrap();
+        let followed = super::find_by_id(db.as_ref(), user_id, 2)
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(followed.following);
+
+        super::unfollow(db.as_ref(), user_id, 2).await.unwrap();
+        let unfollowed = super::find_by_id(db.as_ref(), user_id, 2)
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(!unfollowed.following);
+    }
+
+    #[tokio::test]
+    async fn test_followed_list_pagination() {
+        let db = setup_db().await;
+        let user_id = 1;
+        let other_user_id = 2;
+        let shows: Vec<_> = (1..6).map(sample_show).collect();
+        super::upsert_all(db.as_ref(), shows.iter()).await.unwrap();
+
+        for show in &shows {
+            super::follow(db.as_ref(), user_id, show.id).await.unwrap();
+        }
+
+        let first_page = super::followed(db.as_ref(), user_id, 0, 3).await.unwrap();
+        assert_eq!(first_page.len(), 3);
+
+        let other_user = super::followed(db.as_ref(), other_user_id, 0, 3)
+            .await
+            .unwrap();
+        assert!(other_user.is_empty());
+
+        let second_page = super::followed(db.as_ref(), user_id, 3, 3).await.unwrap();
+        assert_eq!(second_page.len(), 2);
+    }
+}
