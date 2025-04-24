@@ -1,6 +1,8 @@
 use yew::prelude::*;
-use yew_hooks::{UseAsyncOptions, use_async_with_options};
+use yew_hooks::{UseAsyncOptions, use_async, use_async_with_options};
 
+use crate::component::error_message::ErrorMessage;
+use crate::component::follow_button::FollowButton;
 use crate::component::header::Header;
 use crate::component::loading::Loading;
 
@@ -15,6 +17,33 @@ pub fn tvshow_view(props: &Props) -> Html {
         crate::hook::tvshow::get_by_id(props.tvshow_id),
         UseAsyncOptions::enable_auto(),
     );
+
+    let seasons = use_async_with_options(
+        crate::hook::tvshow::list_seasons(props.tvshow_id),
+        UseAsyncOptions::enable_auto(),
+    );
+
+    let tvshow_follow = use_async(crate::hook::tvshow::follow(props.tvshow_id));
+    let tvshow_unfollow = use_async(crate::hook::tvshow::unfollow(props.tvshow_id));
+
+    let tvshow_follow_loading = tvshow_follow.loading || tvshow_unfollow.loading;
+
+    let on_click_follow = {
+        let following = tvshow
+            .data
+            .as_ref()
+            .map(|item| item.following)
+            .unwrap_or(false);
+        let tvshow_follow = tvshow_follow.clone();
+        let tvshow_unfollow = tvshow_unfollow.clone();
+        Callback::from(move |_: MouseEvent| {
+            if following {
+                tvshow_unfollow.run();
+            } else {
+                tvshow_follow.run();
+            }
+        })
+    };
 
     html! {
         <div class="bg-gray-100 min-h-screen">
@@ -62,9 +91,13 @@ pub fn tvshow_view(props: &Props) -> Html {
                                         }}
                                     </div>
 
-                                    <p class="text-gray-800 leading-relaxed">
+                                    <p class="text-gray-800 leading-relaxed mb-4">
                                         { data.overview.clone().unwrap_or_else(|| "No description available.".to_string()) }
                                     </p>
+
+                                    <div class="">
+                                        <FollowButton onclick={on_click_follow} following={data.following} loading={tvshow_follow_loading} />
+                                    </div>
                                 </div>
                             </div>
                         }
@@ -76,6 +109,54 @@ pub fn tvshow_view(props: &Props) -> Html {
                         html! {}
                     }
                 }
+                <section class="mt-12">
+                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">{"Seasons"}</h2>
+                    {
+                        if seasons.loading {
+                            html! { <Loading /> }
+                        } else if let Some(err) = &seasons.error {
+                            html! { <ErrorMessage error={err.to_string()} /> }
+                        } else if let Some(season_list) = &seasons.data {
+                            html! {
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {
+                                        season_list.iter().map(|season| {
+                                            html! {
+                                                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                                                    {
+                                                        if let Some(poster_path) = &season.poster_path {
+                                                            html! {
+                                                                <img
+                                                                    src={format!("https://image.tmdb.org/t/p/w300{}", poster_path)}
+                                                                    alt={season.name.clone()}
+                                                                    class="w-full h-40 object-cover"
+                                                                />
+                                                            }
+                                                        } else {
+                                                            html! {
+                                                                <div class="w-full h-40 bg-gray-300 flex items-center justify-center text-gray-600">
+                                                                    {"No Image"}
+                                                                </div>
+                                                            }
+                                                        }
+                                                    }
+                                                    <div class="px-4 pt-2 pb-3">
+                                                        <h3 class="text-lg font-semibold text-gray-800 mb-1">{ &season.name }</h3>
+                                                        <div class="text-xs text-gray-500">
+                                                            { format!("Air Date: {}", season.air_date.map_or("Unknown".to_string(), |d| d.to_string())) }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }).collect::<Html>()
+                                    }
+                                </div>
+                            }
+                        } else {
+                            html! {}
+                        }
+                    }
+                </section>
             </main>
         </div>
     }

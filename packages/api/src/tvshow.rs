@@ -18,6 +18,9 @@ pub struct TVShow {
     pub vote_count: u64,
     pub vote_average: f64,
     pub adult: bool,
+
+    #[serde(default)]
+    pub following: bool,
 }
 
 impl From<tmdb_api::tvshow::TVShowBase> for TVShow {
@@ -36,6 +39,8 @@ impl From<tmdb_api::tvshow::TVShowBase> for TVShow {
             vote_count: value.vote_count,
             vote_average: value.vote_average,
             adult: value.adult,
+            //
+            following: false,
         }
     }
 }
