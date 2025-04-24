@@ -46,3 +46,11 @@ where
         .fetch_optional(conn)
         .await
 }
+
+#[cfg(test)]
+pub fn create_user(id: u64, name: &str) -> Entity {
+    Entity {
+        id,
+        name: Box::from(name),
+    }
+}

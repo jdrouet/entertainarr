@@ -6,7 +6,7 @@ mod list;
 mod search;
 mod season;
 
-pub(crate) fn router() -> axum::Router {
+pub(super) fn router() -> axum::Router {
     axum::Router::new()
         .route("/", get(list::handle))
         .route("/search", get(search::handle))
@@ -15,11 +15,7 @@ pub(crate) fn router() -> axum::Router {
             "/{tvshow_id}/follow",
             post(follow::create).delete(follow::delete),
         )
-        .route("/{tvshow_id}/seasons", get(season::list::handle))
-        .route(
-            "/{tvshow_id}/seasons/{season_number}/episodes",
-            get(season::episode::list::handle),
-        )
+        .nest("/{tvshow_id}/seasons", season::router())
 }
 
 fn tvshow_to_view(

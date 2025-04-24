@@ -74,3 +74,117 @@ DO UPDATE SET
     qb.build().execute(conn).await?;
     Ok(())
 }
+
+pub async fn watched<'a, X>(
+    conn: X,
+    user_id: u64,
+    tvshow_id: u64,
+    season_number: u64,
+) -> sqlx::Result<()>
+where
+    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+{
+    sqlx::query(
+        r#"INSERT INTO watched_tvshow_episodes (user_id, episode_id, progress, completed)
+SELECT ?, tvshow_episodes.id, 0, true
+FROM tvshow_episodes
+JOIN tvshow_seasons
+    ON tvshow_seasons.id = tvshow_episodes.season_id
+WHERE tvshow_seasons.tvshow_id = ?
+    AND tvshow_seasons.season_number = ?
+ON CONFLICT DO UPDATE SET
+    progress = excluded.progress,
+    completed = excluded.completed,
+    updated_at = CURRENT_TIMESTAMP"#,
+    )
+    .bind(user_id as i64)
+    .bind(tvshow_id as i64)
+    .bind(season_number as i64)
+    .execute(conn)
+    .await?;
+    Ok(())
+}
+
+pub async fn unwatched<'a, X>(
+    conn: X,
+    user_id: u64,
+    tvshow_id: u64,
+    season_number: u64,
+) -> sqlx::Result<()>
+where
+    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+{
+    sqlx::query(
+        r#"DELETE FROM watched_tvshow_episodes
+WHERE user_id = ? AND episode_id IN (
+    SELECT tvshow_episodes.id
+    FROM tvshow_episodes
+    JOIN tvshow_seasons ON tvshow_seasons.id = tvshow_episodes.season_id
+    WHERE tvshow_seasons.tvshow_id = ?
+        AND tvshow_seasons.season_number = ?
+)"#,
+    )
+    .bind(user_id as i64)
+    .bind(tvshow_id as i64)
+    .bind(season_number as i64)
+    .execute(conn)
+    .await?;
+    Ok(())
+}
+
+#[cfg(test)]
+pub fn build_season(id: u64, season_number: u64) -> tmdb_api::tvshow::SeasonBase {
+    tmdb_api::tvshow::SeasonBase {
+        id,
+        name: format!("Season Name #{season_number}"),
+        air_date: None,
+        overview: Some("A test show".to_string()),
+        poster_path: Some("/poster.jpg".to_string()),
+        season_number,
+    }
+}
+
+#[cfg(test)]
+pub async fn create_season(
+    db: &crate::Database,
+    tvshow_id: u64,
+    season_id: u64,
+    season_number: u64,
+) {
+    let season = build_season(season_id, season_number);
+    upsert_all(db.as_ref(), tvshow_id, std::iter::once(&season))
+        .await
+        .unwrap();
+}
+
+#[cfg(test)]
+mod tests {
+    #[tokio::test]
+    async fn should_list_tvshow_seasons() -> Result<(), sqlx::Error> {
+        let db = crate::init().await;
+        crate::model::user::create_user(1, "alice")
+            .persist(db.as_ref())
+            .await?;
+        crate::model::user::create_user(2, "bob")
+            .persist(db.as_ref())
+            .await?;
+
+        crate::model::tvshow::create_tvshow(&db, 1).await;
+        super::create_season(&db, 1, 1, 1).await;
+        super::create_season(&db, 1, 2, 2).await;
+
+        crate::model::tvshow::create_tvshow(&db, 2).await;
+        super::create_season(&db, 2, 3, 1).await;
+
+        let list = super::list(db.as_ref(), 1).await?;
+        assert_eq!(list.len(), 2);
+
+        let list = super::list(db.as_ref(), 2).await?;
+        assert_eq!(list.len(), 1);
+
+        let list = super::list(db.as_ref(), 3).await?;
+        assert_eq!(list.len(), 0);
+
+        Ok(())
+    }
+}

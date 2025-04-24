@@ -187,26 +187,49 @@ where
 }
 
 #[cfg(test)]
+pub fn build_tvshow(id: u64) -> tmdb_api::tvshow::TVShowBase {
+    use chrono::NaiveDate;
+
+    tmdb_api::tvshow::TVShowBase {
+        id,
+        name: "Test Show".to_string(),
+        original_name: "Test Original".to_string(),
+        original_language: "en".to_string(),
+        origin_country: vec!["US".to_string()],
+        overview: Some("A test show".to_string()),
+        first_air_date: Some(NaiveDate::from_ymd_opt(2022, 1, 1).unwrap()),
+        poster_path: Some("/poster.jpg".to_string()),
+        backdrop_path: Some("/backdrop.jpg".to_string()),
+        popularity: 100.0,
+        vote_count: 123,
+        vote_average: 8.5,
+        adult: false,
+    }
+}
+
+#[cfg(test)]
+pub async fn create_tvshow(db: &crate::Database, id: u64) {
+    let show = build_tvshow(id);
+    upsert_all(db.as_ref(), std::iter::once(&show))
+        .await
+        .unwrap();
+}
+
+#[cfg(test)]
 mod tests {
     use chrono::NaiveDate;
     use tmdb_api::tvshow::TVShowBase;
 
     async fn setup_db() -> crate::Database {
-        let db = crate::Config::default().build().await.unwrap();
-        db.migrate().await.unwrap();
-
-        let user = crate::model::user::Entity {
-            id: 1,
-            name: Box::from("alice"),
-        };
-        user.persist(db.as_ref()).await.unwrap();
-
-        let user = crate::model::user::Entity {
-            id: 2,
-            name: Box::from("bob"),
-        };
-        user.persist(db.as_ref()).await.unwrap();
-
+        let db = crate::init().await;
+        crate::model::user::create_user(1, "alice")
+            .persist(db.as_ref())
+            .await
+            .unwrap();
+        crate::model::user::create_user(2, "bob")
+            .persist(db.as_ref())
+            .await
+            .unwrap();
         db
     }
 
@@ -233,7 +256,7 @@ mod tests {
         crate::enable_tracing();
         let db = setup_db().await;
 
-        let show = sample_show(1);
+        let show = super::build_tvshow(1);
         super::upsert_all(db.as_ref(), std::iter::once(&show))
             .await
             .unwrap();

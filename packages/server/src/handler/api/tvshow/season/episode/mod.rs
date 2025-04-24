@@ -1,4 +1,7 @@
-pub mod list;
+use axum::routing::{get, post};
+
+mod list;
+mod watch;
 
 fn episode_to_view(
     value: entertainarr_database::model::tvshow_episode::Entity,
@@ -10,4 +13,14 @@ fn episode_to_view(
         overview: value.overview,
         episode_number: value.episode_number,
     }
+}
+
+pub(super) fn router() -> axum::Router {
+    axum::Router::new()
+        .route("", get(list::handle))
+        .route("/", get(list::handle))
+        .route(
+            "/{episode_number}/watch",
+            post(watch::create).delete(watch::delete),
+        )
 }

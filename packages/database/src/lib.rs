@@ -65,3 +65,10 @@ fn enable_tracing() {
         .with(tracing_subscriber::fmt::layer())
         .try_init();
 }
+
+#[cfg(test)]
+async fn init() -> Database {
+    let db = crate::Config::default().build().await.unwrap();
+    db.migrate().await.unwrap();
+    db
+}
