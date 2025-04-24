@@ -157,7 +157,7 @@ fn range_header_value(range: (Bound<u64>, Bound<u64>)) -> String {
         (Bound::Included(start), Bound::Unbounded) => format!("bytes={}-", start),
         (Bound::Unbounded, Bound::Included(end)) => format!("bytes=-{}", end),
         (Bound::Unbounded, Bound::Excluded(end)) => format!("bytes=-{}", end - 1),
-        (Bound::Unbounded, Bound::Unbounded) => format!("bytes=-"),
+        (Bound::Unbounded, Bound::Unbounded) => "bytes=-".to_string(),
         (Bound::Excluded(start), Bound::Included(end)) => format!("bytes={}-{}", start + 1, end),
         (Bound::Excluded(start), Bound::Excluded(end)) => {
             format!("bytes={}-{}", start + 1, end - 1)

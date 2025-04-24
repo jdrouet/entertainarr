@@ -1,6 +1,5 @@
 use axum::{Extension, http::StatusCode};
-
-use crate::service::database::Database;
+use entertainarr_database::Database;
 
 use super::error::ApiError;
 

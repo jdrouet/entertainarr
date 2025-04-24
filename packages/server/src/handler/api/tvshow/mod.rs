@@ -22,24 +22,24 @@ pub(crate) fn router() -> axum::Router {
         )
 }
 
-impl From<crate::model::tvshow::Entity> for entertainarr_api::tvshow::TVShow {
-    fn from(value: crate::model::tvshow::Entity) -> Self {
-        Self {
-            id: value.id,
-            name: value.name,
-            original_name: value.original_name,
-            original_language: value.original_language,
-            origin_country: value.origin_country,
-            overview: value.overview,
-            first_air_date: value.first_air_date,
-            poster_path: value.poster_path,
-            backdrop_path: value.backdrop_path,
-            popularity: value.popularity,
-            vote_count: value.vote_count,
-            vote_average: value.vote_average,
-            adult: value.adult,
+fn tvshow_to_view(
+    value: entertainarr_database::model::tvshow::Entity,
+) -> entertainarr_api::tvshow::TVShow {
+    entertainarr_api::tvshow::TVShow {
+        id: value.id,
+        name: value.name,
+        original_name: value.original_name,
+        original_language: value.original_language,
+        origin_country: value.origin_country,
+        overview: value.overview,
+        first_air_date: value.first_air_date,
+        poster_path: value.poster_path,
+        backdrop_path: value.backdrop_path,
+        popularity: value.popularity,
+        vote_count: value.vote_count,
+        vote_average: value.vote_average,
+        adult: value.adult,
 
-            following: value.following,
-        }
+        following: value.following,
     }
 }

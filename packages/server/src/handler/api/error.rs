@@ -49,8 +49,8 @@ impl From<std::io::Error> for ApiError {
     }
 }
 
-impl From<sqlx::Error> for ApiError {
-    fn from(value: sqlx::Error) -> Self {
+impl From<entertainarr_database::sqlx::Error> for ApiError {
+    fn from(value: entertainarr_database::sqlx::Error) -> Self {
         tracing::error!(message = "database error", cause = %value);
         ApiError {
             code: StatusCode::INTERNAL_SERVER_ERROR,

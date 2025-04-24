@@ -4,18 +4,16 @@ use std::{
 };
 
 use axum::Extension;
-use model::Dataset;
 
 pub mod prelude;
 
 mod handler;
-mod model;
 mod service;
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Config {
     #[serde(default, alias = "data")]
-    pub dataset: model::Dataset,
+    pub dataset: entertainarr_database::model::Dataset,
     #[serde(default)]
     service: service::Config,
     #[serde(default = "Config::default_ip_addr")]
@@ -27,7 +25,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            dataset: model::Dataset::default(),
+            dataset: entertainarr_database::model::Dataset::default(),
             service: service::Config::default(),
             ip_addr: Self::default_ip_addr(),
             port: Self::default_port(),
@@ -72,7 +70,7 @@ impl Config {
 }
 
 pub struct Server {
-    database: crate::service::database::Database,
+    database: entertainarr_database::Database,
     storage: crate::service::storage::Storage,
     tmdb: crate::service::tmdb::Tmdb,
     socket_addr: SocketAddr,
@@ -94,7 +92,10 @@ impl Server {
         Ok(())
     }
 
-    pub async fn preload(&self, dataset: &Dataset) -> std::io::Result<()> {
+    pub async fn preload(
+        &self,
+        dataset: &entertainarr_database::model::Dataset,
+    ) -> std::io::Result<()> {
         dataset
             .preload(self.database.as_ref())
             .await

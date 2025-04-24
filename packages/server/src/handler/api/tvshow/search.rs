@@ -5,8 +5,8 @@ use tmdb_api::tvshow::TVShowBase;
 use tmdb_api::tvshow::search::TVShowSearch;
 
 use crate::handler::api::error::ApiError;
-use crate::service::database::Database;
 use crate::service::tmdb::Tmdb;
+use entertainarr_database::Database;
 
 #[derive(Debug, serde::Deserialize)]
 pub struct SearchQuery {
@@ -29,6 +29,6 @@ pub(super) async fn handle(
     if list.is_empty() {
         return Ok(Json(Vec::new()));
     }
-    crate::model::tvshow::upsert_all(db.as_ref(), list.iter()).await?;
+    entertainarr_database::model::tvshow::upsert_all(db.as_ref(), list.iter()).await?;
     Ok(Json(list))
 }

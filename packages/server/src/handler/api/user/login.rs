@@ -4,14 +4,17 @@ use axum_extra::extract::{
     cookie::{Cookie, SameSite},
 };
 
-use crate::{handler::api::error::ApiError, service::database::Database};
+use crate::handler::api::error::ApiError;
+use entertainarr_database::Database;
 
 pub async fn handle(
     Extension(database): Extension<Database>,
     jar: CookieJar,
     Json(payload): Json<entertainarr_api::user::LoginPayload>,
 ) -> Result<(CookieJar, StatusCode), ApiError> {
-    let user = crate::model::user::get_by_name(database.as_ref(), &payload.username).await?;
+    let user =
+        entertainarr_database::model::user::get_by_name(database.as_ref(), &payload.username)
+            .await?;
     let Some(user) = user else {
         return Err(ApiError::new(StatusCode::BAD_REQUEST, "unknown username"));
     };

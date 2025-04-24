@@ -6,8 +6,10 @@ use tmdb_api::tvshow::details::TVShowDetails;
 
 use crate::handler::api::authentication::Authentication;
 use crate::handler::api::error::ApiError;
-use crate::service::database::Database;
 use crate::service::tmdb::Tmdb;
+use entertainarr_database::Database;
+
+use super::season_to_view;
 
 pub async fn handle(
     Extension(db): Extension<Database>,
@@ -15,12 +17,12 @@ pub async fn handle(
     Path(tvshow_id): Path<u64>,
     Authentication(_): Authentication,
 ) -> Result<Json<Vec<TVShowSeason>>, ApiError> {
-    let list = crate::model::tvshow_season::list(db.as_ref(), tvshow_id).await?;
+    let list = entertainarr_database::model::tvshow_season::list(db.as_ref(), tvshow_id).await?;
     if !list.is_empty() {
-        return Ok(Json(list.into_iter().map(From::from).collect()));
+        return Ok(Json(list.into_iter().map(season_to_view).collect()));
     }
     let details = TVShowDetails::new(tvshow_id).execute(tmdb.as_ref()).await?;
-    crate::model::tvshow_season::upsert_all(
+    entertainarr_database::model::tvshow_season::upsert_all(
         db.as_ref(),
         tvshow_id,
         details.seasons.iter().map(|season| &season.inner),

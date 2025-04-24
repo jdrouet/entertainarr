@@ -1,11 +1,12 @@
 use std::borrow::Cow;
 
-use sqlx::SqlitePool;
+pub use sqlx;
+pub mod model;
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Config {
     #[serde(default = "Config::default_url")]
-    url: Cow<'static, str>,
+    pub url: Cow<'static, str>,
 }
 
 impl Default for Config {
@@ -21,8 +22,8 @@ impl Config {
         Cow::Borrowed(":memory:")
     }
 
-    pub(crate) async fn build(&self) -> std::io::Result<Database> {
-        SqlitePool::connect(&self.url)
+    pub async fn build(&self) -> std::io::Result<Database> {
+        sqlx::SqlitePool::connect(&self.url)
             .await
             .map(Database)
             .map_err(std::io::Error::other)
@@ -30,7 +31,7 @@ impl Config {
 }
 
 #[derive(Clone, Debug)]
-pub struct Database(SqlitePool);
+pub struct Database(sqlx::SqlitePool);
 
 impl Database {
     pub async fn migrate(&self) -> std::io::Result<()> {
@@ -46,8 +47,8 @@ impl Database {
     }
 }
 
-impl AsRef<SqlitePool> for Database {
-    fn as_ref(&self) -> &SqlitePool {
+impl AsRef<sqlx::SqlitePool> for Database {
+    fn as_ref(&self) -> &sqlx::SqlitePool {
         &self.0
     }
 }

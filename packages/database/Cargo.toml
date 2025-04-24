@@ -1,0 +1,18 @@
+[package]
+name = "entertainarr-database"
+version = "0.1.0"
+edition = "2024"
+
+
+[dependencies]
+chrono = { workspace = true, default-features = false, features = ["serde"] }
+constcat = "0.6"
+serde = { workspace = true, features = ["derive"] }
+sqlx = { version = "0.8", features = [
+    "chrono",
+    "runtime-tokio",
+    "sqlite",
+    "time",
+] }
+tmdb-api = { workspace = true }
+tracing = { workspace = true }

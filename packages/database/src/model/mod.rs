@@ -1,7 +1,7 @@
-pub(crate) mod tvshow;
-pub(crate) mod tvshow_episode;
-pub(crate) mod tvshow_season;
-pub(crate) mod user;
+pub mod tvshow;
+pub mod tvshow_episode;
+pub mod tvshow_season;
+pub mod user;
 
 #[derive(Clone, Debug, Default, serde::Deserialize)]
 pub struct Dataset {
@@ -10,7 +10,7 @@ pub struct Dataset {
 }
 
 impl Dataset {
-    pub async fn preload<'a>(&self, database: &sqlx::SqlitePool) -> sqlx::Result<()> {
+    pub async fn preload(&self, database: &sqlx::SqlitePool) -> sqlx::Result<()> {
         let mut tx = database.begin().await?;
         for user in self.users.iter() {
             user.persist(&mut *tx).await?;

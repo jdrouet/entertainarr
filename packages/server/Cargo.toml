@@ -10,15 +10,10 @@ chrono = { version = "0.4.40", default-features = false, features = ["serde"] }
 config = { version = "0.15", default-features = false, features = ["toml"] }
 constcat = "0.6.0"
 entertainarr-api = { workspace = true }
+entertainarr-database = { workspace = true }
 entertainarr-storage = { workspace = true }
 regex = { version = "1.11" }
 serde = { version = "1.0", features = ["derive"] }
-sqlx = { version = "0.8", features = [
-    "chrono",
-    "runtime-tokio",
-    "sqlite",
-    "time",
-] }
 tmdb-api = { workspace = true, features = ["commands"] }
 tokio = { version = "1.44", features = ["rt-multi-thread", "macros"] }
 tokio-util = { version = "0.7.14", features = ["io"] }

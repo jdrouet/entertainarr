@@ -1,10 +1,7 @@
-use axum::routing::{get, post};
+use axum::routing::post;
 
-mod list;
 mod login;
 
 pub(crate) fn router() -> axum::Router {
-    axum::Router::new()
-        .route("/", get(list::handle))
-        .route("/login", post(login::handle))
+    axum::Router::new().route("/login", post(login::handle))
 }

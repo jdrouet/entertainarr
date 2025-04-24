@@ -1,6 +1,6 @@
 use sqlx::{FromRow, Row, sqlite::SqliteRow};
 
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, serde::Deserialize)]
 pub struct Entity {
     pub id: u64,
     pub name: Box<str>,
@@ -21,7 +21,7 @@ impl Entity {
         X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
     {
         sqlx::query_as(r#"INSERT INTO users (id, name) VALUES (?, ?) ON CONFLICT DO UPDATE SET name = excluded.name RETURNING id, name"#)
-            .bind(&(self.id as i64))
+            .bind(self.id as i64)
             .bind(&self.name)
             .fetch_one(conn)
             .await

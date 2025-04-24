@@ -491,6 +491,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "entertainarr-database"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "constcat",
+ "serde",
+ "sqlx",
+ "tmdb-api",
+ "tracing",
+]
+
+[[package]]
 name = "entertainarr-server"
 version = "0.1.0"
 dependencies = [
@@ -500,10 +512,10 @@ dependencies = [
  "config",
  "constcat",
  "entertainarr-api",
+ "entertainarr-database",
  "entertainarr-storage",
  "regex",
  "serde",
- "sqlx",
  "tmdb-api",
  "tokio",
  "tokio-util",

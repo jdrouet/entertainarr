@@ -49,7 +49,7 @@ fn switch(routes: Route) -> Html {
 
 #[function_component]
 pub fn App() -> Html {
-    let ctx = use_state(|| Authentication::default());
+    let ctx = use_state(Authentication::default);
 
     html! {
         <ContextProvider<Authentication> context={(*ctx).clone()}>
