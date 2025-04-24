@@ -24,7 +24,7 @@ impl Default for Config {
 
 impl Config {
     pub const fn default_size() -> usize {
-        10
+        100
     }
 
     pub fn build(

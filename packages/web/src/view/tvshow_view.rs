@@ -1,11 +1,12 @@
 use yew::prelude::*;
-use yew_hooks::{UseAsyncOptions, use_async, use_async_with_options};
+use yew_hooks::{UseAsyncOptions, use_async_with_options};
 
 use crate::component::error_message::ErrorMessage;
 use crate::component::follow_button::FollowButton;
 use crate::component::header::Header;
 use crate::component::loading::Loading;
 use crate::component::tvshow_season_cardlet::TVShowSeasonCardlet;
+use crate::hook::tvshow::use_tvshow;
 
 #[derive(Debug, Properties, PartialEq)]
 pub struct Props {
@@ -14,34 +15,29 @@ pub struct Props {
 
 #[function_component(TVShowView)]
 pub fn tvshow_view(props: &Props) -> Html {
-    let tvshow = use_async_with_options(
-        crate::hook::tvshow::get_by_id(props.tvshow_id),
-        UseAsyncOptions::enable_auto(),
-    );
+    let tvshow = use_tvshow(props.tvshow_id);
 
     let seasons = use_async_with_options(
         crate::hook::tvshow::list_seasons(props.tvshow_id),
         UseAsyncOptions::enable_auto(),
     );
 
-    let tvshow_follow = use_async(crate::hook::tvshow::follow(props.tvshow_id));
-    let tvshow_unfollow = use_async(crate::hook::tvshow::unfollow(props.tvshow_id));
-
-    let tvshow_follow_loading = tvshow_follow.loading || tvshow_unfollow.loading;
+    let tvshow_follow_loading = tvshow.follow.loading || tvshow.unfollow.loading;
 
     let on_click_follow = {
         let following = tvshow
+            .inner
             .data
             .as_ref()
-            .map(|item| item.following)
+            .map(|inner| inner.following)
             .unwrap_or(false);
-        let tvshow_follow = tvshow_follow.clone();
-        let tvshow_unfollow = tvshow_unfollow.clone();
+        let follow = tvshow.follow.clone();
+        let unfollow = tvshow.unfollow.clone();
         Callback::from(move |_: MouseEvent| {
             if following {
-                tvshow_unfollow.run();
+                unfollow.run();
             } else {
-                tvshow_follow.run();
+                follow.run();
             }
         })
     };
@@ -51,7 +47,7 @@ pub fn tvshow_view(props: &Props) -> Html {
             <Header />
             <main class="max-w-6xl mx-auto px-4 py-8">
                 {
-                    if let Some(data) = &tvshow.data {
+                    if let Some(data) = &tvshow.inner.data {
                         html! {
                             <div class="flex flex-col md:flex-row gap-6">
                                 <img
@@ -113,9 +109,9 @@ pub fn tvshow_view(props: &Props) -> Html {
                                 </div>
                             </div>
                         }
-                    } else if tvshow.loading {
+                    } else if tvshow.inner.loading {
                         html! { <Loading /> }
-                    } else if let Some(err) = &tvshow.error {
+                    } else if let Some(err) = &tvshow.inner.error {
                         html! { <div class="text-red-600">{ format!("Error: {}", err) }</div> }
                     } else {
                         html! {}

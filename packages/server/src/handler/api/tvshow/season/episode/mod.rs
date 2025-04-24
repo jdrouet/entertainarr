@@ -23,11 +23,8 @@ fn episode_to_view(
 }
 
 pub(super) fn router() -> axum::Router {
-    axum::Router::new()
-        .route("", get(list::handle))
-        .route("/", get(list::handle))
-        .route(
-            "/{episode_number}/watch",
-            post(watch::create).delete(watch::delete),
-        )
+    axum::Router::new().route("/", get(list::handle)).route(
+        "/{episode_number}/watch",
+        post(watch::create).delete(watch::delete),
+    )
 }

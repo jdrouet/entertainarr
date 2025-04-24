@@ -21,7 +21,6 @@ fn season_to_view(
 
 pub(super) fn router() -> axum::Router {
     axum::Router::new()
-        .route("", get(list::handle))
         .route("/", get(list::handle))
         .nest("/{season_number}/episodes", episode::router())
         .route(
