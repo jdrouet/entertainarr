@@ -9,6 +9,8 @@ pub struct Entity {
     pub air_date: Option<chrono::NaiveDate>,
     pub overview: Option<String>,
     pub episode_number: u64,
+    pub watch_progress: Option<u64>,
+    pub watch_completed: Option<bool>,
 }
 
 impl FromRow<'_, SqliteRow> for Entity {
@@ -20,23 +22,42 @@ impl FromRow<'_, SqliteRow> for Entity {
             air_date: row.get(3),
             overview: row.get(4),
             episode_number: row.get(5),
+            watch_progress: row.get(6),
+            watch_completed: row.get(7),
         })
     }
 }
 
-pub async fn list<'a, X>(conn: X, tvshow_id: u64, season_number: u64) -> sqlx::Result<Vec<Entity>>
+pub async fn list<'a, X>(
+    conn: X,
+    user_id: u64,
+    tvshow_id: u64,
+    season_number: u64,
+) -> sqlx::Result<Vec<Entity>>
 where
     X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
 {
-    let sql = r#"SELECT tvshow_episodes.id, tvshow_episodes.season_id, tvshow_episodes.name, tvshow_episodes.air_date, tvshow_episodes.overview, tvshow_episodes.episode_number
+    let sql = r#"SELECT
+    tvshow_episodes.id,
+    tvshow_episodes.season_id,
+    tvshow_episodes.name,
+    tvshow_episodes.air_date,
+    tvshow_episodes.overview,
+    tvshow_episodes.episode_number,
+    watched_tvshow_episodes.progress,
+    watched_tvshow_episodes.completed
 FROM tvshow_episodes
 JOIN tvshow_seasons
     ON tvshow_seasons.id = tvshow_episodes.season_id
     AND tvshow_seasons.tvshow_id = ?
-    AND tvshow_seasons.season_number = ?"#;
+    AND tvshow_seasons.season_number = ?
+LEFT OUTER JOIN watched_tvshow_episodes
+    ON watched_tvshow_episodes.episode_id = tvshow_episodes.id
+    AND watched_tvshow_episodes.user_id = ?"#;
     sqlx::query_as(sql)
         .bind(tvshow_id as i64)
         .bind(season_number as i64)
+        .bind(user_id as i64)
         .fetch_all(conn)
         .await
 }
@@ -199,13 +220,13 @@ mod tests {
         super::create_episode(&db, 2, 2, 4, 1).await;
         super::create_episode(&db, 2, 2, 5, 2).await;
 
-        let list = super::list(db.as_ref(), 1, 1).await?;
+        let list = super::list(db.as_ref(), 1, 1, 1).await?;
         assert_eq!(list.len(), 3);
 
-        let list = super::list(db.as_ref(), 1, 2).await?;
+        let list = super::list(db.as_ref(), 1, 1, 2).await?;
         assert_eq!(list.len(), 2);
 
-        let list = super::list(db.as_ref(), 2, 1).await?;
+        let list = super::list(db.as_ref(), 1, 2, 1).await?;
         assert_eq!(list.len(), 0);
 
         Ok(())
@@ -229,7 +250,7 @@ mod tests {
         super::watched(db.as_ref(), 1, 1, 1, 1, 10, false).await?;
         super::watched(db.as_ref(), 1, 1, 1, 2, 10, true).await?;
 
-        let list = super::list(db.as_ref(), 1, 1).await?;
+        let list = super::list(db.as_ref(), 1, 1, 1).await?;
         assert_eq!(list.len(), 2);
 
         Ok(())

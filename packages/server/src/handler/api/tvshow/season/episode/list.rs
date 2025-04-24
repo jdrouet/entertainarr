@@ -11,10 +11,14 @@ use super::episode_to_view;
 pub async fn handle(
     Extension(db): Extension<Database>,
     Path((tvshow_id, season_number)): Path<(u64, u64)>,
-    Authentication(_): Authentication,
+    Authentication(user_id): Authentication,
 ) -> Result<Json<Vec<TVShowEpisode>>, ApiError> {
-    let list =
-        entertainarr_database::model::tvshow_episode::list(db.as_ref(), tvshow_id, season_number)
-            .await?;
+    let list = entertainarr_database::model::tvshow_episode::list(
+        db.as_ref(),
+        user_id,
+        tvshow_id,
+        season_number,
+    )
+    .await?;
     Ok(Json(list.into_iter().map(episode_to_view).collect()))
 }

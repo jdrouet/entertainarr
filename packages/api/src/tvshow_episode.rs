@@ -1,4 +1,10 @@
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct Watch {
+    pub progress: u64,
+    pub completed: bool,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct TVShowEpisode {
     pub id: u64,
     pub name: String,
@@ -7,16 +13,6 @@ pub struct TVShowEpisode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub overview: Option<String>,
     pub episode_number: u64,
-}
-
-impl From<tmdb_api::tvshow::EpisodeShort> for TVShowEpisode {
-    fn from(value: tmdb_api::tvshow::EpisodeShort) -> Self {
-        Self {
-            id: value.id,
-            name: value.name,
-            air_date: value.air_date,
-            overview: value.overview,
-            episode_number: value.episode_number,
-        }
-    }
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub watch: Option<Watch>,
 }

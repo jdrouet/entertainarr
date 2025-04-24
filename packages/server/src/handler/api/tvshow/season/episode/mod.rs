@@ -12,6 +12,13 @@ fn episode_to_view(
         air_date: value.air_date,
         overview: value.overview,
         episode_number: value.episode_number,
+        watch: match (value.watch_progress, value.watch_completed) {
+            (Some(progress), Some(completed)) => Some(entertainarr_api::tvshow_episode::Watch {
+                progress,
+                completed,
+            }),
+            _ => None,
+        },
     }
 }
 
