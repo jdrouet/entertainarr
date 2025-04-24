@@ -5,7 +5,7 @@ use tmdb_api::tvshow::TVShowBase;
 const BASE_VIEW: &str = r#"SELECT
     tvshows.id, tvshows.name, tvshows.original_name, tvshows.original_language, tvshows.origin_country, tvshows.overview, tvshows.first_air_date, tvshows.poster_path, tvshows.backdrop_path, tvshows.popularity, tvshows.vote_count, tvshows.vote_average, tvshows.adult, followed_tvshows.created_at is not null
 FROM tvshows
-LEFT OUTER JOIN followed_tvshows ON tvshows.id = followed_tvshows.tvshow_id AND followed_tvshows.user_id = ?"#;
+LEFT OUTER JOIN followed_tvshows ON tvshows.id = followed_tvshows.tvshow_id"#;
 
 // with an inner join, won't show for unfollowed
 const FOLLOWED_VIEW: &str = r#"SELECT
@@ -58,7 +58,10 @@ impl FromRow<'_, SqliteRow> for Entity {
     }
 }
 
-const FIND_BY_ID_SQL: &str = constcat::concat!(BASE_VIEW, " WHERE tvshows.id = ? LIMIT 1");
+const FIND_BY_ID_SQL: &str = constcat::concat!(
+    BASE_VIEW,
+    " AND followed_tvshows.user_id = ? WHERE tvshows.id = ? LIMIT 1"
+);
 
 pub async fn find_by_id<'a, X>(
     conn: X,
@@ -82,6 +85,7 @@ where
     let mut qb = QueryBuilder::<Sqlite>::new(
         "INSERT INTO tvshows (id, name, original_name, original_language, origin_country, overview, first_air_date, poster_path, backdrop_path, popularity, vote_count, vote_average, adult) ",
     );
+
     qb.push_values(list, |mut b, item| {
         b.push_bind(item.id as i64)
             .push_bind(item.name.as_str())
@@ -99,8 +103,7 @@ where
     });
 
     qb.push(
-        r#" ON CONFLICT (id)
-DO UPDATE SET
+        r#" ON CONFLICT (id) DO UPDATE SET
     name = excluded.name,
     original_name = excluded.original_name,
     original_language = excluded.original_language,
@@ -113,8 +116,7 @@ DO UPDATE SET
     vote_count = excluded.vote_count,
     vote_average = excluded.vote_average,
     adult = excluded.adult,
-    updated_at = CURRENT_TIMESTAMP
-"#,
+    updated_at = CURRENT_TIMESTAMP"#,
     );
 
     qb.build().execute(conn).await?;
@@ -145,6 +147,24 @@ where
         .execute(conn)
         .await?;
     Ok(())
+}
+
+pub async fn get_by_ids<'a, X>(
+    conn: X,
+    user_id: u64,
+    tvshow_ids: impl Iterator<Item = u64>,
+) -> sqlx::Result<Vec<Entity>>
+where
+    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+{
+    let mut qb = QueryBuilder::<Sqlite>::new(BASE_VIEW);
+    qb.push(" AND followed_tvshows.user_id =")
+        .push_bind(user_id as i64);
+    qb.push(" WHERE false ");
+    for id in tvshow_ids {
+        qb.push("OR tvshows.id = ").push_bind(id as i64);
+    }
+    qb.build_query_as::<Entity>().fetch_all(conn).await
 }
 
 const FOLLOWED_SQL: &str = constcat::concat!(FOLLOWED_VIEW, " LIMIT ? OFFSET ?");
@@ -210,6 +230,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_upsert_and_find_by_id() {
+        crate::enable_tracing();
         let db = setup_db().await;
 
         let show = sample_show(1);
@@ -254,6 +275,9 @@ mod tests {
         let other_user_id = 2;
         let shows: Vec<_> = (1..6).map(sample_show).collect();
         super::upsert_all(db.as_ref(), shows.iter()).await.unwrap();
+
+        let fetched = super::get_by_ids(db.as_ref(), user_id, 1..6).await.unwrap();
+        assert_eq!(fetched.len(), shows.len());
 
         for show in &shows {
             super::follow(db.as_ref(), user_id, show.id).await.unwrap();

@@ -52,3 +52,16 @@ impl AsRef<sqlx::SqlitePool> for Database {
         &self.0
     }
 }
+
+#[cfg(test)]
+fn enable_tracing() {
+    use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+
+    let _ = tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "entertainarr_database=debug".into()),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .try_init();
+}
