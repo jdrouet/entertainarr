@@ -1,4 +1,5 @@
-use sqlx::{FromRow, Row, sqlite::SqliteRow};
+use sqlx::{FromRow, QueryBuilder, Row, Sqlite, sqlite::SqliteRow};
+use tmdb_api::tvshow::EpisodeShort;
 
 #[derive(Clone, Debug)]
 pub struct Entity {
@@ -40,38 +41,38 @@ JOIN tvshow_seasons
         .await
 }
 
-// pub async fn upsert_all<'a, X>(
-//     conn: X,
-//     season_id: u64,
-//     list: impl Iterator<Item = &EpisodeShort>,
-// ) -> sqlx::Result<()>
-// where
-//     X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
-// {
-//     let mut qb = QueryBuilder::<Sqlite>::new(
-//         "INSERT INTO tvshow_episodes (id, season_id, name, air_date, overview, episode_number) ",
-//     );
-//     qb.push_values(list, |mut b, item| {
-//         b.push_bind(item.id as i64)
-//             .push_bind(season_id as i64)
-//             .push_bind(item.name.as_str())
-//             .push_bind(item.air_date.as_ref())
-//             .push_bind(item.overview.as_ref())
-//             .push_bind(item.season_number as i64);
-//     });
+pub async fn upsert_all<'a, X>(
+    conn: X,
+    season_id: u64,
+    list: impl Iterator<Item = &EpisodeShort>,
+) -> sqlx::Result<()>
+where
+    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+{
+    let mut qb = QueryBuilder::<Sqlite>::new(
+        "INSERT INTO tvshow_episodes (id, season_id, name, air_date, overview, episode_number) ",
+    );
+    qb.push_values(list, |mut b, item| {
+        b.push_bind(item.id as i64)
+            .push_bind(season_id as i64)
+            .push_bind(item.name.as_str())
+            .push_bind(item.air_date.as_ref())
+            .push_bind(item.overview.as_ref())
+            .push_bind(item.season_number as i64);
+    });
 
-//     qb.push(
-//         r#" ON CONFLICT (id)
-// DO UPDATE SET
-//     season_id = excluded.season_id,
-//     name = excluded.name,
-//     air_date = excluded.air_date,
-//     overview = excluded.overview,
-//     episode_number = excluded.episode_number,
-//     updated_at = CURRENT_TIMESTAMP
-// "#,
-//     );
+    qb.push(
+        r#" ON CONFLICT (id)
+DO UPDATE SET
+    season_id = excluded.season_id,
+    name = excluded.name,
+    air_date = excluded.air_date,
+    overview = excluded.overview,
+    episode_number = excluded.episode_number,
+    updated_at = CURRENT_TIMESTAMP
+"#,
+    );
 
-//     qb.build().execute(conn).await?;
-//     Ok(())
-// }
+    qb.build().execute(conn).await?;
+    Ok(())
+}

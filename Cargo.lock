@@ -517,6 +517,7 @@ dependencies = [
  "entertainarr-storage",
  "regex",
  "serde",
+ "thiserror 2.0.12",
  "tmdb-api",
  "tokio",
  "tokio-util",

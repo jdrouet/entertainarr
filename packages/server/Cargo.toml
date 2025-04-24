@@ -13,6 +13,7 @@ entertainarr-database = { workspace = true }
 entertainarr-storage = { workspace = true }
 regex = { version = "1.11" }
 serde = { workspace = true, features = ["derive"] }
+thiserror = "2.0.12"
 tmdb-api = { workspace = true, features = ["commands"] }
 tokio = { workspace = true }
 tokio-util = { version = "0.7.14", features = ["io"] }
