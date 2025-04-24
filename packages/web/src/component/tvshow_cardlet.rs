@@ -34,6 +34,17 @@ pub fn tv_show_cardlet(props: &Props) -> Html {
 
             <div class="p-4 flex-1">
                 <h3 class="text-lg font-semibold text-gray-800">{ &show.name }</h3>
+                <div class="flex gap-2 mt-1 text-xs">
+                    if show.following {
+                        <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">{"Following"}</span>
+                    }
+                    if show.completed {
+                        <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded-full">{"Completed"}</span>
+                    }
+                    if show.terminated {
+                        <span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-full">{"Terminated"}</span>
+                    }
+                </div>
                 if let Some(overview) = &show.overview {
                     <p class="text-sm text-gray-600 line-clamp-3 mt-1">{ overview }</p>
                 }

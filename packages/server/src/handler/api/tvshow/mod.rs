@@ -41,5 +41,7 @@ fn tvshow_to_view(
         adult: value.adult,
 
         following: value.following,
+        completed: false,
+        terminated: false,
     }
 }

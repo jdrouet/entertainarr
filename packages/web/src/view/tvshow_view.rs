@@ -91,6 +91,17 @@ pub fn tvshow_view(props: &Props) -> Html {
                                         }}
                                     </div>
 
+                                    if data.completed || data.terminated {
+                                        <div class="flex gap-2 mb-4 text-xs">
+                                            if data.completed {
+                                                <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded-full">{"Completed"}</span>
+                                            }
+                                            if data.terminated {
+                                                <span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-full">{"Terminated"}</span>
+                                            }
+                                        </div>
+                                    }
+
                                     <p class="text-gray-800 leading-relaxed mb-4">
                                         { data.overview.clone().unwrap_or_else(|| "No description available.".to_string()) }
                                     </p>
