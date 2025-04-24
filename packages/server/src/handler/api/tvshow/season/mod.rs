@@ -1,3 +1,4 @@
+pub mod episode;
 pub mod list;
 
 impl From<crate::model::tvshow_season::Entity> for entertainarr_api::tvshow_season::TVShowSeason {

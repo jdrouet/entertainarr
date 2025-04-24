@@ -16,6 +16,10 @@ pub(crate) fn router() -> axum::Router {
             post(follow::create).delete(follow::delete),
         )
         .route("/{tvshow_id}/seasons", get(season::list::handle))
+        .route(
+            "/{tvshow_id}/seasons/{season_number}/episodes",
+            get(season::episode::list::handle),
+        )
 }
 
 impl From<crate::model::tvshow::Entity> for entertainarr_api::tvshow::TVShow {
