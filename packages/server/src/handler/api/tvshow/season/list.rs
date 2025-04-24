@@ -15,24 +15,24 @@ pub async fn handle(
     Extension(db): Extension<Database>,
     Extension(tmdb): Extension<Tmdb>,
     Path(tvshow_id): Path<u64>,
-    Authentication(_): Authentication,
+    Authentication(user_id): Authentication,
 ) -> Result<Json<Vec<TVShowSeason>>, ApiError> {
-    let list = entertainarr_database::model::tvshow_season::list(db.as_ref(), tvshow_id).await?;
+    let list =
+        entertainarr_database::model::tvshow_season::list(db.as_ref(), user_id, tvshow_id).await?;
     if !list.is_empty() {
         return Ok(Json(list.into_iter().map(season_to_view).collect()));
     }
     let details = TVShowDetails::new(tvshow_id).execute(tmdb.as_ref()).await?;
-    entertainarr_database::model::tvshow_season::upsert_all(
-        db.as_ref(),
-        tvshow_id,
-        details.seasons.iter().map(|season| &season.inner),
-    )
-    .await?;
+    if !details.seasons.is_empty() {
+        entertainarr_database::model::tvshow_season::upsert_all(
+            db.as_ref(),
+            tvshow_id,
+            details.seasons.iter().map(|season| &season.inner),
+        )
+        .await?;
+    }
 
-    let list = details
-        .seasons
-        .into_iter()
-        .map(|season| TVShowSeason::from(season.inner))
-        .collect();
-    Ok(Json(list))
+    let list =
+        entertainarr_database::model::tvshow_season::list(db.as_ref(), user_id, tvshow_id).await?;
+    Ok(Json(list.into_iter().map(super::season_to_view).collect()))
 }

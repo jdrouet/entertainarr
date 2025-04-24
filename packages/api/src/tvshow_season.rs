@@ -9,17 +9,6 @@ pub struct TVShowSeason {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub poster_path: Option<String>,
     pub season_number: u64,
-}
-
-impl From<tmdb_api::tvshow::SeasonBase> for TVShowSeason {
-    fn from(value: tmdb_api::tvshow::SeasonBase) -> Self {
-        Self {
-            id: value.id,
-            name: value.name,
-            air_date: value.air_date,
-            overview: value.overview,
-            poster_path: value.poster_path,
-            season_number: value.season_number,
-        }
-    }
+    pub episode_count: u32,
+    pub watched_episode_count: u32,
 }

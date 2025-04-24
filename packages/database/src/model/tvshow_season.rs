@@ -10,6 +10,8 @@ pub struct Entity {
     pub overview: Option<String>,
     pub poster_path: Option<String>,
     pub season_number: u64,
+    pub episode_count: u32,
+    pub watched_episode_count: u32,
 }
 
 impl FromRow<'_, SqliteRow> for Entity {
@@ -22,16 +24,57 @@ impl FromRow<'_, SqliteRow> for Entity {
             overview: row.get(4),
             poster_path: row.get(5),
             season_number: row.get(6),
+            episode_count: row.get(7),
+            watched_episode_count: row.get(8),
         })
     }
 }
 
-pub async fn list<'a, X>(conn: X, tvshow_id: u64) -> sqlx::Result<Vec<Entity>>
+pub async fn list<'a, X>(conn: X, user_id: u64, tvshow_id: u64) -> sqlx::Result<Vec<Entity>>
 where
     X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
 {
-    let sql = "SELECT id, tvshow_id, name, air_date, overview, poster_path, season_number FROM tvshow_seasons WHERE tvshow_id = ?";
+    let sql = r#"WITH tvshow_episodes_subset AS (
+    SELECT tvshow_episodes.*
+    FROM tvshow_episodes
+    JOIN tvshow_seasons
+        ON tvshow_seasons.id = tvshow_episodes.season_id
+        AND tvshow_seasons.tvshow_id = ?
+), tvshow_season_episode_count AS (
+    SELECT
+        tvshow_episodes_subset.season_id AS season_id,
+        count(tvshow_episodes_subset.id) AS episode_count
+    FROM tvshow_episodes_subset
+    GROUP BY tvshow_episodes_subset.season_id
+), tvshow_season_episode_seen AS (
+    SELECT
+        tvshow_episodes_subset.season_id AS season_id,
+        count(tvshow_episodes_subset.id) AS episode_count
+    FROM tvshow_episodes_subset
+    JOIN watched_tvshow_episodes
+        ON watched_tvshow_episodes.episode_id = tvshow_episodes_subset.id
+        AND watched_tvshow_episodes.user_id = ?
+    WHERE watched_tvshow_episodes.completed
+    GROUP BY tvshow_episodes_subset.season_id
+) SELECT
+    tvshow_seasons.id,
+    tvshow_seasons.tvshow_id,
+    tvshow_seasons.name,
+    tvshow_seasons.air_date,
+    tvshow_seasons.overview,
+    tvshow_seasons.poster_path,
+    tvshow_seasons.season_number,
+    ifnull(tvshow_season_episode_count.episode_count, 0),
+    ifnull(tvshow_season_episode_seen.episode_count, 0)
+FROM tvshow_seasons
+LEFT OUTER JOIN tvshow_season_episode_count
+    ON tvshow_season_episode_count.season_id = tvshow_seasons.id
+LEFT OUTER JOIN tvshow_season_episode_seen
+    ON tvshow_season_episode_seen.season_id = tvshow_seasons.id
+WHERE tvshow_id = ?"#;
     sqlx::query_as(sql)
+        .bind(tvshow_id as i64)
+        .bind(user_id as i64)
         .bind(tvshow_id as i64)
         .fetch_all(conn)
         .await
@@ -176,14 +219,51 @@ mod tests {
         crate::model::tvshow::create_tvshow(&db, 2).await;
         super::create_season(&db, 2, 3, 1).await;
 
-        let list = super::list(db.as_ref(), 1).await?;
+        let list = super::list(db.as_ref(), 1, 1).await?;
         assert_eq!(list.len(), 2);
 
-        let list = super::list(db.as_ref(), 2).await?;
+        let list = super::list(db.as_ref(), 1, 2).await?;
         assert_eq!(list.len(), 1);
 
-        let list = super::list(db.as_ref(), 3).await?;
+        let list = super::list(db.as_ref(), 1, 3).await?;
         assert_eq!(list.len(), 0);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn should_mark_as_watched() -> Result<(), sqlx::Error> {
+        let db = crate::init().await;
+        crate::model::user::create_user(1, "alice")
+            .persist(db.as_ref())
+            .await?;
+        crate::model::user::create_user(2, "bob")
+            .persist(db.as_ref())
+            .await?;
+
+        crate::model::tvshow::create_tvshow(&db, 1).await;
+
+        crate::model::tvshow_season::create_season(&db, 1, 1, 1).await;
+        crate::model::tvshow_episode::create_episode(&db, 1, 1, 1, 1).await;
+        crate::model::tvshow_episode::create_episode(&db, 1, 1, 2, 2).await;
+        crate::model::tvshow_episode::create_episode(&db, 1, 1, 3, 3).await;
+
+        crate::model::tvshow_season::create_season(&db, 1, 2, 2).await;
+        crate::model::tvshow_episode::create_episode(&db, 2, 2, 4, 1).await;
+        crate::model::tvshow_episode::create_episode(&db, 2, 2, 5, 2).await;
+
+        crate::model::tvshow_episode::watched(db.as_ref(), 1, 1, 1, 1, 100, true).await?;
+        crate::model::tvshow_episode::watched(db.as_ref(), 1, 1, 1, 2, 10, false).await?;
+
+        let list = super::list(db.as_ref(), 1, 1).await?;
+        assert_eq!(list.len(), 2);
+
+        let season = list.get(0).unwrap();
+        assert_eq!(season.episode_count, 3);
+        assert_eq!(
+            season.watched_episode_count, 1,
+            "should have watched a single episode"
+        );
 
         Ok(())
     }

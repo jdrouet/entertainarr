@@ -14,6 +14,8 @@ fn season_to_view(
         overview: value.overview,
         poster_path: value.poster_path,
         season_number: value.season_number,
+        episode_count: value.episode_count,
+        watched_episode_count: value.watched_episode_count,
     }
 }
 
