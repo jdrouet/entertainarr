@@ -19,7 +19,7 @@ pub fn tv_show_cardlet(props: &Props) -> Html {
         .map(|path| format!("https://image.tmdb.org/t/p/w185{}", path));
 
     html! {
-        <Link<Route> to={Route::TvshowView { id: props.show.id }} classes="flex bg-white shadow-sm rounded-md overflow-hidden hover:shadow-md transition">
+        <Link<Route> to={Route::TvshowView { tvshow_id: props.show.id }} classes="flex bg-white shadow-sm rounded-md overflow-hidden hover:shadow-md transition">
             if let Some(url) = poster_url {
                 <img
                     src={url}

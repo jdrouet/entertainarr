@@ -5,6 +5,7 @@ use crate::component::error_message::ErrorMessage;
 use crate::component::follow_button::FollowButton;
 use crate::component::header::Header;
 use crate::component::loading::Loading;
+use crate::component::tvshow_season_cardlet::TVShowSeasonCardlet;
 
 #[derive(Debug, Properties, PartialEq)]
 pub struct Props {
@@ -133,31 +134,7 @@ pub fn tvshow_view(props: &Props) -> Html {
                                     {
                                         season_list.iter().map(|season| {
                                             html! {
-                                                <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                                                    {
-                                                        if let Some(poster_path) = &season.poster_path {
-                                                            html! {
-                                                                <img
-                                                                    src={format!("https://image.tmdb.org/t/p/w300{}", poster_path)}
-                                                                    alt={season.name.clone()}
-                                                                    class="w-full h-40 object-cover"
-                                                                />
-                                                            }
-                                                        } else {
-                                                            html! {
-                                                                <div class="w-full h-40 bg-gray-300 flex items-center justify-center text-gray-600">
-                                                                    {"No Image"}
-                                                                </div>
-                                                            }
-                                                        }
-                                                    }
-                                                    <div class="px-4 pt-2 pb-3">
-                                                        <h3 class="text-lg font-semibold text-gray-800 mb-1">{ &season.name }</h3>
-                                                        <div class="text-xs text-gray-500">
-                                                            { format!("Air Date: {}", season.air_date.map_or("Unknown".to_string(), |d| d.to_string())) }
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                <TVShowSeasonCardlet tvshow_id={props.tvshow_id} season={season.clone()} />
                                             }
                                         }).collect::<Html>()
                                     }
