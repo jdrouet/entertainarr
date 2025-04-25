@@ -1,8 +1,4 @@
 use entertainarr_database::Database;
-use tmdb_api::{
-    prelude::Command,
-    tvshow::{details::TVShowDetails, season::details::TVShowSeasonDetails},
-};
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 
@@ -10,130 +6,84 @@ use crate::service::{storage::Storage, tmdb::Tmdb};
 
 use super::Action;
 
-#[derive(Debug, thiserror::Error)]
-enum Error {
-    #[error(transparent)]
-    Database(#[from] entertainarr_database::sqlx::Error),
-    #[error(transparent)]
-    Tmdb(#[from] tmdb_api::error::Error),
-}
-
 pub(super) struct Runner {
     cancel: CancellationToken,
-    sender: mpsc::Sender<super::Action>,
-    receiver: mpsc::Receiver<super::Action>,
-    database: Database,
-    #[allow(unused)]
-    storage: Storage,
-    tmdb: Tmdb,
+    context: super::Context,
+    receiver: mpsc::UnboundedReceiver<super::Action>,
 }
 
 impl Runner {
     pub(super) fn new(
         cancel: CancellationToken,
-        sender: mpsc::Sender<super::Action>,
-        receiver: mpsc::Receiver<super::Action>,
+        sender: mpsc::UnboundedSender<super::Action>,
+        receiver: mpsc::UnboundedReceiver<super::Action>,
         database: Database,
         storage: Storage,
         tmdb: Tmdb,
     ) -> Self {
         Self {
             cancel,
-            sender,
+            context: super::Context {
+                sender,
+                database,
+                storage,
+                tmdb,
+            },
             receiver,
-            database,
-            storage,
-            tmdb,
         }
-    }
-
-    async fn sync_tvshow(&self, tvshow_id: u64) -> Result<(), Error> {
-        tracing::debug!("fetching details");
-        let tvshow = TVShowDetails::new(tvshow_id)
-            .execute(self.tmdb.as_ref())
-            .await?;
-
-        tracing::debug!("storing in database");
-        entertainarr_database::model::tvshow::upsert_all(
-            self.database.as_ref(),
-            std::iter::once(&tvshow.inner),
-        )
-        .await?;
-
-        tracing::debug!("delegating new tasks");
-        for action in tvshow
-            .seasons
-            .into_iter()
-            .map(|season| Action::sync_tvshow_season(tvshow_id, season.inner.season_number))
-        {
-            let _ = self.sender.send(action).await;
-        }
-
-        tracing::debug!("done");
-        Ok(())
-    }
-
-    async fn sync_tvshow_season(&self, tvshow_id: u64, season_number: u64) -> Result<(), Error> {
-        tracing::debug!("fetching details");
-        let season = TVShowSeasonDetails::new(tvshow_id, season_number)
-            .execute(self.tmdb.as_ref())
-            .await?;
-
-        tracing::debug!("storing in database");
-        entertainarr_database::model::tvshow_season::upsert_all(
-            self.database.as_ref(),
-            tvshow_id,
-            std::iter::once(&season.inner),
-        )
-        .await?;
-
-        entertainarr_database::model::tvshow_episode::upsert_all(
-            self.database.as_ref(),
-            season.inner.id,
-            season.episodes.iter().map(|item| &item.inner),
-        )
-        .await?;
-        tracing::debug!("completed");
-        Ok(())
     }
 
     #[tracing::instrument(skip(self))]
     async fn handle_action(&self, action: Action) {
         match action.params {
-            super::ActionParams::SyncTvShow { tvshow_id } => {
-                match self.sync_tvshow(tvshow_id).await {
-                    Ok(_) => {}
-                    Err(err) => {
-                        tracing::warn!(message = "unable to synchronize tvshow", cause = %err);
-                        let _ = self
-                            .sender
-                            .send(Action {
-                                params: action.params,
-                                retry: action.retry + 1,
-                            })
-                            .await;
-                    }
+            super::ActionParams::ScanEveryStorage(ref inner) => {
+                if let Err(err) = inner.execute(&self.context).await {
+                    tracing::warn!(
+                        message = "unable to scan every storage",
+                        cause = %err,
+                    );
+                    let _ = self.context.sender.send(Action {
+                        params: action.params,
+                        retry: action.retry + 1,
+                    });
                 }
             }
-            super::ActionParams::SyncTvShowSeason {
-                tvshow_id,
-                season_number,
-            } => match self.sync_tvshow_season(tvshow_id, season_number).await {
-                Ok(_) => {}
-                Err(err) => {
+            super::ActionParams::ScanStoragePath(ref inner) => {
+                if let Err(err) = inner.execute(&self.context).await {
+                    tracing::warn!(
+                        message = "unable to scan storage",
+                        cause = %err,
+                    );
+                    let _ = self.context.sender.send(Action {
+                        params: action.params,
+                        retry: action.retry + 1,
+                    });
+                }
+            }
+            super::ActionParams::SyncTvShow(ref inner) => {
+                if let Err(err) = inner.execute(&self.context).await {
+                    tracing::warn!(
+                        message = "unable to synchronize tvshow",
+                        cause = %err,
+                    );
+                    let _ = self.context.sender.send(Action {
+                        params: action.params,
+                        retry: action.retry + 1,
+                    });
+                }
+            }
+            super::ActionParams::SyncTvShowSeason(ref inner) => {
+                if let Err(err) = inner.execute(&self.context).await {
                     tracing::warn!(
                         message = "unable to synchronize tvshow season",
                         cause = %err,
                     );
-                    let _ = self
-                        .sender
-                        .send(Action {
-                            params: action.params,
-                            retry: action.retry + 1,
-                        })
-                        .await;
+                    let _ = self.context.sender.send(Action {
+                        params: action.params,
+                        retry: action.retry + 1,
+                    });
                 }
-            },
+            }
         }
     }
 

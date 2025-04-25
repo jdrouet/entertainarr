@@ -47,6 +47,10 @@ impl Storage {
         Ok(())
     }
 
+    pub fn sources(&self) -> impl Iterator<Item = (&Box<str>, &source::AnySource)> {
+        self.sources.iter()
+    }
+
     pub fn source(&self, name: &str) -> Option<&source::AnySource> {
         self.sources.get(name)
     }

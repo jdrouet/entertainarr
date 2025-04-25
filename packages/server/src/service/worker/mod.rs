@@ -7,6 +7,10 @@ use tokio_util::sync::CancellationToken;
 use super::{storage::Storage, tmdb::Tmdb};
 
 mod runner;
+mod scan_every_storage;
+mod scan_storage_path;
+mod sync_tvshow;
+mod sync_tvshow_season;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config {
@@ -33,7 +37,7 @@ impl Config {
         storage: Storage,
         tmdb: Tmdb,
     ) -> std::io::Result<Worker> {
-        Worker::new(self.size, database, storage, tmdb)
+        Worker::new(database, storage, tmdb)
     }
 }
 
@@ -41,19 +45,14 @@ impl Config {
 #[derive(Clone, Debug)]
 pub struct Worker {
     cancel: CancellationToken,
-    sender: mpsc::Sender<Action>,
+    sender: mpsc::UnboundedSender<Action>,
     task: Arc<JoinHandle<()>>,
 }
 
 impl Worker {
-    pub fn new(
-        queue_size: usize,
-        database: Database,
-        storage: Storage,
-        tmdb: Tmdb,
-    ) -> std::io::Result<Self> {
+    pub fn new(database: Database, storage: Storage, tmdb: Tmdb) -> std::io::Result<Self> {
         let cancel = CancellationToken::new();
-        let (sender, receiver) = mpsc::channel(queue_size);
+        let (sender, receiver) = mpsc::unbounded_channel();
         let task = runner::Runner::new(
             cancel.clone(),
             sender.clone(),
@@ -70,17 +69,37 @@ impl Worker {
         })
     }
 
-    pub async fn push(&self, action: Action) {
-        if let Err(err) = self.sender.send(action).await {
+    pub fn push(&self, action: Action) {
+        if let Err(err) = self.sender.send(action) {
             tracing::error!(message = "unable to send action to worker queue", cause = %err);
         }
     }
 }
 
 #[derive(Debug)]
+struct Context {
+    sender: mpsc::UnboundedSender<Action>,
+    database: Database,
+    storage: Storage,
+    tmdb: Tmdb,
+}
+
+#[derive(Debug, thiserror::Error)]
+enum Error {
+    #[error(transparent)]
+    Database(#[from] entertainarr_database::sqlx::Error),
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+    #[error(transparent)]
+    Tmdb(#[from] tmdb_api::error::Error),
+}
+
+#[derive(Debug)]
 enum ActionParams {
-    SyncTvShow { tvshow_id: u64 },
-    SyncTvShowSeason { tvshow_id: u64, season_number: u64 },
+    ScanEveryStorage(scan_every_storage::ScanEveryStorage),
+    ScanStoragePath(scan_storage_path::ScanStoragePath),
+    SyncTvShow(sync_tvshow::SyncTVShow),
+    SyncTvShowSeason(sync_tvshow_season::SyncTVShowSeason),
 }
 
 #[derive(Debug)]
@@ -90,19 +109,36 @@ pub struct Action {
 }
 
 impl Action {
+    pub fn scan_storage_full() -> Self {
+        Self {
+            params: ActionParams::ScanEveryStorage(scan_every_storage::ScanEveryStorage),
+            retry: 0,
+        }
+    }
+
+    pub fn scan_storage_path(name: String, path: String) -> Self {
+        Self {
+            params: ActionParams::ScanStoragePath(scan_storage_path::ScanStoragePath {
+                name,
+                path,
+            }),
+            retry: 0,
+        }
+    }
+
     pub fn sync_tvshow(tvshow_id: u64) -> Self {
         Self {
-            params: ActionParams::SyncTvShow { tvshow_id },
+            params: ActionParams::SyncTvShow(sync_tvshow::SyncTVShow { tvshow_id }),
             retry: 0,
         }
     }
 
     pub fn sync_tvshow_season(tvshow_id: u64, season_number: u64) -> Self {
         Self {
-            params: ActionParams::SyncTvShowSeason {
+            params: ActionParams::SyncTvShowSeason(sync_tvshow_season::SyncTVShowSeason {
                 tvshow_id,
                 season_number,
-            },
+            }),
             retry: 0,
         }
     }
