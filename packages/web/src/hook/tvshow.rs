@@ -151,3 +151,22 @@ pub fn use_tvshow_episodes(
         yew_hooks::UseAsyncOptions::enable_auto(),
     )
 }
+
+pub async fn tvshow_sync(tvshow_id: u64) -> Result<(), Arc<gloo_net::Error>> {
+    let url = format!("/api/tvshows/{tvshow_id}/sync");
+    let res = gloo_net::http::Request::post(url.as_str())
+        .credentials(web_sys::RequestCredentials::Include)
+        .send()
+        .await
+        .map_err(Arc::new)?;
+    if res.status() >= 200 && res.status() < 300 {
+        Ok(())
+    } else {
+        res.json().await.map_err(Arc::new)
+    }
+}
+
+#[hook]
+pub fn use_tvshow_sync(tvshow_id: u64) -> UseAsyncHandle<(), Arc<gloo_net::Error>> {
+    use_async(tvshow_sync(tvshow_id))
+}

@@ -22,12 +22,14 @@ impl SyncTVShowSeason {
         )
         .await?;
 
-        entertainarr_database::model::tvshow_episode::upsert_all(
-            ctx.database.as_ref(),
-            season.inner.id,
-            season.episodes.iter().map(|item| &item.inner),
-        )
-        .await?;
+        if !season.episodes.is_empty() {
+            entertainarr_database::model::tvshow_episode::upsert_all(
+                ctx.database.as_ref(),
+                season.inner.id,
+                season.episodes.iter().map(|item| &item.inner),
+            )
+            .await?;
+        }
         tracing::debug!("done");
         Ok(())
     }

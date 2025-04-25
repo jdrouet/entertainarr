@@ -5,12 +5,15 @@ mod get_by_id;
 mod list;
 mod search;
 mod season;
+mod sync;
 
 pub(super) fn router() -> axum::Router {
     axum::Router::new()
         .route("/", get(list::handle))
         .route("/search", get(search::handle))
+        .route("/sync", post(sync::all))
         .route("/{tvshow_id}", get(get_by_id::handle))
+        .route("/{tvshow_id}/sync", post(sync::single))
         .route(
             "/{tvshow_id}/follow",
             post(follow::create).delete(follow::delete),

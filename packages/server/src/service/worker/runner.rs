@@ -34,6 +34,10 @@ impl Runner {
 
     #[tracing::instrument(skip_all, fields(retry = action.retry))]
     async fn handle_action(&self, action: Action) {
+        if action.retry > 10 {
+            tracing::error!(message = "too many retry, aborting", action = ?action);
+            return;
+        }
         match action.params {
             super::ActionParams::AnalyzeFile(ref inner) => {
                 if let Err(err) = inner.execute(&self.context).await {
@@ -63,6 +67,18 @@ impl Runner {
                 if let Err(err) = inner.execute(&self.context).await {
                     tracing::warn!(
                         message = "unable to scan storage",
+                        cause = %err,
+                    );
+                    let _ = self.context.sender.send(Action {
+                        params: action.params,
+                        retry: action.retry + 1,
+                    });
+                }
+            }
+            super::ActionParams::SyncEveryTVShow(ref inner) => {
+                if let Err(err) = inner.execute(&self.context).await {
+                    tracing::warn!(
+                        message = "unable to trigger sync of every tvshow",
                         cause = %err,
                     );
                     let _ = self.context.sender.send(Action {

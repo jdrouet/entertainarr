@@ -186,6 +186,17 @@ where
         .await
 }
 
+pub async fn with_followers<'a, X>(conn: X) -> sqlx::Result<Vec<u64>>
+where
+    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+{
+    let sql = r#"SELECT tvshows.id
+FROM tvshows
+JOIN followed_tvshows ON tvshows.id = followed_tvshows.tvshow_id
+GROUP BY tvshows.id"#;
+    sqlx::query_scalar(sql).fetch_all(conn).await
+}
+
 #[cfg(test)]
 pub fn build_tvshow(id: u64) -> tmdb_api::tvshow::TVShowBase {
     use chrono::NaiveDate;

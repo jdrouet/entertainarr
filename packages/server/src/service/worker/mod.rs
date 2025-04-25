@@ -13,6 +13,7 @@ mod runner;
 mod analyse_file;
 mod scan_every_storage;
 mod scan_storage_path;
+mod sync_every_tvshow;
 mod sync_tvshow;
 mod sync_tvshow_season;
 
@@ -101,6 +102,7 @@ enum ActionParams {
     AnalyzeFile(analyse_file::AnalyseFile),
     ScanEveryStorage(scan_every_storage::ScanEveryStorage),
     ScanStoragePath(scan_storage_path::ScanStoragePath),
+    SyncEveryTVShow(sync_every_tvshow::SyncEveryTVShow),
     SyncTvShow(sync_tvshow::SyncTVShow),
     SyncTvShowSeason(sync_tvshow_season::SyncTVShowSeason),
 }
@@ -132,6 +134,13 @@ impl Action {
                 name,
                 path,
             }),
+            retry: 0,
+        }
+    }
+
+    pub fn sync_every_tvshow() -> Self {
+        Self {
+            params: ActionParams::SyncEveryTVShow(sync_every_tvshow::SyncEveryTVShow),
             retry: 0,
         }
     }

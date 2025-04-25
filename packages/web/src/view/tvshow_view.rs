@@ -6,7 +6,7 @@ use crate::component::follow_button::FollowButton;
 use crate::component::header::Header;
 use crate::component::loading::Loading;
 use crate::component::tvshow_season_cardlet::TVShowSeasonCardlet;
-use crate::hook::tvshow::use_tvshow;
+use crate::hook::tvshow::{use_tvshow, use_tvshow_sync};
 
 #[derive(Debug, Properties, PartialEq)]
 pub struct Props {
@@ -39,6 +39,15 @@ pub fn tvshow_view(props: &Props) -> Html {
             } else {
                 follow.run();
             }
+        })
+    };
+
+    let tvshow_sync = use_tvshow_sync(props.tvshow_id);
+
+    let on_click_refresh = {
+        let refresh = tvshow_sync.clone();
+        Callback::from(move |_: MouseEvent| {
+            refresh.run();
         })
     };
 
@@ -103,8 +112,9 @@ pub fn tvshow_view(props: &Props) -> Html {
                                         { data.overview.clone().unwrap_or_else(|| "No description available.".to_string()) }
                                     </p>
 
-                                    <div class="">
+                                    <div class="flex flex-row gap-2">
                                         <FollowButton onclick={on_click_follow} following={data.following} loading={tvshow_follow_loading} />
+                                        <button class="text-sm px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600" onclick={on_click_refresh}>{"Refresh"}</button>
                                     </div>
                                 </div>
                             </div>
