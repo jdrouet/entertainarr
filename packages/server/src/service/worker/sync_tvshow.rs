@@ -6,6 +6,7 @@ pub(super) struct SyncTVShow {
 }
 
 impl SyncTVShow {
+    #[tracing::instrument(name = "sync_tvshow", skip_all, fields(tvshow_id = %self.tvshow_id))]
     pub(super) async fn execute(&self, ctx: &super::Context) -> Result<(), super::Error> {
         tracing::debug!("fetching details");
         let tvshow = TVShowDetails::new(self.tvshow_id)

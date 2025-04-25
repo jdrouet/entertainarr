@@ -4,6 +4,7 @@ use std::{
 };
 
 use axum::Extension;
+use service::worker::Action;
 
 pub mod prelude;
 
@@ -113,6 +114,7 @@ impl Server {
     }
 
     pub async fn listen(self) -> std::io::Result<()> {
+        self.worker.push(Action::scan_storage_full());
         tracing::debug!("starting server on {}", self.socket_addr);
         let listener = tokio::net::TcpListener::bind(self.socket_addr).await?;
         tracing::info!("server listening on {}", self.socket_addr);

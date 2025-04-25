@@ -33,9 +33,21 @@ impl Runner {
         }
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip_all, fields(retry = action.retry))]
     async fn handle_action(&self, action: Action) {
         match action.params {
+            super::ActionParams::AnalyzeFile(ref inner) => {
+                if let Err(err) = inner.execute(&self.context).await {
+                    tracing::warn!(
+                        message = "unable to analyze file",
+                        cause = %err,
+                    );
+                    let _ = self.context.sender.send(Action {
+                        params: action.params,
+                        retry: action.retry + 1,
+                    });
+                }
+            }
             super::ActionParams::ScanEveryStorage(ref inner) => {
                 if let Err(err) = inner.execute(&self.context).await {
                     tracing::warn!(

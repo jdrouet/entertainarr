@@ -7,6 +7,7 @@ pub(super) struct ScanStoragePath {
 }
 
 impl ScanStoragePath {
+    #[tracing::instrument(name = "scan_storage_path", skip_all, fields(source = %self.name, path = %self.path))]
     pub(super) async fn execute(&self, ctx: &super::Context) -> Result<(), super::Error> {
         tracing::debug!("starting scan");
         let Some(source) = ctx.storage.source(&self.name) else {
@@ -18,7 +19,11 @@ impl ScanStoragePath {
         for entry in entries {
             match entry {
                 entertainarr_storage::entry::EntryInfo::File(file) => {
-                    tracing::debug!(message = "found file", file = ?file);
+                    let _ = ctx.sender.send(super::Action::analyze_file(
+                        self.name.clone(),
+                        self.path.clone(),
+                        file,
+                    ));
                 }
                 entertainarr_storage::entry::EntryInfo::Directory(directory) => {
                     let path = if self.path.is_empty() {

@@ -1,11 +1,13 @@
 use std::sync::Arc;
 
 use entertainarr_database::Database;
+use entertainarr_storage::entry::FileInfo;
 use tokio::{sync::mpsc, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
 
 use super::{storage::Storage, tmdb::Tmdb};
 
+mod analyse_file;
 mod runner;
 mod scan_every_storage;
 mod scan_storage_path;
@@ -96,6 +98,7 @@ enum Error {
 
 #[derive(Debug)]
 enum ActionParams {
+    AnalyzeFile(analyse_file::AnalyseFile),
     ScanEveryStorage(scan_every_storage::ScanEveryStorage),
     ScanStoragePath(scan_storage_path::ScanStoragePath),
     SyncTvShow(sync_tvshow::SyncTVShow),
@@ -109,6 +112,13 @@ pub struct Action {
 }
 
 impl Action {
+    pub fn analyze_file(source: String, path: String, file: FileInfo) -> Self {
+        Self {
+            params: ActionParams::AnalyzeFile(analyse_file::AnalyseFile { source, path, file }),
+            retry: 0,
+        }
+    }
+
     pub fn scan_storage_full() -> Self {
         Self {
             params: ActionParams::ScanEveryStorage(scan_every_storage::ScanEveryStorage),
