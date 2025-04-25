@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
-use entertainarr_api::{tvshow::TVShow, tvshow_season::TVShowSeason};
+use entertainarr_api::{
+    tvshow::TVShow, tvshow_episode::TVShowEpisode, tvshow_season::TVShowSeason,
+};
 use yew::prelude::*;
 use yew_hooks::{UseAsyncHandle, use_async, use_async_with_options};
 
@@ -100,4 +102,52 @@ pub fn use_tvshow(tvshow_id: u64) -> UseTVShow {
         follow,
         unfollow,
     }
+}
+
+pub async fn get_season(
+    tvshow_id: u64,
+    season_number: u64,
+) -> Result<TVShowSeason, Arc<gloo_net::Error>> {
+    let url = format!("/api/tvshows/{tvshow_id}/seasons/{season_number}");
+    let res = gloo_net::http::Request::get(url.as_str())
+        .credentials(web_sys::RequestCredentials::Include)
+        .send()
+        .await
+        .map_err(Arc::new)?;
+    res.json().await.map_err(Arc::new)
+}
+
+#[hook]
+pub fn use_tvshow_season(
+    tvshow_id: u64,
+    season_number: u64,
+) -> UseAsyncHandle<TVShowSeason, Arc<gloo_net::Error>> {
+    use_async_with_options(
+        get_season(tvshow_id, season_number),
+        yew_hooks::UseAsyncOptions::enable_auto(),
+    )
+}
+
+pub async fn list_episodes(
+    tvshow_id: u64,
+    season_number: u64,
+) -> Result<Vec<TVShowEpisode>, Arc<gloo_net::Error>> {
+    let url = format!("/api/tvshows/{tvshow_id}/seasons/{season_number}/episodes");
+    let res = gloo_net::http::Request::get(url.as_str())
+        .credentials(web_sys::RequestCredentials::Include)
+        .send()
+        .await
+        .map_err(Arc::new)?;
+    res.json().await.map_err(Arc::new)
+}
+
+#[hook]
+pub fn use_tvshow_episodes(
+    tvshow_id: u64,
+    season_number: u64,
+) -> UseAsyncHandle<Vec<TVShowEpisode>, Arc<gloo_net::Error>> {
+    use_async_with_options(
+        list_episodes(tvshow_id, season_number),
+        yew_hooks::UseAsyncOptions::enable_auto(),
+    )
 }

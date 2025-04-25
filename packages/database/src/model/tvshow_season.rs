@@ -1,6 +1,45 @@
 use sqlx::{FromRow, QueryBuilder, Row, Sqlite, sqlite::SqliteRow};
 use tmdb_api::tvshow::SeasonBase;
 
+const BASE_QUERY: &str = r#"WITH tvshow_episodes_subset AS (
+SELECT tvshow_episodes.*
+FROM tvshow_episodes
+JOIN tvshow_seasons
+    ON tvshow_seasons.id = tvshow_episodes.season_id
+    AND tvshow_seasons.tvshow_id = ?
+), tvshow_season_episode_count AS (
+SELECT
+    tvshow_episodes_subset.season_id AS season_id,
+    count(tvshow_episodes_subset.id) AS episode_count
+FROM tvshow_episodes_subset
+GROUP BY tvshow_episodes_subset.season_id
+), tvshow_season_episode_seen AS (
+SELECT
+    tvshow_episodes_subset.season_id AS season_id,
+    count(tvshow_episodes_subset.id) AS episode_count
+FROM tvshow_episodes_subset
+JOIN watched_tvshow_episodes
+    ON watched_tvshow_episodes.episode_id = tvshow_episodes_subset.id
+    AND watched_tvshow_episodes.user_id = ?
+WHERE watched_tvshow_episodes.completed
+GROUP BY tvshow_episodes_subset.season_id
+) SELECT
+tvshow_seasons.id,
+tvshow_seasons.tvshow_id,
+tvshow_seasons.name,
+tvshow_seasons.air_date,
+tvshow_seasons.overview,
+tvshow_seasons.poster_path,
+tvshow_seasons.season_number,
+ifnull(tvshow_season_episode_count.episode_count, 0),
+ifnull(tvshow_season_episode_seen.episode_count, 0)
+FROM tvshow_seasons
+LEFT OUTER JOIN tvshow_season_episode_count
+ON tvshow_season_episode_count.season_id = tvshow_seasons.id
+LEFT OUTER JOIN tvshow_season_episode_seen
+ON tvshow_season_episode_seen.season_id = tvshow_seasons.id
+WHERE tvshow_id = ?"#;
+
 #[derive(Clone, Debug)]
 pub struct Entity {
     pub id: u64,
@@ -30,49 +69,30 @@ impl FromRow<'_, SqliteRow> for Entity {
     }
 }
 
+pub async fn find_by_number<'a, X>(
+    conn: X,
+    user_id: u64,
+    tvshow_id: u64,
+    season_number: u64,
+) -> sqlx::Result<Option<Entity>>
+where
+    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+{
+    let sql = constcat::concat!(BASE_QUERY, " AND season_number = ? LIMIT 1");
+    sqlx::query_as(sql)
+        .bind(tvshow_id as i64)
+        .bind(user_id as i64)
+        .bind(tvshow_id as i64)
+        .bind(season_number as i64)
+        .fetch_optional(conn)
+        .await
+}
+
 pub async fn list<'a, X>(conn: X, user_id: u64, tvshow_id: u64) -> sqlx::Result<Vec<Entity>>
 where
     X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
 {
-    let sql = r#"WITH tvshow_episodes_subset AS (
-    SELECT tvshow_episodes.*
-    FROM tvshow_episodes
-    JOIN tvshow_seasons
-        ON tvshow_seasons.id = tvshow_episodes.season_id
-        AND tvshow_seasons.tvshow_id = ?
-), tvshow_season_episode_count AS (
-    SELECT
-        tvshow_episodes_subset.season_id AS season_id,
-        count(tvshow_episodes_subset.id) AS episode_count
-    FROM tvshow_episodes_subset
-    GROUP BY tvshow_episodes_subset.season_id
-), tvshow_season_episode_seen AS (
-    SELECT
-        tvshow_episodes_subset.season_id AS season_id,
-        count(tvshow_episodes_subset.id) AS episode_count
-    FROM tvshow_episodes_subset
-    JOIN watched_tvshow_episodes
-        ON watched_tvshow_episodes.episode_id = tvshow_episodes_subset.id
-        AND watched_tvshow_episodes.user_id = ?
-    WHERE watched_tvshow_episodes.completed
-    GROUP BY tvshow_episodes_subset.season_id
-) SELECT
-    tvshow_seasons.id,
-    tvshow_seasons.tvshow_id,
-    tvshow_seasons.name,
-    tvshow_seasons.air_date,
-    tvshow_seasons.overview,
-    tvshow_seasons.poster_path,
-    tvshow_seasons.season_number,
-    ifnull(tvshow_season_episode_count.episode_count, 0),
-    ifnull(tvshow_season_episode_seen.episode_count, 0)
-FROM tvshow_seasons
-LEFT OUTER JOIN tvshow_season_episode_count
-    ON tvshow_season_episode_count.season_id = tvshow_seasons.id
-LEFT OUTER JOIN tvshow_season_episode_seen
-    ON tvshow_season_episode_seen.season_id = tvshow_seasons.id
-WHERE tvshow_id = ?"#;
-    sqlx::query_as(sql)
+    sqlx::query_as(BASE_QUERY)
         .bind(tvshow_id as i64)
         .bind(user_id as i64)
         .bind(tvshow_id as i64)
