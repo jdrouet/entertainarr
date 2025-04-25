@@ -26,7 +26,12 @@ pub fn home() -> Html {
         <div class="bg-gray-100 min-h-screen">
             <Header />
             <main class="max-w-4xl mx-auto p-6">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">{"TV Shows"}</h2>
+                <div class="flex flex-row justify-between items-center mb-4">
+                    <h1 class="text-2xl font-bold text-gray-800">
+                        {"TV Shows"}
+                    </h1>
+                    <Link<Route> to={Route::TvshowSearch} classes="text-sm px-4 py-2 rounded bg-blue-500 text-white">{"Search"}</Link<Route>>
+                </div>
                 {
                     if tvshows.loading {
                         html! {
