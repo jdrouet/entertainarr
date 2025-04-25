@@ -79,7 +79,7 @@ where
             .push_bind(item.name.as_str())
             .push_bind(item.air_date.as_ref())
             .push_bind(item.overview.as_ref())
-            .push_bind(item.season_number as i64);
+            .push_bind(item.episode_number as i64);
     });
 
     qb.push(
@@ -163,6 +163,75 @@ WHERE user_id = ? AND episode_id IN (
     .execute(conn)
     .await?;
     Ok(())
+}
+
+#[derive(Debug)]
+pub struct EpisodeSearch {
+    pub tvshow_id: u64,
+    pub tvshow_name: String,
+    pub tvshow_year: Option<u16>,
+    pub season_id: u64,
+    pub season_number: u16,
+    pub episode_id: u64,
+    pub episode_number: u16,
+}
+
+impl FromRow<'_, SqliteRow> for EpisodeSearch {
+    fn from_row(row: &'_ SqliteRow) -> Result<Self, sqlx::Error> {
+        Ok(Self {
+            tvshow_id: row.get(0),
+            tvshow_name: row.get(1),
+            tvshow_year: row.get(2),
+            season_id: row.get(3),
+            season_number: row.get(4),
+            episode_id: row.get(5),
+            episode_number: row.get(6),
+        })
+    }
+}
+
+pub async fn search<'a, X>(
+    conn: X,
+    title: &str,
+    _year: Option<u16>,
+    season: u16,
+    episode: u16,
+) -> sqlx::Result<Vec<EpisodeSearch>>
+where
+    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+{
+    let mut query = QueryBuilder::<Sqlite>::new(
+        r#"SELECT
+    tvshows.id, tvshows.name, NULL,
+    tvshow_seasons.id, tvshow_seasons.season_number,
+    tvshow_episodes.id, tvshow_episodes.episode_number
+FROM tvshows
+JOIN tvshow_seasons ON tvshows.id = tvshow_seasons.tvshow_id
+JOIN tvshow_episodes ON tvshow_seasons.id = tvshow_episodes.season_id"#,
+    );
+    query
+        .push(" WHERE tvshow_seasons.season_number = ")
+        .push_bind(season);
+    query
+        .push(" AND tvshow_episodes.episode_number = ")
+        .push_bind(episode);
+    query.push(" AND ( true");
+    for word in title.split(' ') {
+        query
+            .push(" AND lower(tvshows.name) LIKE ")
+            .push_bind(format!("%{word}%"));
+    }
+    query.push(" ) LIMIT 10");
+    tracing::info!(
+        message = query.sql(),
+        season = season,
+        episode = episode,
+        title = title
+    );
+    query
+        .build_query_as::<EpisodeSearch>()
+        .fetch_all(conn)
+        .await
 }
 
 #[cfg(test)]

@@ -1,5 +1,4 @@
 use entertainarr_database::Database;
-use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 
 use crate::service::{storage::Storage, tmdb::Tmdb};
@@ -9,14 +8,14 @@ use super::Action;
 pub(super) struct Runner {
     cancel: CancellationToken,
     context: super::Context,
-    receiver: mpsc::UnboundedReceiver<super::Action>,
+    receiver: super::queue::Receiver<super::Action>,
 }
 
 impl Runner {
     pub(super) fn new(
         cancel: CancellationToken,
-        sender: mpsc::UnboundedSender<super::Action>,
-        receiver: mpsc::UnboundedReceiver<super::Action>,
+        sender: super::queue::Sender<super::Action>,
+        receiver: super::queue::Receiver<super::Action>,
         database: Database,
         storage: Storage,
         tmdb: Tmdb,
@@ -103,16 +102,10 @@ impl Runner {
         tokio::select! {
             _ = self.cancel.cancelled() => {
                 tracing::info!("worker is being stopped");
-                self.receiver.close();
             },
-            maybe = self.receiver.recv() => {
-                match maybe {
-                    Some(action) => {
-                        self.handle_action(action).await;
-                    }
-                    None => {
-                        tracing::debug!("receiver is closed");
-                    }
+            maybe_action = self.receiver.recv() => {
+                if let Some(action) = maybe_action {
+                    self.handle_action(action).await;
                 }
             },
         };

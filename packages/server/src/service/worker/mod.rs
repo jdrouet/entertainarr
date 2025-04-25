@@ -2,13 +2,15 @@ use std::sync::Arc;
 
 use entertainarr_database::Database;
 use entertainarr_storage::entry::FileInfo;
-use tokio::{sync::mpsc, task::JoinHandle};
+use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
 use super::{storage::Storage, tmdb::Tmdb};
 
-mod analyse_file;
+mod queue;
 mod runner;
+
+mod analyse_file;
 mod scan_every_storage;
 mod scan_storage_path;
 mod sync_tvshow;
@@ -47,14 +49,14 @@ impl Config {
 #[derive(Clone, Debug)]
 pub struct Worker {
     cancel: CancellationToken,
-    sender: mpsc::UnboundedSender<Action>,
+    sender: queue::Sender<Action>,
     task: Arc<JoinHandle<()>>,
 }
 
 impl Worker {
     pub fn new(database: Database, storage: Storage, tmdb: Tmdb) -> std::io::Result<Self> {
         let cancel = CancellationToken::new();
-        let (sender, receiver) = mpsc::unbounded_channel();
+        let (sender, receiver) = queue::channel();
         let task = runner::Runner::new(
             cancel.clone(),
             sender.clone(),
@@ -71,16 +73,14 @@ impl Worker {
         })
     }
 
-    pub fn push(&self, action: Action) {
-        if let Err(err) = self.sender.send(action) {
-            tracing::error!(message = "unable to send action to worker queue", cause = %err);
-        }
+    pub async fn push(&self, action: Action) {
+        let _ = self.sender.send(action);
     }
 }
 
 #[derive(Debug)]
 struct Context {
-    sender: mpsc::UnboundedSender<Action>,
+    sender: queue::Sender<Action>,
     database: Database,
     storage: Storage,
     tmdb: Tmdb,

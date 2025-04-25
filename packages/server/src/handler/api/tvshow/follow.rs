@@ -21,7 +21,7 @@ pub(super) async fn create(
     let item = tvshow::find_by_id(&mut *tx, user_id, tvshow_id).await?;
     let item = item.ok_or_else(|| ApiError::not_found("tvshow not found"))?;
     tx.commit().await?;
-    worker.push(Action::sync_tvshow(tvshow_id));
+    worker.push(Action::sync_tvshow(tvshow_id)).await;
     Ok(Json(tvshow_to_view(item)))
 }
 

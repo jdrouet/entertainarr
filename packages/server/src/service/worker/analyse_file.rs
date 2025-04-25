@@ -1,5 +1,6 @@
 use std::cell::LazyCell;
 
+use entertainarr_database::model;
 use entertainarr_storage::entry::FileInfo;
 
 const TVSHOW_FILENAME_PARSER: LazyCell<TVShowFilenameParser> =
@@ -62,6 +63,39 @@ impl AnalyseFile {
             season = file.season,
             episode = file.episode
         );
+        let mut tx = ctx.database.as_ref().begin().await?;
+        let mut episodes = model::tvshow_episode::search(
+            &mut *tx,
+            &file.title,
+            file.year,
+            file.season,
+            file.episode,
+        )
+        .await?;
+        if episodes.is_empty() {
+            tracing::debug!("no matching episodes, maybe nobody is following it");
+            return Ok(());
+        }
+        if episodes.len() != 1 {
+            tracing::warn!("multiple possible episodes, not yet implemented");
+            return Ok(());
+        }
+        let episode = episodes.pop().unwrap();
+
+        let file_entity = model::file::Entity {
+            id: 0,
+            source: self.source.clone(),
+            directory: self.path.clone(),
+            filename: self.file.name.clone(),
+            size: self.file.size,
+            created_at: self.file.created_at,
+            modified_at: self.file.modified_at,
+        };
+        let db_file = model::file::upsert(&mut *tx, &file_entity).await?;
+        model::tvshow_episode_file::Entity::new(db_file.id, episode.episode_id)
+            .upsert(&mut *tx)
+            .await?;
+        tx.commit().await?;
         Ok(())
     }
 
