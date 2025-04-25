@@ -89,7 +89,7 @@ pub fn tvshow_season_view(props: &Props) -> Html {
                                 html! { <span class="text-gray-500 text-sm">{"Not Watched"}</span> }
                             };
 
-                            let file_status = if false {
+                            let file_status = if episode.file_count > 0 {
                                 html! { <span class="text-blue-600 font-medium text-sm">{"Available"}</span> }
                             } else {
                                 html! { <span class="text-red-500 font-medium text-sm">{"Not Available"}</span> }

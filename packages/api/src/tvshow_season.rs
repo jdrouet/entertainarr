@@ -9,6 +9,8 @@ pub struct TVShowSeason {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub poster_path: Option<String>,
     pub season_number: u64,
+    #[serde(default, skip_serializing_if = "crate::is_u32_zero")]
     pub episode_count: u32,
+    #[serde(default, skip_serializing_if = "crate::is_u32_zero")]
     pub watched_episode_count: u32,
 }

@@ -19,6 +19,7 @@ fn episode_to_view(
             }),
             _ => None,
         },
+        file_count: value.file_count,
     }
 }
 

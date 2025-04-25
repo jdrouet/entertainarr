@@ -17,6 +17,7 @@ pub struct TVShow {
     pub popularity: f64,
     pub vote_count: u64,
     pub vote_average: f64,
+    #[serde(default, skip_serializing_if = "crate::is_false")]
     pub adult: bool,
 
     #[serde(default)]
