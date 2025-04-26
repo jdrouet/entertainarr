@@ -8,6 +8,10 @@ mod storage;
 mod tvshow;
 mod user;
 
+async fn not_found() -> error::ApiError {
+    error::ApiError::not_found("endpoint not found")
+}
+
 pub(crate) fn router() -> axum::Router {
     axum::Router::new()
         .route("/status", head(status::handle))
@@ -15,4 +19,5 @@ pub(crate) fn router() -> axum::Router {
         .nest("/movies", movie::router())
         .nest("/tvshows", tvshow::router())
         .nest("/users", user::router())
+        .fallback(not_found)
 }

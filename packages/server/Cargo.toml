@@ -11,6 +11,7 @@ config = { version = "0.15", default-features = false, features = ["toml"] }
 entertainarr-api = { workspace = true }
 entertainarr-database = { workspace = true }
 entertainarr-storage = { workspace = true }
+include_dir = { version = "0.7" }
 mime_guess = "2.0"
 regex = { version = "1.11" }
 serde = { workspace = true, features = ["derive"] }
