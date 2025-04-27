@@ -14,32 +14,41 @@ pub struct Props {
 pub fn tv_show_cardlet(props: &Props) -> Html {
     let season = &props.season;
 
+    let air_date = season
+        .air_date
+        .map(|date| date.format("%Y-%m-%d").to_string())
+        .unwrap_or_else(|| "Unknown".to_string());
+
     html! {
-        <Link<Route> to={Route::TvshowSeasonView { tvshow_id: props.tvshow_id, season_number: props.season.season_number }} classes="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-md transition">
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                {
-                    if let Some(poster_path) = &season.poster_path {
-                        html! {
-                            <img
-                                src={format!("https://image.tmdb.org/t/p/w300{}", poster_path)}
-                                alt={season.name.clone()}
-                                class="w-full h-40 object-cover"
-                            />
-                        }
-                    } else {
-                        html! {
-                            <div class="w-full h-40 bg-gray-300 flex items-center justify-center text-gray-600">
-                                {"No Image"}
-                            </div>
-                        }
-                    }
-                }
-                <div class="px-4 pt-2 pb-3">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-1">{ &season.name }</h3>
-                    <div class="text-xs text-gray-500">
-                        { format!("Air Date: {}", season.air_date.map_or("Unknown".to_string(), |d| d.to_string())) }
-                    </div>
+        <Link<Route> to={Route::TvshowSeasonView { tvshow_id: props.tvshow_id, season_number: props.season.season_number }} classes="w-[180px] bg-white rounded-lg shadow-md overflow-hidden hover:shadow-md relative hover:shadow-lg transition">
+            if let Some(poster_path) = &season.poster_path {
+                <img
+                    src={format!("https://image.tmdb.org/t/p/w300{}", poster_path)}
+                    alt={season.name.clone()}
+                    class="w-full h-[250px] object-cover"
+                />
+            } else {
+                <div class="w-full h-[250px] flex items-center justify-center bg-gray-700 text-white">
+                    {"No Image"}
                 </div>
+            }
+
+
+            <div class="absolute top-2 right-2 flex flex-row gap-2">
+                if season.episode_count > 0 {
+                    <div class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow">
+                        if season.episode_count > season.watched_episode_count {
+                            { season.episode_count - season.watched_episode_count }
+                        } else {
+                            {"🗸"}
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="px-3 py-2 h-[60px] flex flex-col justify-center text-center">
+                <div class="font-semibold text-sm truncate">{ &season.name }</div>
+                <div class="text-gray-800 text-xs">{ air_date }</div>
             </div>
         </Link<Route>>
     }

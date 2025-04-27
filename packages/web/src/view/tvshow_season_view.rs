@@ -3,6 +3,7 @@ use yew::prelude::*;
 use crate::component::error_message::ErrorMessage;
 use crate::component::header::Header;
 use crate::component::loading::Loading;
+use crate::hook::tvshow::use_tvshow;
 use crate::hook::tvshow::use_tvshow_episodes;
 use crate::hook::tvshow::use_tvshow_season;
 
@@ -14,60 +15,47 @@ pub struct Props {
 
 #[function_component(TVShowSeasonView)]
 pub fn tvshow_season_view(props: &Props) -> Html {
+    let tvshow = use_tvshow(props.tvshow_id);
     let season = use_tvshow_season(props.tvshow_id, props.season_number);
     let episodes = use_tvshow_episodes(props.tvshow_id, props.season_number);
+
+    let tvshow_name = tvshow.inner.data.as_ref().map(|inner| inner.name.as_str());
 
     html! {
         <div class="bg-gray-100 min-h-screen">
             <Header />
-            <main class="max-w-6xl mx-auto px-4 py-6 space-y-8">
+            <main class="max-w-6xl mx-auto px-4 py-8">
                 if let Some(err) = &season.error {
                     <ErrorMessage error={err.to_string()} />
                 } else if let Some(season) = &season.data {
-                    <div class="bg-white rounded-lg shadow flex flex-col md:flex-row overflow-hidden">
-                        {
-                            if let Some(poster) = &season.poster_path {
-                                html! {
-                                    <img
-                                        src={format!("https://image.tmdb.org/t/p/w300{}", poster)}
-                                        alt="Season Poster"
-                                        class="w-full md:w-48 h-auto object-cover"
-                                    />
-                                }
-                            } else {
-                                html! {
-                                    <div class="w-full md:w-48 h-72 bg-gray-200 flex items-center justify-center text-gray-400">
-                                        {"No Image"}
-                                    </div>
-                                }
-                            }
-                        }
-                        <div class="p-6 flex flex-col justify-between">
-                            <div>
-                                <h2 class="text-2xl font-bold text-gray-800">
-                                    { format!("Season {} - {}", season.season_number, season.name) }
-                                </h2>
-                                {
-                                    if let Some(date) = season.air_date {
-                                        html! {
-                                            <p class="text-sm text-gray-500 mt-1">
-                                                { format!("Aired on {}", date.format("%B %d, %Y")) }
-                                            </p>
-                                        }
-                                    } else {
-                                        html!()
-                                    }
-                                }
-                                {
-                                    if let Some(overview) = &season.overview {
-                                        html! {
-                                            <p class="mt-4 text-gray-700">{ overview }</p>
-                                        }
-                                    } else {
-                                        html!()
-                                    }
-                                }
+                    <div class="flex flex-col md:flex-row gap-6 mb-6">
+                        if let Some(path) = season.poster_path.as_ref() {
+                            <div class="w-full md:w-1/6">
+                                <img
+                                    class="max-h-[300px] mx-auto rounded-lg shadow-md"
+                                    src={format!("https://image.tmdb.org/t/p/w500{path}")}
+                                    alt={season.name.clone()}
+                                />
                             </div>
+                        }
+
+                        <div class="flex-1">
+                            <h1 class="text-3xl font-bold text-gray-900 mb-1">
+                                if let Some(name) = tvshow_name {
+                                    {name}
+                                }
+                            </h1>
+                            <h2 class="text-2xl font-bold text-gray-800">
+                                {season.name.as_str()}
+                            </h2>
+                            if let Some(date) = season.air_date {
+                                <p class="text-sm text-gray-500 mt-1">
+                                    { format!("Aired on {}", date.format("%B %d, %Y")) }
+                                </p>
+                            }
+                            if let Some(overview) = &season.overview {
+                                <p class="mt-4 text-gray-700">{ overview }</p>
+                            }
                             <p class="text-sm text-gray-600 mt-4">
                                 { format!("{} episodes • {} watched", season.episode_count, season.watched_episode_count) }
                             </p>
