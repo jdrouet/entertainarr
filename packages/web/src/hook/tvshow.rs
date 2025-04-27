@@ -60,11 +60,33 @@ pub async fn unfollow(tvshow_id: u64) -> Result<TVShow, Arc<gloo_net::Error>> {
     res.json().await.map_err(Arc::new)
 }
 
+pub async fn watch(tvshow_id: u64) -> Result<TVShow, Arc<gloo_net::Error>> {
+    let url = format!("/api/tvshows/{tvshow_id}/watch");
+    let res = gloo_net::http::Request::post(url.as_str())
+        .credentials(web_sys::RequestCredentials::Include)
+        .send()
+        .await
+        .map_err(Arc::new)?;
+    res.json().await.map_err(Arc::new)
+}
+
+pub async fn unwatch(tvshow_id: u64) -> Result<TVShow, Arc<gloo_net::Error>> {
+    let url = format!("/api/tvshows/{tvshow_id}/watch");
+    let res = gloo_net::http::Request::delete(url.as_str())
+        .credentials(web_sys::RequestCredentials::Include)
+        .send()
+        .await
+        .map_err(Arc::new)?;
+    res.json().await.map_err(Arc::new)
+}
+
 #[derive(Clone)]
 pub struct UseTVShow {
     pub inner: UseAsyncHandle<TVShow, Arc<gloo_net::Error>>,
     pub follow: UseAsyncHandle<(), Arc<gloo_net::Error>>,
     pub unfollow: UseAsyncHandle<(), Arc<gloo_net::Error>>,
+    pub watch: UseAsyncHandle<(), Arc<gloo_net::Error>>,
+    pub unwatch: UseAsyncHandle<(), Arc<gloo_net::Error>>,
 }
 
 #[hook]
@@ -97,10 +119,36 @@ pub fn use_tvshow(tvshow_id: u64) -> UseTVShow {
             }
         })
     };
+    let watch = {
+        let load = load.clone();
+        use_async(async move {
+            match watch(tvshow_id).await {
+                Ok(res) => {
+                    load.update(res);
+                    Ok(())
+                }
+                Err(err) => Err(err),
+            }
+        })
+    };
+    let unwatch = {
+        let load = load.clone();
+        use_async(async move {
+            match unwatch(tvshow_id).await {
+                Ok(res) => {
+                    load.update(res);
+                    Ok(())
+                }
+                Err(err) => Err(err),
+            }
+        })
+    };
     UseTVShow {
         inner: load,
         follow,
         unfollow,
+        watch,
+        unwatch,
     }
 }
 

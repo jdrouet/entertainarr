@@ -1,17 +1,49 @@
 use sqlx::{FromRow, QueryBuilder, Row, Sqlite, sqlite::SqliteRow};
 use tmdb_api::tvshow::TVShowBase;
 
-// with left outer join
-const BASE_VIEW: &str = r#"SELECT
-    tvshows.id, tvshows.name, tvshows.original_name, tvshows.original_language, tvshows.origin_country, tvshows.overview, tvshows.first_air_date, tvshows.poster_path, tvshows.backdrop_path, tvshows.popularity, tvshows.vote_count, tvshows.vote_average, tvshows.adult, followed_tvshows.created_at is not null
-FROM tvshows
-LEFT OUTER JOIN followed_tvshows ON tvshows.id = followed_tvshows.tvshow_id"#;
+fn with_views(user_id: u64) -> QueryBuilder<'static, Sqlite> {
+    let mut qb = QueryBuilder::<Sqlite>::new("WITH tvshow_episode_count AS (");
+    qb.push(" SELECT tvshow_seasons.tvshow_id, count(tvshow_episodes.id) AS episode_count");
+    qb.push(" FROM tvshow_seasons");
+    qb.push(" JOIN tvshow_episodes ON tvshow_seasons.id = tvshow_episodes.season_id");
+    qb.push(" GROUP BY tvshow_seasons.tvshow_id");
+    qb.push("), tvshow_episode_seen AS (");
+    qb.push(" SELECT tvshow_seasons.tvshow_id, count(tvshow_episodes.id) AS episode_seen_count");
+    qb.push(" FROM tvshow_seasons");
+    qb.push(" JOIN tvshow_episodes ON tvshow_seasons.id = tvshow_episodes.season_id");
+    qb.push(" JOIN watched_tvshow_episodes ON tvshow_episodes.id = watched_tvshow_episodes.episode_id AND watched_tvshow_episodes.user_id = ").push_bind(user_id as i64);
+    qb.push(" GROUP BY tvshow_seasons.tvshow_id");
+    qb.push(") ");
+    qb
+}
 
-// with an inner join, won't show for unfollowed
-const FOLLOWED_VIEW: &str = r#"SELECT
-    tvshows.id, tvshows.name, tvshows.original_name, tvshows.original_language, tvshows.origin_country, tvshows.overview, tvshows.first_air_date, tvshows.poster_path, tvshows.backdrop_path, tvshows.popularity, tvshows.vote_count, tvshows.vote_average, tvshows.adult, followed_tvshows.created_at is not null
-FROM tvshows
-JOIN followed_tvshows ON tvshows.id = followed_tvshows.tvshow_id AND followed_tvshows.user_id = ?"#;
+fn with_base(user_id: u64) -> QueryBuilder<'static, Sqlite> {
+    let mut qb = with_views(user_id);
+    qb.push(" SELECT");
+    qb.push(" tvshows.id, tvshows.name, tvshows.original_name, tvshows.original_language, tvshows.origin_country, tvshows.overview, tvshows.first_air_date, tvshows.poster_path, tvshows.backdrop_path, tvshows.popularity, tvshows.vote_count, tvshows.vote_average, tvshows.adult");
+    qb.push(", followed_tvshows.created_at is not null");
+    qb.push(", ifnull(tvshow_episode_count.episode_count, 0)");
+    qb.push(", ifnull(tvshow_episode_seen.episode_seen_count, 0)");
+    qb.push(" FROM tvshows");
+    qb.push(" LEFT OUTER JOIN followed_tvshows ON tvshows.id = followed_tvshows.tvshow_id AND followed_tvshows.user_id = ").push_bind(user_id as i64);
+    qb.push(" LEFT OUTER JOIN tvshow_episode_count ON tvshow_episode_count.tvshow_id = tvshows.id");
+    qb.push(" LEFT OUTER JOIN tvshow_episode_seen ON tvshow_episode_seen.tvshow_id = tvshows.id");
+    qb
+}
+
+fn with_followed(user_id: u64) -> QueryBuilder<'static, Sqlite> {
+    let mut qb = with_views(user_id);
+    qb.push(" SELECT");
+    qb.push(" tvshows.id, tvshows.name, tvshows.original_name, tvshows.original_language, tvshows.origin_country, tvshows.overview, tvshows.first_air_date, tvshows.poster_path, tvshows.backdrop_path, tvshows.popularity, tvshows.vote_count, tvshows.vote_average, tvshows.adult");
+    qb.push(", followed_tvshows.created_at is not null");
+    qb.push(", ifnull(tvshow_episode_count.episode_count, 0)");
+    qb.push(", ifnull(tvshow_episode_seen.episode_seen_count, 0)");
+    qb.push(" FROM tvshows");
+    qb.push(" JOIN followed_tvshows ON tvshows.id = followed_tvshows.tvshow_id AND followed_tvshows.user_id = ").push_bind(user_id as i64);
+    qb.push(" LEFT OUTER JOIN tvshow_episode_count ON tvshow_episode_count.tvshow_id = tvshows.id");
+    qb.push(" LEFT OUTER JOIN tvshow_episode_seen ON tvshow_episode_seen.tvshow_id = tvshows.id");
+    qb
+}
 
 #[derive(Clone, Debug)]
 pub struct Entity {
@@ -29,6 +61,8 @@ pub struct Entity {
     pub vote_average: f64,
     pub adult: bool,
     pub following: bool,
+    pub episode_count: u32,
+    pub watched_episode_count: u32,
 }
 
 impl FromRow<'_, SqliteRow> for Entity {
@@ -54,14 +88,11 @@ impl FromRow<'_, SqliteRow> for Entity {
             vote_average: row.get(11),
             adult: row.get(12),
             following: row.get(13),
+            episode_count: row.get(14),
+            watched_episode_count: row.get(15),
         })
     }
 }
-
-const FIND_BY_ID_SQL: &str = constcat::concat!(
-    BASE_VIEW,
-    " AND followed_tvshows.user_id = ? WHERE tvshows.id = ? LIMIT 1"
-);
 
 pub async fn find_by_id<'a, X>(
     conn: X,
@@ -71,9 +102,11 @@ pub async fn find_by_id<'a, X>(
 where
     X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
 {
-    sqlx::query_as(FIND_BY_ID_SQL)
-        .bind(user_id as i64)
-        .bind(tvshow_id as i64)
+    let mut qb = with_base(user_id);
+    qb.push(" WHERE tvshows.id = ").push_bind(tvshow_id as i64);
+    qb.push(" LIMIT 1");
+    qb.build_query_as::<Entity>()
+        .persistent(true)
         .fetch_optional(conn)
         .await
 }
@@ -157,17 +190,14 @@ pub async fn get_by_ids<'a, X>(
 where
     X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
 {
-    let mut qb = QueryBuilder::<Sqlite>::new(BASE_VIEW);
-    qb.push(" AND followed_tvshows.user_id =")
-        .push_bind(user_id as i64);
+    let mut qb = with_base(user_id);
     qb.push(" WHERE false ");
     for id in tvshow_ids {
         qb.push("OR tvshows.id = ").push_bind(id as i64);
     }
-    qb.build_query_as::<Entity>().fetch_all(conn).await
+    let query = qb.build_query_as::<Entity>();
+    query.fetch_all(conn).await
 }
-
-const FOLLOWED_SQL: &str = constcat::concat!(FOLLOWED_VIEW, " LIMIT ? OFFSET ?");
 
 pub async fn followed<'a, X>(
     conn: X,
@@ -178,10 +208,12 @@ pub async fn followed<'a, X>(
 where
     X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
 {
-    sqlx::query_as(FOLLOWED_SQL)
-        .bind(user_id as i64)
-        .bind(count)
-        .bind(offset)
+    let mut qb = with_followed(user_id);
+    qb.push(" ORDER BY tvshows.name");
+    qb.push(" LIMIT ").push_bind(count);
+    qb.push(" OFFSET ").push_bind(offset);
+    qb.build_query_as::<Entity>()
+        .persistent(true)
         .fetch_all(conn)
         .await
 }
@@ -195,6 +227,49 @@ FROM tvshows
 JOIN followed_tvshows ON tvshows.id = followed_tvshows.tvshow_id
 GROUP BY tvshows.id"#;
     sqlx::query_scalar(sql).fetch_all(conn).await
+}
+
+pub async fn watched<'a, X>(conn: X, user_id: u64, tvshow_id: u64) -> sqlx::Result<()>
+where
+    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+{
+    sqlx::query(
+        r#"INSERT OR REPLACE INTO watched_tvshow_episodes (user_id, episode_id, progress, completed)
+SELECT ?, tvshow_episodes.id, 0, true
+FROM tvshow_episodes
+JOIN tvshow_seasons
+    ON tvshow_seasons.id = tvshow_episodes.season_id
+WHERE tvshow_seasons.tvshow_id = ?
+ON CONFLICT DO UPDATE SET
+    progress = excluded.progress,
+    completed = excluded.completed,
+    updated_at = CURRENT_TIMESTAMP"#,
+    )
+    .bind(user_id as i64)
+    .bind(tvshow_id as i64)
+    .execute(conn)
+    .await?;
+    Ok(())
+}
+
+pub async fn unwatched<'a, X>(conn: X, user_id: u64, tvshow_id: u64) -> sqlx::Result<()>
+where
+    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+{
+    sqlx::query(
+        r#"DELETE FROM watched_tvshow_episodes
+WHERE user_id = ? AND episode_id IN (
+    SELECT tvshow_episodes.id
+    FROM tvshow_episodes
+    JOIN tvshow_seasons ON tvshow_seasons.id = tvshow_episodes.season_id
+    WHERE tvshow_seasons.tvshow_id = ?
+)"#,
+    )
+    .bind(user_id as i64)
+    .bind(tvshow_id as i64)
+    .execute(conn)
+    .await?;
+    Ok(())
 }
 
 #[cfg(test)]

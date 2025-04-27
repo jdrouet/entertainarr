@@ -23,7 +23,16 @@ pub struct TVShow {
     #[serde(default)]
     pub following: bool,
     #[serde(default)]
-    pub completed: bool,
+    pub episode_count: u32,
+    #[serde(default)]
+    pub watched_episode_count: u32,
+    /// when there will be no more episodes
     #[serde(default)]
     pub terminated: bool,
+}
+
+impl TVShow {
+    pub fn watch_completed(&self) -> bool {
+        self.episode_count > 0 && self.episode_count == self.watched_episode_count
+    }
 }

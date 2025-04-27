@@ -25,7 +25,7 @@ pub fn home() -> Html {
     html! {
         <div class="bg-gray-100 min-h-screen">
             <Header />
-            <main class="max-w-4xl mx-auto p-6">
+            <main class="max-w-6xl mx-auto p-6">
                 <div class="flex flex-row justify-between items-center mb-4">
                     <h1 class="text-2xl font-bold text-gray-800">
                         {"TV Shows"}
@@ -72,7 +72,7 @@ pub fn home() -> Html {
                             }
                         } else {
                             html! {
-                                <div class="grid gap-4">
+                                <div class="grid grid-cols-3 gap-4">
                                     { for shows.iter().map(|show| html! {
                                         <TVShowCardlet show={show.clone()} />
                                     }) }

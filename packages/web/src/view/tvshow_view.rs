@@ -45,9 +45,16 @@ pub fn tvshow_view(props: &Props) -> Html {
     let tvshow_sync = use_tvshow_sync(props.tvshow_id);
 
     let on_click_refresh = {
-        let refresh = tvshow_sync.clone();
+        let trigger = tvshow_sync.clone();
         Callback::from(move |_: MouseEvent| {
-            refresh.run();
+            trigger.run();
+        })
+    };
+
+    let on_click_watch = {
+        let trigger = tvshow.watch.clone();
+        Callback::from(move |_: MouseEvent| {
+            trigger.run();
         })
     };
 
@@ -97,9 +104,9 @@ pub fn tvshow_view(props: &Props) -> Html {
                                         }}
                                     </div>
 
-                                    if data.completed || data.terminated {
+                                    if data.watch_completed() || data.terminated {
                                         <div class="flex gap-2 mb-4 text-xs">
-                                            if data.completed {
+                                            if data.following && data.episode_count > 0 && data.episode_count == data.watched_episode_count {
                                                 <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded-full">{"Completed"}</span>
                                             }
                                             if data.terminated {
@@ -115,6 +122,7 @@ pub fn tvshow_view(props: &Props) -> Html {
                                     <div class="flex flex-row gap-2">
                                         <FollowButton onclick={on_click_follow} following={data.following} loading={tvshow_follow_loading} />
                                         <button class="text-sm px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600" onclick={on_click_refresh}>{"Refresh"}</button>
+                                        <button class="text-sm px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600" onclick={on_click_watch}>{"Mark watched"}</button>
                                     </div>
                                 </div>
                             </div>

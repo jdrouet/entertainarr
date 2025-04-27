@@ -4,54 +4,63 @@ use entertainarr_api::tvshow::TVShow;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-#[derive(Properties, PartialEq)]
-pub struct Props {
+#[derive(Properties, PartialEq, Clone)]
+pub struct TVShowCardletProps {
     pub show: TVShow,
 }
 
 #[function_component(TVShowCardlet)]
-pub fn tv_show_cardlet(props: &Props) -> Html {
-    let show = &props.show;
+pub fn tv_show_cardlet(props: &TVShowCardletProps) -> Html {
+    let TVShowCardletProps { show } = props.clone();
 
-    let poster_url = show
-        .poster_path
+    // Unseen episodes calculation
+    let unseen_episodes = show
+        .episode_count
+        .saturating_sub(show.watched_episode_count);
+
+    // Format first air date nicely
+    let first_air_date = show
+        .first_air_date
+        .map(|date| date.format("%Y-%m-%d").to_string())
+        .unwrap_or_else(|| "Unknown".to_string());
+
+    // Backdrop image handling
+    let backdrop_url = show
+        .backdrop_path
         .as_ref()
-        .map(|path| format!("https://image.tmdb.org/t/p/w185{}", path));
+        .map(|path| format!("https://image.tmdb.org/t/p/w780{}", path));
 
     html! {
-        <Link<Route> to={Route::TvshowView { tvshow_id: props.show.id }} classes="flex bg-white shadow-sm rounded-md overflow-hidden hover:shadow-md transition">
-            if let Some(url) = poster_url {
-                <img
-                    src={url}
-                    alt={format!("Poster for {}", show.name)}
-                    class="w-24 h-auto object-cover"
-                />
+        <Link<Route> to={Route::TvshowView { tvshow_id: props.show.id }} classes="w-full h-[250px] rounded-lg overflow-hidden shadow-md relative hover:shadow-lg transition">
+            if let Some(url) = backdrop_url {
+                <img src={url} alt={show.name.clone()} class="w-full h-[190px] object-cover" />
             } else {
-                <div class="w-24 bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
-                    {"No Image"}
+                <div class="w-full h-[190px] flex items-center justify-center bg-gray-700 text-white">
+                    { "No Image" }
                 </div>
             }
 
-            <div class="p-4 flex-1">
-                <h3 class="text-lg font-semibold text-gray-800">{ &show.name }</h3>
-                <div class="flex gap-2 mt-1 text-xs">
-                    if show.following {
-                        <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">{"Following"}</span>
+            <div class="absolute top-2 right-2 flex flex-row gap-2">
+                if show.following {
+                    if show.episode_count > 0 {
+                        <div class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow">
+                            if unseen_episodes > 0 {
+                                { unseen_episodes }
+                            } else {
+                                {"🗸"}
+                            }
+                        </div>
                     }
-                    if show.completed {
-                        <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded-full">{"Completed"}</span>
-                    }
-                    if show.terminated {
-                        <span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-full">{"Terminated"}</span>
-                    }
-                </div>
-                if let Some(overview) = &show.overview {
-                    <p class="text-sm text-gray-600 line-clamp-3 mt-1">{ overview }</p>
+                    <div class="bg-white text-xs font-bold px-2 py-1 rounded-full shadow">
+                        {"❤️"}
+                    </div>
                 }
-                <div class="text-xs text-gray-500 mt-2 flex justify-between">
-                    <span>{ show.first_air_date.map(|d| d.to_string()).unwrap_or_else(|| "Unknown date".to_string()) }</span>
-                    <span>{ format!("⭐ {:.1} ({})", show.vote_average, show.vote_count) }</span>
-                </div>
+            </div>
+
+            // Bottom info
+            <div class="px-3 py-2 h-[60px] flex flex-col justify-center text-center">
+                <div class="font-semibold text-sm truncate">{ show.name.clone() }</div>
+                <div class="text-gray-800 text-xs">{ first_air_date }</div>
             </div>
         </Link<Route>>
     }

@@ -1,7 +1,6 @@
 use std::borrow::Cow;
 
 use axum::{
-    extract::Path,
     http::{StatusCode, Uri, header},
     response::{IntoResponse, Response},
     routing::get,

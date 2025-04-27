@@ -54,7 +54,7 @@ pub fn tvshow_search() -> Html {
     html! {
         <div class="bg-gray-100 min-h-screen">
             <Header />
-            <main class="max-w-4xl mx-auto p-6">
+            <main class="max-w-6xl mx-auto p-6">
                 <h2 class="text-2xl font-bold text-gray-800 mb-4">{"TV Shows - Search"}</h2>
                 <form class="flex mb-6 space-x-2" {onsubmit}>
                     <input
@@ -122,7 +122,7 @@ pub fn tvshow_search() -> Html {
                             }
                         } else {
                             html! {
-                                <div class="grid gap-4">
+                                <div class="grid grid-cols-3 gap-4">
                                     { for shows.iter().map(|show| html! {
                                         <TVShowCardlet show={show.clone()} />
                                     }) }
