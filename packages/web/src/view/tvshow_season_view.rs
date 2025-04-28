@@ -47,7 +47,7 @@ pub fn tvshow_season_view(props: &Props) -> Html {
         use_unwatch_tvshow_season(props.tvshow_id, props.season_number, callback)
     };
 
-    let tvshow_name = tvshow.inner.data.as_ref().map(|inner| inner.name.as_str());
+    let tvshow_name = tvshow.data.as_ref().map(|inner| inner.name.as_str());
 
     html! {
         <div class="bg-gray-100 min-h-screen">

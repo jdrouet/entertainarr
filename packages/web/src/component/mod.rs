@@ -1,3 +1,4 @@
+pub mod badge;
 pub mod button;
 pub mod error_message;
 pub mod follow_button;

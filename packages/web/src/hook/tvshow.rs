@@ -40,7 +40,7 @@ pub async fn list_seasons(tvshow_id: u64) -> Result<Vec<TVShowSeason>, Arc<gloo_
     res.json().await.map_err(Arc::new)
 }
 
-pub async fn follow(tvshow_id: u64) -> Result<TVShow, Arc<gloo_net::Error>> {
+pub async fn follow_tvshow(tvshow_id: u64) -> Result<TVShow, Arc<gloo_net::Error>> {
     let url = format!("/api/tvshows/{tvshow_id}/follow");
     let res = gloo_net::http::Request::post(url.as_str())
         .credentials(web_sys::RequestCredentials::Include)
@@ -48,108 +48,92 @@ pub async fn follow(tvshow_id: u64) -> Result<TVShow, Arc<gloo_net::Error>> {
         .await
         .map_err(Arc::new)?;
     res.json().await.map_err(Arc::new)
-}
-
-pub async fn unfollow(tvshow_id: u64) -> Result<TVShow, Arc<gloo_net::Error>> {
-    let url = format!("/api/tvshows/{tvshow_id}/follow");
-    let res = gloo_net::http::Request::delete(url.as_str())
-        .credentials(web_sys::RequestCredentials::Include)
-        .send()
-        .await
-        .map_err(Arc::new)?;
-    res.json().await.map_err(Arc::new)
-}
-
-pub async fn watch(tvshow_id: u64) -> Result<TVShow, Arc<gloo_net::Error>> {
-    let url = format!("/api/tvshows/{tvshow_id}/watch");
-    let res = gloo_net::http::Request::post(url.as_str())
-        .credentials(web_sys::RequestCredentials::Include)
-        .send()
-        .await
-        .map_err(Arc::new)?;
-    res.json().await.map_err(Arc::new)
-}
-
-pub async fn unwatch(tvshow_id: u64) -> Result<TVShow, Arc<gloo_net::Error>> {
-    let url = format!("/api/tvshows/{tvshow_id}/watch");
-    let res = gloo_net::http::Request::delete(url.as_str())
-        .credentials(web_sys::RequestCredentials::Include)
-        .send()
-        .await
-        .map_err(Arc::new)?;
-    res.json().await.map_err(Arc::new)
-}
-
-#[derive(Clone)]
-pub struct UseTVShow {
-    pub inner: UseAsyncHandle<TVShow, Arc<gloo_net::Error>>,
-    pub follow: UseAsyncHandle<(), Arc<gloo_net::Error>>,
-    pub unfollow: UseAsyncHandle<(), Arc<gloo_net::Error>>,
-    pub watch: UseAsyncHandle<(), Arc<gloo_net::Error>>,
-    pub unwatch: UseAsyncHandle<(), Arc<gloo_net::Error>>,
 }
 
 #[hook]
-pub fn use_tvshow(tvshow_id: u64) -> UseTVShow {
-    let load = use_async_with_options(
+pub fn use_follow_tvshow(
+    tvshow_id: u64,
+    callback: Callback<TVShow>,
+) -> UseAsyncHandle<(), Arc<gloo_net::Error>> {
+    use_async(async move {
+        let tvshow = follow_tvshow(tvshow_id).await?;
+        callback.emit(tvshow);
+        Ok(())
+    })
+}
+
+pub async fn unfollow_tvshow(tvshow_id: u64) -> Result<TVShow, Arc<gloo_net::Error>> {
+    let url = format!("/api/tvshows/{tvshow_id}/follow");
+    let res = gloo_net::http::Request::delete(url.as_str())
+        .credentials(web_sys::RequestCredentials::Include)
+        .send()
+        .await
+        .map_err(Arc::new)?;
+    res.json().await.map_err(Arc::new)
+}
+
+#[hook]
+pub fn use_unfollow_tvshow(
+    tvshow_id: u64,
+    callback: Callback<TVShow>,
+) -> UseAsyncHandle<(), Arc<gloo_net::Error>> {
+    use_async(async move {
+        let tvshow = unfollow_tvshow(tvshow_id).await?;
+        callback.emit(tvshow);
+        Ok(())
+    })
+}
+
+pub async fn watch_tvshow(tvshow_id: u64) -> Result<TVShow, Arc<gloo_net::Error>> {
+    let url = format!("/api/tvshows/{tvshow_id}/watch");
+    let res = gloo_net::http::Request::post(url.as_str())
+        .credentials(web_sys::RequestCredentials::Include)
+        .send()
+        .await
+        .map_err(Arc::new)?;
+    res.json().await.map_err(Arc::new)
+}
+
+#[hook]
+pub fn use_watch_tvshow(
+    tvshow_id: u64,
+    callback: Callback<TVShow>,
+) -> UseAsyncHandle<(), Arc<gloo_net::Error>> {
+    use_async(async move {
+        let tvshow = watch_tvshow(tvshow_id).await?;
+        callback.emit(tvshow);
+        Ok(())
+    })
+}
+
+pub async fn unwatch_tvshow(tvshow_id: u64) -> Result<TVShow, Arc<gloo_net::Error>> {
+    let url = format!("/api/tvshows/{tvshow_id}/watch");
+    let res = gloo_net::http::Request::delete(url.as_str())
+        .credentials(web_sys::RequestCredentials::Include)
+        .send()
+        .await
+        .map_err(Arc::new)?;
+    res.json().await.map_err(Arc::new)
+}
+
+#[hook]
+pub fn use_unwatch_tvshow(
+    tvshow_id: u64,
+    callback: Callback<TVShow>,
+) -> UseAsyncHandle<(), Arc<gloo_net::Error>> {
+    use_async(async move {
+        let tvshow = unwatch_tvshow(tvshow_id).await?;
+        callback.emit(tvshow);
+        Ok(())
+    })
+}
+
+#[hook]
+pub fn use_tvshow(tvshow_id: u64) -> UseAsyncHandle<TVShow, Arc<gloo_net::Error>> {
+    use_async_with_options(
         get_by_id(tvshow_id),
         yew_hooks::UseAsyncOptions::enable_auto(),
-    );
-    let follow = {
-        let load = load.clone();
-        use_async(async move {
-            match follow(tvshow_id).await {
-                Ok(res) => {
-                    load.update(res);
-                    Ok(())
-                }
-                Err(err) => Err(err),
-            }
-        })
-    };
-    let unfollow = {
-        let load = load.clone();
-        use_async(async move {
-            match unfollow(tvshow_id).await {
-                Ok(res) => {
-                    load.update(res);
-                    Ok(())
-                }
-                Err(err) => Err(err),
-            }
-        })
-    };
-    let watch = {
-        let load = load.clone();
-        use_async(async move {
-            match watch(tvshow_id).await {
-                Ok(res) => {
-                    load.update(res);
-                    Ok(())
-                }
-                Err(err) => Err(err),
-            }
-        })
-    };
-    let unwatch = {
-        let load = load.clone();
-        use_async(async move {
-            match unwatch(tvshow_id).await {
-                Ok(res) => {
-                    load.update(res);
-                    Ok(())
-                }
-                Err(err) => Err(err),
-            }
-        })
-    };
-    UseTVShow {
-        inner: load,
-        follow,
-        unfollow,
-        watch,
-        unwatch,
-    }
+    )
 }
 
 pub async fn get_season(

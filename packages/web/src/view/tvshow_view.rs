@@ -1,13 +1,15 @@
+use entertainarr_api::tvshow::TVShow;
 use yew::prelude::*;
 use yew_hooks::{UseAsyncOptions, use_async_with_options};
 
+use crate::component::badge::{Badge, BadgeKind};
 use crate::component::button::Button;
 use crate::component::error_message::ErrorMessage;
 use crate::component::follow_button::FollowButton;
 use crate::component::header::Header;
 use crate::component::loading::Loading;
 use crate::component::tvshow_season_cardlet::TVShowSeasonCardlet;
-use crate::hook::tvshow::{use_tvshow, use_tvshow_sync};
+use crate::hook::tvshow::*;
 
 #[derive(Debug, Properties, PartialEq)]
 pub struct Props {
@@ -23,17 +25,50 @@ pub fn tvshow_view(props: &Props) -> Html {
         UseAsyncOptions::enable_auto(),
     );
 
-    let tvshow_follow_loading = tvshow.follow.loading || tvshow.unfollow.loading;
+    let follow_tvshow = {
+        let tvshow = tvshow.clone();
+        let callback = Callback::from(move |value: TVShow| {
+            tvshow.update(value);
+        });
+        use_follow_tvshow(props.tvshow_id, callback)
+    };
+    let unfollow_tvshow = {
+        let tvshow = tvshow.clone();
+        let callback = Callback::from(move |value: TVShow| {
+            tvshow.update(value);
+        });
+        use_unfollow_tvshow(props.tvshow_id, callback)
+    };
+
+    let watch_tvshow = {
+        let tvshow = tvshow.clone();
+        let seasons = seasons.clone();
+        let callback = Callback::from(move |value: TVShow| {
+            tvshow.update(value);
+            seasons.run();
+        });
+        use_watch_tvshow(props.tvshow_id, callback)
+    };
+    let unwatch_tvshow = {
+        let tvshow = tvshow.clone();
+        let seasons = seasons.clone();
+        let callback = Callback::from(move |value: TVShow| {
+            tvshow.update(value);
+            seasons.run();
+        });
+        use_unwatch_tvshow(props.tvshow_id, callback)
+    };
+
+    let tvshow_follow_loading = follow_tvshow.loading || unfollow_tvshow.loading;
 
     let on_click_follow = {
         let following = tvshow
-            .inner
             .data
             .as_ref()
             .map(|inner| inner.following)
             .unwrap_or(false);
-        let follow = tvshow.follow.clone();
-        let unfollow = tvshow.unfollow.clone();
+        let follow = follow_tvshow.clone();
+        let unfollow = unfollow_tvshow.clone();
         Callback::from(move |_: MouseEvent| {
             if following {
                 unfollow.run();
@@ -44,7 +79,7 @@ pub fn tvshow_view(props: &Props) -> Html {
     };
 
     let tvshow_sync_callback = {
-        let tvshow = tvshow.inner.clone();
+        let tvshow = tvshow.clone();
         let seasons = seasons.clone();
         Callback::from(move |_: ()| {
             tvshow.run();
@@ -61,8 +96,15 @@ pub fn tvshow_view(props: &Props) -> Html {
         })
     };
 
+    let on_click_unwatch = {
+        let trigger = unwatch_tvshow.clone();
+        Callback::from(move |_: MouseEvent| {
+            trigger.run();
+        })
+    };
+
     let on_click_watch = {
-        let trigger = tvshow.watch.clone();
+        let trigger = watch_tvshow.clone();
         Callback::from(move |_: MouseEvent| {
             trigger.run();
         })
@@ -72,7 +114,7 @@ pub fn tvshow_view(props: &Props) -> Html {
         <div class="bg-gray-100 min-h-screen">
             <Header />
             <main class="max-w-6xl mx-auto px-4 py-8">
-                if let Some(data) = &tvshow.inner.data {
+                if let Some(data) = &tvshow.data {
                     <div class="flex flex-col md:flex-row gap-6">
                         if let Some(path) = data.poster_path.as_ref() {
                             <div class="w-full md:w-1/5">
@@ -108,10 +150,10 @@ pub fn tvshow_view(props: &Props) -> Html {
                             if data.watch_completed() || data.terminated {
                                 <div class="flex gap-2 mb-4 text-xs">
                                     if data.following && data.episode_count > 0 && data.episode_count == data.watched_episode_count {
-                                        <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded-full">{"Completed"}</span>
+                                        <Badge kind={BadgeKind::Info} label="Completed" />
                                     }
                                     if data.terminated {
-                                        <span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-full">{"Terminated"}</span>
+                                        <Badge kind={BadgeKind::Danger} label="Terminated" />
                                     }
                                 </div>
                             }
@@ -133,14 +175,28 @@ pub fn tvshow_view(props: &Props) -> Html {
                                             "Refresh"
                                         }}
                                     />
-                                    <Button alt="Mark all episodes as watched" onclick={on_click_watch} label="Mark all watched" />
+                                    if data.watch_completed() {
+                                        <Button
+                                            alt="Mark all episodes as not watched"
+                                            disabled={unwatch_tvshow.loading}
+                                            onclick={on_click_unwatch}
+                                            label="Unwatch all"
+                                        />
+                                    } else {
+                                        <Button
+                                            alt="Mark all episodes as watched"
+                                            disabled={watch_tvshow.loading}
+                                            onclick={on_click_watch}
+                                            label="Mark all watched"
+                                        />
+                                    }
                                 }
                             </div>
                         </div>
                     </div>
-                } else if tvshow.inner.loading {
+                } else if tvshow.loading {
                     <Loading />
-                } else if let Some(err) = &tvshow.inner.error {
+                } else if let Some(err) = &tvshow.error {
                     <div class="text-red-600">{ format!("Error: {}", err) }</div>
                 }
                 <section class="mt-12">
