@@ -24,6 +24,16 @@ impl ApiError {
     }
 }
 
+impl From<crate::view::Error> for ApiError {
+    fn from(value: crate::view::Error) -> Self {
+        match value {
+            crate::view::Error::Io(inner) => ApiError::from(inner),
+            crate::view::Error::Database(inner) => ApiError::from(inner),
+            crate::view::Error::Tmdb(inner) => ApiError::from(inner),
+        }
+    }
+}
+
 impl From<axum::http::Error> for ApiError {
     fn from(value: axum::http::Error) -> Self {
         tracing::error!(message = "http error", cause = ?value);

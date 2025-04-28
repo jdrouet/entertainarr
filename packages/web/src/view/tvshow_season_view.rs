@@ -1,3 +1,4 @@
+use entertainarr_api::tvshow_season::TVShowSeason;
 use yew::prelude::*;
 
 use crate::component::button::Button;
@@ -8,6 +9,7 @@ use crate::component::tvshow_episode_list_item::TVShowEpisodeListItem;
 use crate::hook::tvshow::use_tvshow;
 use crate::hook::tvshow::use_tvshow_episodes;
 use crate::hook::tvshow::use_tvshow_season;
+use crate::hook::tvshow::{use_unwatch_tvshow_season, use_watch_tvshow_season};
 
 #[derive(Properties, PartialEq)]
 pub struct Props {
@@ -20,6 +22,30 @@ pub fn tvshow_season_view(props: &Props) -> Html {
     let tvshow = use_tvshow(props.tvshow_id);
     let season = use_tvshow_season(props.tvshow_id, props.season_number);
     let episodes = use_tvshow_episodes(props.tvshow_id, props.season_number);
+
+    let watch = {
+        let season = season.clone();
+        let episodes = episodes.clone();
+
+        let callback = Callback::from(move |value: TVShowSeason| {
+            season.update(value);
+            episodes.run();
+        });
+
+        use_watch_tvshow_season(props.tvshow_id, props.season_number, callback)
+    };
+
+    let unwatch = {
+        let season = season.clone();
+        let episodes = episodes.clone();
+
+        let callback = Callback::from(move |value: TVShowSeason| {
+            season.update(value);
+            episodes.run();
+        });
+
+        use_unwatch_tvshow_season(props.tvshow_id, props.season_number, callback)
+    };
 
     let tvshow_name = tvshow.inner.data.as_ref().map(|inner| inner.name.as_str());
 
@@ -62,7 +88,20 @@ pub fn tvshow_season_view(props: &Props) -> Html {
                                 { format!("{} episodes • {} watched", season.episode_count, season.watched_episode_count) }
                             </p>
                             <div>
-                                <Button alt="Mark all episodes as watched" label="Watched" onclick={|_| {}} />
+                                if season.watch_completed() {
+                                    <Button
+                                        alt="Mark all episodes as not watched"
+                                        label="Unwatched all"
+                                        onclick={move |_: MouseEvent| unwatch.run()}
+                                    />
+                                } else {
+                                    <Button
+                                        alt="Mark all episodes as watched"
+                                        label="Mark all watched"
+                                        onclick={move |_: MouseEvent| watch.run()}
+                                    />
+                                }
+
                             </div>
                         </div>
                     </div>

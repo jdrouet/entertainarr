@@ -20,3 +20,9 @@ pub struct TVShowEpisode {
     #[serde(default, skip_serializing_if = "crate::is_u16_zero")]
     pub file_count: u16,
 }
+
+impl TVShowEpisode {
+    pub fn watched(&self) -> bool {
+        self.watch.as_ref().map(|w| w.completed).unwrap_or(false)
+    }
+}

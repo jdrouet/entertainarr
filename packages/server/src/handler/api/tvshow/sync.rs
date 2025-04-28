@@ -1,15 +1,20 @@
 use axum::Extension;
 use axum::extract::Path;
 use axum::http::StatusCode;
+use entertainarr_database::Database;
 
 use crate::handler::api::error::ApiError;
+use crate::service::tmdb::Tmdb;
 use crate::service::worker::{Action, Worker};
 
 pub(super) async fn single(
-    Extension(worker): Extension<Worker>,
+    Extension(db): Extension<Database>,
+    Extension(tmdb): Extension<Tmdb>,
     Path(tvshow_id): Path<u64>,
 ) -> Result<StatusCode, ApiError> {
-    worker.push(Action::sync_tvshow(tvshow_id)).await;
+    let mut tx = db.as_ref().begin().await?;
+    crate::view::tvshow::synchronize_tvshow(&mut tx, &tmdb, tvshow_id).await?;
+    tx.commit().await?;
     Ok(StatusCode::CREATED)
 }
 

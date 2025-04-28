@@ -215,6 +215,65 @@ pub async fn tvshow_sync(tvshow_id: u64) -> Result<(), Arc<gloo_net::Error>> {
 }
 
 #[hook]
-pub fn use_tvshow_sync(tvshow_id: u64) -> UseAsyncHandle<(), Arc<gloo_net::Error>> {
-    use_async(tvshow_sync(tvshow_id))
+pub fn use_tvshow_sync(
+    tvshow_id: u64,
+    callback: Callback<()>,
+) -> UseAsyncHandle<(), Arc<gloo_net::Error>> {
+    use_async(async move {
+        tvshow_sync(tvshow_id).await?;
+        callback.emit(());
+        Ok(())
+    })
+}
+
+pub async fn watch_season(
+    tvshow_id: u64,
+    season_number: u64,
+) -> Result<TVShowSeason, Arc<gloo_net::Error>> {
+    let url = format!("/api/tvshows/{tvshow_id}/seasons/{season_number}/watch");
+    let res = gloo_net::http::Request::post(url.as_str())
+        .credentials(web_sys::RequestCredentials::Include)
+        .send()
+        .await
+        .map_err(Arc::new)?;
+    res.json().await.map_err(Arc::new)
+}
+
+#[hook]
+pub fn use_watch_tvshow_season(
+    tvshow_id: u64,
+    season_number: u64,
+    callback: Callback<TVShowSeason>,
+) -> UseAsyncHandle<(), Arc<gloo_net::Error>> {
+    use_async(async move {
+        let season = watch_season(tvshow_id, season_number).await?;
+        callback.emit(season);
+        Ok(())
+    })
+}
+
+pub async fn unwatch_season(
+    tvshow_id: u64,
+    season_number: u64,
+) -> Result<TVShowSeason, Arc<gloo_net::Error>> {
+    let url = format!("/api/tvshows/{tvshow_id}/seasons/{season_number}/watch");
+    let res = gloo_net::http::Request::delete(url.as_str())
+        .credentials(web_sys::RequestCredentials::Include)
+        .send()
+        .await
+        .map_err(Arc::new)?;
+    res.json().await.map_err(Arc::new)
+}
+
+#[hook]
+pub fn use_unwatch_tvshow_season(
+    tvshow_id: u64,
+    season_number: u64,
+    callback: Callback<TVShowSeason>,
+) -> UseAsyncHandle<(), Arc<gloo_net::Error>> {
+    use_async(async move {
+        let season = unwatch_season(tvshow_id, season_number).await?;
+        callback.emit(season);
+        Ok(())
+    })
 }

@@ -14,3 +14,9 @@ pub struct TVShowSeason {
     #[serde(default, skip_serializing_if = "crate::is_u32_zero")]
     pub watched_episode_count: u32,
 }
+
+impl TVShowSeason {
+    pub fn watch_completed(&self) -> bool {
+        self.episode_count > 0 && self.episode_count == self.watched_episode_count
+    }
+}

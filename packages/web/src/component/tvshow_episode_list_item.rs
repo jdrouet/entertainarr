@@ -1,6 +1,8 @@
 use entertainarr_api::tvshow_episode::TVShowEpisode;
 use yew::prelude::*;
 
+use crate::component::button::Button;
+
 #[derive(Properties, PartialEq)]
 pub struct Props {
     pub episode: TVShowEpisode,
@@ -10,11 +12,7 @@ pub struct Props {
 pub fn tv_show_episode_list_item(props: &Props) -> Html {
     let episode = &props.episode;
 
-    let is_watched = episode
-        .watch
-        .as_ref()
-        .map_or(false, |w| w.completed || w.progress > 0);
-    let watch_status = if is_watched {
+    let watch_status = if episode.watched() {
         html! { <span class="text-green-600 font-medium text-sm">{"Watched"}</span> }
     } else {
         html! { <span class="text-gray-500 text-sm">{"Not Watched"}</span> }
@@ -66,12 +64,13 @@ pub fn tv_show_episode_list_item(props: &Props) -> Html {
                 </div>
             </div>
             <div class="mt-4 md:mt-0">
-                <button
-                    onclick={on_mark_watched}
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2 px-4 rounded shadow transition"
-                >
-                    { "Mark as Watched" }
-                </button>
+                if !episode.watched() {
+                    <Button
+                        alt="Mark episode as watched"
+                        onclick={on_mark_watched}
+                        label="Mark as Watched"
+                    />
+                }
             </div>
         </div>
     }

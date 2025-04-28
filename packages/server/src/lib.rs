@@ -9,6 +9,7 @@ pub mod prelude;
 
 mod handler;
 mod service;
+mod view;
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Config {

@@ -43,7 +43,16 @@ pub fn tvshow_view(props: &Props) -> Html {
         })
     };
 
-    let tvshow_sync = use_tvshow_sync(props.tvshow_id);
+    let tvshow_sync_callback = {
+        let tvshow = tvshow.inner.clone();
+        let seasons = seasons.clone();
+        Callback::from(move |_: ()| {
+            tvshow.run();
+            seasons.run();
+        })
+    };
+
+    let tvshow_sync = use_tvshow_sync(props.tvshow_id, tvshow_sync_callback.clone());
 
     let on_click_refresh = {
         let trigger = tvshow_sync.clone();
@@ -113,8 +122,19 @@ pub fn tvshow_view(props: &Props) -> Html {
 
                             <div class="flex flex-row gap-2">
                                 <FollowButton onclick={on_click_follow} following={data.following} loading={tvshow_follow_loading} />
-                                <Button alt="Refresh TV Show" onclick={on_click_refresh} label="Refresh" />
-                                <Button alt="Mark all episodes as watched" onclick={on_click_watch} label="Mark all watched" />
+                                if data.following {
+                                    <Button
+                                        alt="Refresh TV Show"
+                                        disabled={tvshow_sync.loading}
+                                        onclick={on_click_refresh}
+                                        label={if tvshow_sync.loading {
+                                            "Refreshing..."
+                                        } else {
+                                            "Refresh"
+                                        }}
+                                    />
+                                    <Button alt="Mark all episodes as watched" onclick={on_click_watch} label="Mark all watched" />
+                                }
                             </div>
                         </div>
                     </div>
