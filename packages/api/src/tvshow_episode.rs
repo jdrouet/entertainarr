@@ -1,4 +1,4 @@
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct Watch {
     #[serde(default, skip_serializing_if = "crate::is_u64_zero")]
     pub progress: u64,
@@ -6,7 +6,7 @@ pub struct Watch {
     pub completed: bool,
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct TVShowEpisode {
     pub id: u64,
     pub name: String,

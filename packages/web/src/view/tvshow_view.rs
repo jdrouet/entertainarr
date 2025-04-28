@@ -1,6 +1,7 @@
 use yew::prelude::*;
 use yew_hooks::{UseAsyncOptions, use_async_with_options};
 
+use crate::component::button::Button;
 use crate::component::error_message::ErrorMessage;
 use crate::component::follow_button::FollowButton;
 use crate::component::header::Header;
@@ -112,8 +113,8 @@ pub fn tvshow_view(props: &Props) -> Html {
 
                             <div class="flex flex-row gap-2">
                                 <FollowButton onclick={on_click_follow} following={data.following} loading={tvshow_follow_loading} />
-                                <button class="text-sm px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600" onclick={on_click_refresh}>{"Refresh"}</button>
-                                <button class="text-sm px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600" onclick={on_click_watch}>{"Mark watched"}</button>
+                                <Button alt="Refresh TV Show" onclick={on_click_refresh} label="Refresh" />
+                                <Button alt="Mark all episodes as watched" onclick={on_click_watch} label="Mark all watched" />
                             </div>
                         </div>
                     </div>
@@ -130,11 +131,11 @@ pub fn tvshow_view(props: &Props) -> Html {
                             <ErrorMessage error={err.to_string()} />
                         } else if let Some(season_list) = &seasons.data {
                             <div class="flex flex-row flex-wrap gap-3">
-                                {season_list.iter().map(|season| {
+                                {for season_list.iter().map(|season| {
                                     html! {
                                         <TVShowSeasonCardlet tvshow_id={props.tvshow_id} season={season.clone()} />
                                     }
-                                }).collect::<Html>()}
+                                })}
                             </div>
                         }
                 </section>
