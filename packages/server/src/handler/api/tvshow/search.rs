@@ -1,7 +1,7 @@
 use axum::extract::Query;
 use axum::{Extension, Json};
 use entertainarr_api::tvshow::TVShow;
-use entertainarr_database::Database;
+use entertainarr_database::{Database, model};
 use tmdb_api::prelude::Command;
 use tmdb_api::tvshow::search::TVShowSearch;
 
@@ -34,12 +34,8 @@ pub(super) async fn handle(
         return Ok(Json(Vec::new()));
     }
     let mut tx = db.as_ref().begin().await?;
-    entertainarr_database::model::tvshow::upsert_all(
-        &mut *tx,
-        tvshows.results.iter().map(|item| &item.inner),
-    )
-    .await?;
-    let list = entertainarr_database::model::tvshow::get_by_ids(
+    model::tvshow::upsert_all(&mut *tx, tvshows.results.iter().map(|item| &item.inner)).await?;
+    let list = model::tvshow::get_by_ids(
         &mut *tx,
         user_id,
         tvshows.results.iter().map(|item| item.inner.id),
