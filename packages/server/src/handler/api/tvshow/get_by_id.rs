@@ -2,8 +2,6 @@ use axum::extract::Path;
 use axum::{Extension, Json};
 use entertainarr_api::tvshow::TVShow;
 use entertainarr_database::Database;
-use tmdb_api::prelude::Command;
-use tmdb_api::tvshow::details::TVShowDetails;
 
 use crate::handler::api::authentication::Authentication;
 use crate::handler::api::error::ApiError;
@@ -23,7 +21,10 @@ pub(super) async fn handle(
     {
         return Ok(Json(tvshow_to_view(found)));
     }
-    let res = TVShowDetails::new(tvshow_id).execute(tmdb.as_ref()).await?;
+    let res = tmdb
+        .as_ref()
+        .get_tvshow_details(tvshow_id, &Default::default())
+        .await?;
     entertainarr_database::model::tvshow::upsert_all(&mut *tx, std::iter::once(&res.inner)).await?;
 
     let Some(found) =

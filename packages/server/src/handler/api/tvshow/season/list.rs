@@ -1,8 +1,6 @@
 use axum::extract::Path;
 use axum::{Extension, Json};
 use entertainarr_api::tvshow_season::TVShowSeason;
-use tmdb_api::prelude::Command;
-use tmdb_api::tvshow::details::TVShowDetails;
 
 use crate::handler::api::authentication::Authentication;
 use crate::handler::api::error::ApiError;
@@ -22,7 +20,10 @@ pub async fn handle(
     if !list.is_empty() {
         return Ok(Json(list.into_iter().map(season_to_view).collect()));
     }
-    let details = TVShowDetails::new(tvshow_id).execute(tmdb.as_ref()).await?;
+    let details = tmdb
+        .as_ref()
+        .get_tvshow_details(tvshow_id, &Default::default())
+        .await?;
     if !details.seasons.is_empty() {
         entertainarr_database::model::tvshow_season::upsert_all(
             db.as_ref(),

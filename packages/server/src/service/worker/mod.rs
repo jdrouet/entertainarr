@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use entertainarr_database::Database;
 use tokio::task::JoinHandle;
@@ -16,12 +16,15 @@ mod sync_tvshow;
 pub struct Config {
     #[serde(default = "Config::default_size")]
     size: usize,
+    #[serde(default = "Config::default_tick_interval")]
+    tick_interval: u64,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
             size: Self::default_size(),
+            tick_interval: Self::default_tick_interval(),
         }
     }
 }
@@ -31,8 +34,12 @@ impl Config {
         100
     }
 
+    pub const fn default_tick_interval() -> u64 {
+        60
+    }
+
     pub fn build(&self, database: Database, tmdb: Tmdb) -> std::io::Result<Worker> {
-        Worker::new(database, tmdb)
+        Worker::new(Duration::from_secs(self.tick_interval), database, tmdb)
     }
 }
 
@@ -45,10 +52,17 @@ pub struct Worker {
 }
 
 impl Worker {
-    pub fn new(database: Database, tmdb: Tmdb) -> std::io::Result<Self> {
+    pub fn new(tick_interval: Duration, database: Database, tmdb: Tmdb) -> std::io::Result<Self> {
         let cancel = CancellationToken::new();
         let (sender, receiver) = queue::channel();
-        let task = runner::Runner::new(cancel.clone(), sender.clone(), receiver, database, tmdb);
+        let task = runner::Runner::new(
+            cancel.clone(),
+            sender.clone(),
+            receiver,
+            tick_interval,
+            database,
+            tmdb,
+        );
         let task = tokio::spawn(async move { task.run().await });
         Ok(Self {
             cancel,

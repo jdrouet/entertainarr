@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use entertainarr_database::Database;
 use tokio_util::sync::CancellationToken;
 
@@ -9,6 +11,7 @@ pub(super) struct Runner {
     cancel: CancellationToken,
     context: super::Context,
     receiver: super::queue::Receiver<super::Action>,
+    tick: tokio::time::Interval,
 }
 
 impl Runner {
@@ -16,6 +19,7 @@ impl Runner {
         cancel: CancellationToken,
         sender: super::queue::Sender<super::Action>,
         receiver: super::queue::Receiver<super::Action>,
+        tick_period: Duration,
         database: Database,
         tmdb: Tmdb,
     ) -> Self {
@@ -27,6 +31,7 @@ impl Runner {
                 tmdb,
             },
             receiver,
+            tick: tokio::time::interval(tick_period),
         }
     }
 
@@ -68,6 +73,9 @@ impl Runner {
         tokio::select! {
             _ = self.cancel.cancelled() => {
                 tracing::info!("worker is being stopped");
+            },
+            _ = self.tick.tick() => {
+                tracing::info!("tick");
             },
             maybe_action = self.receiver.recv() => {
                 if let Some(action) = maybe_action {

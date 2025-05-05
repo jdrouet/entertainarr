@@ -2,8 +2,6 @@ use axum::extract::Query;
 use axum::{Extension, Json};
 use entertainarr_api::tvshow::TVShow;
 use entertainarr_database::{Database, model};
-use tmdb_api::prelude::Command;
-use tmdb_api::tvshow::search::TVShowSearch;
 
 use crate::handler::api::authentication::Authentication;
 use crate::handler::api::error::ApiError;
@@ -25,10 +23,8 @@ pub(super) async fn handle(
     Query(query): Query<SearchQuery>,
     Authentication(user_id): Authentication,
 ) -> Result<Json<Vec<TVShow>>, ApiError> {
-    let tvshows = TVShowSearch::new(query.query)
-        .with_page(Some(query.page + 1))
-        .execute(tmdb.as_ref())
-        .await?;
+    let params = tmdb_api::tvshow::search::Params::default().with_page(query.page + 1);
+    let tvshows = tmdb.as_ref().search_tvshows(&query.query, &params).await?;
     tracing::debug!("found {} items on tmdb", tvshows.total_results);
     if tvshows.results.is_empty() {
         return Ok(Json(Vec::new()));

@@ -1,8 +1,3 @@
-use tmdb_api::{
-    prelude::Command,
-    tvshow::{details::TVShowDetails, season::details::TVShowSeasonDetails},
-};
-
 use crate::service::tmdb::Tmdb;
 
 type Transaction<'a> =
@@ -15,7 +10,10 @@ pub async fn synchronize_tvshow<'a>(
     tvshow_id: u64,
 ) -> Result<(), super::Error> {
     tracing::debug!("fetching details");
-    let tvshow = TVShowDetails::new(tvshow_id).execute(tmdb.as_ref()).await?;
+    let tvshow = tmdb
+        .as_ref()
+        .get_tvshow_details(tvshow_id, &Default::default())
+        .await?;
 
     tracing::debug!("storing in database");
     entertainarr_database::model::tvshow::upsert_all(&mut **tx, std::iter::once(&tvshow.inner))
@@ -37,8 +35,9 @@ pub async fn synchronize_tvshow_season<'a>(
     season_number: u64,
 ) -> Result<(), super::Error> {
     tracing::debug!("fetching details");
-    let season = TVShowSeasonDetails::new(tvshow_id, season_number)
-        .execute(tmdb.as_ref())
+    let season = tmdb
+        .as_ref()
+        .get_tvshow_season_details(tvshow_id, season_number, &Default::default())
         .await?;
 
     tracing::debug!("storing in database");
