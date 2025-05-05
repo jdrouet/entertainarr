@@ -533,7 +533,6 @@ dependencies = [
  "config",
  "entertainarr-api",
  "entertainarr-database",
- "entertainarr-storage",
  "include_dir",
  "mime_guess",
  "mockito",

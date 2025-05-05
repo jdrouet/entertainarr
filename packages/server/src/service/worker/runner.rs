@@ -1,7 +1,7 @@
 use entertainarr_database::Database;
 use tokio_util::sync::CancellationToken;
 
-use crate::service::{storage::Storage, tmdb::Tmdb};
+use crate::service::tmdb::Tmdb;
 
 use super::Action;
 
@@ -17,7 +17,6 @@ impl Runner {
         sender: super::queue::Sender<super::Action>,
         receiver: super::queue::Receiver<super::Action>,
         database: Database,
-        storage: Storage,
         tmdb: Tmdb,
     ) -> Self {
         Self {
@@ -25,7 +24,6 @@ impl Runner {
             context: super::Context {
                 sender,
                 database,
-                storage,
                 tmdb,
             },
             receiver,
@@ -39,42 +37,6 @@ impl Runner {
             return;
         }
         match action.params {
-            super::ActionParams::AnalyzeFile(ref inner) => {
-                if let Err(err) = inner.execute(&self.context).await {
-                    tracing::warn!(
-                        message = "unable to analyze file",
-                        cause = %err,
-                    );
-                    let _ = self.context.sender.send(Action {
-                        params: action.params,
-                        retry: action.retry + 1,
-                    });
-                }
-            }
-            super::ActionParams::ScanEveryStorage(ref inner) => {
-                if let Err(err) = inner.execute(&self.context).await {
-                    tracing::warn!(
-                        message = "unable to scan every storage",
-                        cause = %err,
-                    );
-                    let _ = self.context.sender.send(Action {
-                        params: action.params,
-                        retry: action.retry + 1,
-                    });
-                }
-            }
-            super::ActionParams::ScanStoragePath(ref inner) => {
-                if let Err(err) = inner.execute(&self.context).await {
-                    tracing::warn!(
-                        message = "unable to scan storage",
-                        cause = %err,
-                    );
-                    let _ = self.context.sender.send(Action {
-                        params: action.params,
-                        retry: action.retry + 1,
-                    });
-                }
-            }
             super::ActionParams::SyncEveryTVShow(ref inner) => {
                 if let Err(err) = inner.execute(&self.context).await {
                     tracing::warn!(
@@ -91,18 +53,6 @@ impl Runner {
                 if let Err(err) = inner.execute(&self.context).await {
                     tracing::warn!(
                         message = "unable to synchronize tvshow",
-                        cause = %err,
-                    );
-                    let _ = self.context.sender.send(Action {
-                        params: action.params,
-                        retry: action.retry + 1,
-                    });
-                }
-            }
-            super::ActionParams::SyncTvShowSeason(ref inner) => {
-                if let Err(err) = inner.execute(&self.context).await {
-                    tracing::warn!(
-                        message = "unable to synchronize tvshow season",
                         cause = %err,
                     );
                     let _ = self.context.sender.send(Action {

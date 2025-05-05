@@ -62,15 +62,10 @@ impl Config {
 impl Config {
     pub async fn build(&self) -> std::io::Result<Server> {
         let database = self.service.database.build().await?;
-        let storage = self.service.storage.build()?;
         let tmdb = self.service.tmdb.build()?;
-        let worker = self
-            .service
-            .worker
-            .build(database.clone(), storage.clone(), tmdb.clone())?;
+        let worker = self.service.worker.build(database.clone(), tmdb.clone())?;
         Ok(Server {
             database,
-            storage,
             tmdb,
             worker,
             socket_addr: SocketAddr::new(self.ip_addr, self.port),
@@ -80,7 +75,6 @@ impl Config {
 
 pub struct Server {
     database: entertainarr_database::Database,
-    storage: crate::service::storage::Storage,
     tmdb: crate::service::tmdb::Tmdb,
     worker: crate::service::worker::Worker,
     socket_addr: SocketAddr,
@@ -91,7 +85,6 @@ impl Server {
         handler::router()
             .layer(tower_http::trace::TraceLayer::new_for_http())
             .layer(Extension(self.database.clone()))
-            .layer(Extension(self.storage.clone()))
             .layer(Extension(self.tmdb.clone()))
             .layer(Extension(self.worker.clone()))
     }
@@ -99,7 +92,6 @@ impl Server {
     pub async fn prepare(&self) -> std::io::Result<()> {
         tracing::debug!("preparing server");
         self.database.migrate().await?;
-        self.storage.healthcheck().await?;
         Ok(())
     }
 
