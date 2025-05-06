@@ -7,12 +7,14 @@ mod search;
 mod season;
 mod sync;
 mod watch;
+mod watchlist;
 
 pub(super) fn router() -> axum::Router {
     axum::Router::new()
         .route("/", get(list::handle))
         .route("/search", get(search::handle))
         .route("/sync", post(sync::all))
+        .route("/watchlist", get(watchlist::handle))
         .route("/{tvshow_id}", get(get_by_id::handle))
         .route("/{tvshow_id}/sync", post(sync::single))
         .route(

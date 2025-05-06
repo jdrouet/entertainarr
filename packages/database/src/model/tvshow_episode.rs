@@ -63,7 +63,8 @@ LEFT OUTER JOIN watched_tvshow_episodes
     ON watched_tvshow_episodes.episode_id = tvshow_episodes.id
     AND watched_tvshow_episodes.user_id = ?
 LEFT OUTER JOIN tvshow_episode_file_count
-    on tvshow_episode_file_count.episode_id = tvshow_episodes.id"#;
+    on tvshow_episode_file_count.episode_id = tvshow_episodes.id
+ORDER BY tvshow_episodes.episode_number"#;
     sqlx::query_as(sql)
         .bind(tvshow_id as i64)
         .bind(season_number as i64)
@@ -285,6 +286,76 @@ JOIN tvshow_episodes ON tvshow_seasons.id = tvshow_episodes.season_id"#,
     );
     query
         .build_query_as::<EpisodeSearch>()
+        .fetch_all(conn)
+        .await
+}
+
+#[derive(Debug)]
+pub struct EpisodeWatchlist {
+    pub tvshow_id: u64,
+    pub tvshow_name: String,
+    pub season_number: u64,
+    pub episode_number: u64,
+    pub image_path: Option<String>,
+    pub air_date: chrono::NaiveDate,
+}
+
+impl FromRow<'_, SqliteRow> for EpisodeWatchlist {
+    fn from_row(row: &'_ SqliteRow) -> Result<Self, sqlx::Error> {
+        Ok(Self {
+            tvshow_id: row.get(0),
+            tvshow_name: row.get(1),
+            season_number: row.get(2),
+            episode_number: row.get(3),
+            image_path: row.get(4),
+            air_date: row.get(5),
+        })
+    }
+}
+
+/// returns a list of episodes that the user didn't watch
+pub async fn watchlist<'a, X>(conn: X, user_id: u64) -> sqlx::Result<Vec<EpisodeWatchlist>>
+where
+    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+{
+    let sql = r#"WITH watchlist_episodes AS (
+    SELECT
+        tvshows.id,
+        tvshows.name,
+        tvshow_seasons.season_number,
+        tvshow_episodes.episode_number,
+        tvshows.backdrop_path,
+        tvshow_episodes.air_date,
+        row_number() OVER (PARTITION BY tvshows.id ORDER BY tvshow_episodes.air_date) AS row_num
+    FROM
+        tvshows
+        JOIN followed_tvshows
+            ON tvshows.id = followed_tvshows.tvshow_id
+            AND followed_tvshows.user_id = ?
+        JOIN tvshow_seasons
+            ON tvshows.id = tvshow_seasons.tvshow_id
+        JOIN tvshow_episodes
+            ON tvshow_seasons.id = tvshow_episodes.season_id
+    WHERE
+        tvshow_seasons.season_number > 0
+        AND tvshow_episodes.air_date IS NOT NULL
+        AND tvshow_episodes.air_date < CURRENT_TIMESTAMP
+        AND tvshow_episodes.id NOT IN (
+            SELECT
+                episode_id
+            FROM
+                watched_tvshow_episodes
+            WHERE
+                user_id = ?
+        )
+)
+SELECT id, name, season_number, episode_number, backdrop_path, air_date
+FROM watchlist_episodes
+WHERE row_num = 1
+ORDER BY air_date DESC"#;
+    sqlx::query_as(sql)
+        .bind(user_id as i64)
+        .bind(user_id as i64)
         .fetch_all(conn)
         .await
 }

@@ -26,3 +26,14 @@ impl TVShowEpisode {
         self.watch.as_ref().map(|w| w.completed).unwrap_or(false)
     }
 }
+
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct TVShowEpisodeSmall {
+    pub tvshow_id: u64,
+    pub season_number: u64,
+    pub episode_number: u64,
+    pub tvshow_name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image_path: Option<String>,
+    pub air_date: chrono::NaiveDate,
+}

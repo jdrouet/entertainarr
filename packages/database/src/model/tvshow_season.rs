@@ -92,7 +92,8 @@ pub async fn list<'a, X>(conn: X, user_id: u64, tvshow_id: u64) -> sqlx::Result<
 where
     X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
 {
-    sqlx::query_as(BASE_QUERY)
+    let sql = constcat::concat!(BASE_QUERY, "ORDER BY tvshow_seasons.season_number");
+    sqlx::query_as(sql)
         .bind(tvshow_id as i64)
         .bind(user_id as i64)
         .bind(tvshow_id as i64)

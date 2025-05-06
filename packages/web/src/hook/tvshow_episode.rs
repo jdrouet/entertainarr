@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use entertainarr_api::tvshow_episode::TVShowEpisode;
+use entertainarr_api::tvshow_episode::{TVShowEpisode, TVShowEpisodeSmall};
 use yew::prelude::*;
-use yew_hooks::{UseAsyncHandle, use_async, use_async_with_options};
+use yew_hooks::{UseAsyncHandle, UseAsyncOptions, use_async, use_async_with_options};
 
 async fn list_episodes(
     tvshow_id: u64,
@@ -84,4 +84,19 @@ pub fn use_unwatch_tvshow_episode(
         callback.emit(episode);
         Ok(())
     })
+}
+
+async fn episode_watchlist() -> Result<Vec<TVShowEpisodeSmall>, Arc<gloo_net::Error>> {
+    let url = "/api/tvshows/watchlist";
+    let res = gloo_net::http::Request::get(url)
+        .credentials(web_sys::RequestCredentials::Include)
+        .send()
+        .await
+        .map_err(Arc::new)?;
+    res.json().await.map_err(Arc::new)
+}
+
+#[hook]
+pub fn use_episode_watchlist() -> UseAsyncHandle<Vec<TVShowEpisodeSmall>, Arc<gloo_net::Error>> {
+    use_async_with_options(episode_watchlist(), UseAsyncOptions::enable_auto())
 }

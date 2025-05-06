@@ -5,5 +5,6 @@ pub mod follow_button;
 pub mod header;
 pub mod loading;
 pub mod tvshow_cardlet;
+pub mod tvshow_episode_cardlet;
 pub mod tvshow_episode_list_item;
 pub mod tvshow_season_cardlet;
