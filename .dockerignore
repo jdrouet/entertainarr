@@ -1,0 +1,4 @@
+.git
+target
+packages/web/dist
+packages/transcode/.tmp

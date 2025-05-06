@@ -1,10 +1,16 @@
 [service.database]
-url = ":memory:"
+url = "/etc/entertainarr/entertainarr.db"
 
-[service.storage.sources.migrations]
+[service.storage.tvshow.store]
 type = "local"
-path = ".."
+root = "/data/tvshow"
 
-[service.storage.sources.movies]
-type = "local"
-path = ".."
+[service.tmdb]
+token = "...."
+
+# [service.worker]
+# tick_interval = 3600
+
+[[dataset.users]]
+id = 1
+name = "Jeremie"
