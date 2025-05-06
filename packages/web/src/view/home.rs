@@ -1,26 +1,14 @@
-use std::sync::Arc;
-
-use entertainarr_api::tvshow::TVShow;
 use yew::prelude::*;
-use yew_hooks::prelude::*;
 use yew_router::prelude::*;
 
 use crate::Route;
 use crate::component::header::Header;
 use crate::component::tvshow_cardlet::TVShowCardlet;
-
-async fn fetch_tvshows() -> Result<Vec<TVShow>, Arc<gloo_net::Error>> {
-    let res = gloo_net::http::Request::get("/api/tvshows")
-        .credentials(web_sys::RequestCredentials::Include)
-        .send()
-        .await
-        .map_err(Arc::new)?;
-    res.json().await.map_err(Arc::new)
-}
+use crate::hook::tvshow::use_followed_tvshows;
 
 #[function_component(Home)]
 pub fn home() -> Html {
-    let tvshows = use_async_with_options(fetch_tvshows(), UseAsyncOptions::enable_auto());
+    let tvshows = use_followed_tvshows();
 
     html! {
         <div class="bg-gray-100 min-h-screen">
@@ -58,7 +46,7 @@ pub fn home() -> Html {
                             </div>
                         }
                     } else if let Some(shows) = &tvshows.data {
-                        if shows.is_empty() {
+                        if shows.data.is_empty() {
                             html! {
                                 <div class="flex flex-col items-center justify-center text-center text-gray-500 py-16">
                                     <svg class="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -73,7 +61,7 @@ pub fn home() -> Html {
                         } else {
                             html! {
                                 <div class="grid grid-cols-3 gap-4">
-                                    { for shows.iter().map(|show| html! {
+                                    { for shows.data.iter().map(|show| html! {
                                         <TVShowCardlet show={show.clone()} />
                                     }) }
                                 </div>

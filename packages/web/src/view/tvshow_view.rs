@@ -1,6 +1,5 @@
 use entertainarr_api::tvshow::TVShow;
 use yew::prelude::*;
-use yew_hooks::{UseAsyncOptions, use_async_with_options};
 
 use crate::component::badge::{Badge, BadgeKind};
 use crate::component::button::Button;
@@ -10,6 +9,7 @@ use crate::component::header::Header;
 use crate::component::loading::Loading;
 use crate::component::tvshow_season_cardlet::TVShowSeasonCardlet;
 use crate::hook::tvshow::*;
+use crate::hook::tvshow_season::*;
 
 #[derive(Debug, Properties, PartialEq)]
 pub struct Props {
@@ -19,11 +19,7 @@ pub struct Props {
 #[function_component(TVShowView)]
 pub fn tvshow_view(props: &Props) -> Html {
     let tvshow = use_tvshow(props.tvshow_id);
-
-    let seasons = use_async_with_options(
-        crate::hook::tvshow::list_seasons(props.tvshow_id),
-        UseAsyncOptions::enable_auto(),
-    );
+    let seasons = use_tvshow_seasons(props.tvshow_id);
 
     let follow_tvshow = {
         let tvshow = tvshow.clone();

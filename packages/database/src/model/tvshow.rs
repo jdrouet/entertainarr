@@ -45,6 +45,14 @@ fn with_followed(user_id: u64) -> QueryBuilder<'static, Sqlite> {
     qb
 }
 
+fn with_count_followed(user_id: u64) -> QueryBuilder<'static, Sqlite> {
+    let mut qb = with_views(user_id);
+    qb.push(" SELECT count(*)");
+    qb.push(" FROM tvshows");
+    qb.push(" JOIN followed_tvshows ON tvshows.id = followed_tvshows.tvshow_id AND followed_tvshows.user_id = ").push_bind(user_id as i64);
+    qb
+}
+
 #[derive(Clone, Debug)]
 pub struct Entity {
     pub id: u64,
@@ -216,6 +224,19 @@ where
         .persistent(true)
         .fetch_all(conn)
         .await
+}
+
+pub async fn count_followed<'a, X>(conn: X, user_id: u64) -> sqlx::Result<u32>
+where
+    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+{
+    let mut qb = with_count_followed(user_id);
+    let count: u32 = qb
+        .build_query_scalar()
+        .persistent(true)
+        .fetch_one(conn)
+        .await?;
+    Ok(count)
 }
 
 pub async fn with_followers<'a, X>(conn: X) -> sqlx::Result<Vec<u64>>
