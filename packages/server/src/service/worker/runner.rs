@@ -75,7 +75,8 @@ impl Runner {
                 tracing::info!("worker is being stopped");
             },
             _ = self.tick.tick() => {
-                tracing::info!("tick");
+                tracing::debug!("tick");
+                let _ = self.context.sender.send(Action::sync_every_tvshow());
             },
             maybe_action = self.receiver.recv() => {
                 if let Some(action) = maybe_action {

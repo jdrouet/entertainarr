@@ -293,6 +293,15 @@ WHERE user_id = ? AND episode_id IN (
     Ok(())
 }
 
+pub async fn list_needing_update<'a, X>(conn: X) -> sqlx::Result<Vec<u64>>
+where
+    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+{
+    sqlx::query_scalar("SELECT id FROM tvshows WHERE updated_at < datetime('now', '-1 week')")
+        .fetch_all(conn)
+        .await
+}
+
 #[cfg(test)]
 pub fn build_tvshow(id: u64) -> tmdb_api::tvshow::TVShowBase {
     use chrono::NaiveDate;
