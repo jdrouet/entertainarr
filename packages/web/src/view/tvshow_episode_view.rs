@@ -3,7 +3,6 @@ use yew::prelude::*;
 use crate::component::header::Header;
 use crate::hook::tvshow::*;
 use crate::hook::tvshow_episode::*;
-use crate::hook::tvshow_season::*;
 
 #[derive(Properties, PartialEq)]
 pub struct Props {
@@ -15,14 +14,16 @@ pub struct Props {
 #[function_component(TVShowEpisodeView)]
 pub fn tvshow_episode_view(props: &Props) -> Html {
     let tvshow = use_tvshow(props.tvshow_id);
-    let season = use_tvshow_season(props.tvshow_id, props.season_number);
     let episode = use_tvshow_episode(props.tvshow_id, props.season_number, props.episode_number);
 
     html! {
         <div class="bg-gray-100 min-h-screen">
             <Header />
-            <main class="max-w-6xl mx-auto px-4 py-8">
-                <div class="flex flex-row mb-1 items-center gap-4">
+            <main class="max-w-6xl mx-auto p-4">
+                <video class="w-full" controls={true}>
+                    <source src="/api/files/42" type="video/mp4" />
+                </video>
+                <div class="flex flex-row mb-1 items-center gap-4 my-4">
                     if let Some(ref tvshow) = tvshow.data {
                         <h1 class="text-2xl font-bold text-gray-900">
                             {format!("{} S{:02}E{:02}", tvshow.name, props.season_number, props.episode_number)}
@@ -36,6 +37,9 @@ pub fn tvshow_episode_view(props: &Props) -> Html {
                         </h3>
                     }
                 </div>
+                if let Some(overview) = episode.data.as_ref().and_then(|v| v.overview.as_ref()) {
+                    <div>{overview}</div>
+                }
             </main>
         </div>
     }
