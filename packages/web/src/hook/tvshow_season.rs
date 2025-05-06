@@ -4,7 +4,7 @@ use entertainarr_api::tvshow_season::TVShowSeason;
 use yew::prelude::*;
 use yew_hooks::{UseAsyncHandle, use_async, use_async_with_options};
 
-pub async fn list_seasons(tvshow_id: u64) -> Result<Vec<TVShowSeason>, Arc<gloo_net::Error>> {
+async fn list_seasons(tvshow_id: u64) -> Result<Vec<TVShowSeason>, Arc<gloo_net::Error>> {
     let url = format!("/api/tvshows/{tvshow_id}/seasons");
     let res = gloo_net::http::Request::get(url.as_str())
         .credentials(web_sys::RequestCredentials::Include)
@@ -24,7 +24,7 @@ pub fn use_tvshow_seasons(
     )
 }
 
-pub async fn get_season(
+async fn get_season(
     tvshow_id: u64,
     season_number: u64,
 ) -> Result<TVShowSeason, Arc<gloo_net::Error>> {
@@ -48,7 +48,7 @@ pub fn use_tvshow_season(
     )
 }
 
-pub async fn watch_season(
+async fn watch_season(
     tvshow_id: u64,
     season_number: u64,
 ) -> Result<TVShowSeason, Arc<gloo_net::Error>> {
@@ -74,7 +74,7 @@ pub fn use_watch_tvshow_season(
     })
 }
 
-pub async fn unwatch_season(
+async fn unwatch_season(
     tvshow_id: u64,
     season_number: u64,
 ) -> Result<TVShowSeason, Arc<gloo_net::Error>> {
