@@ -19,8 +19,13 @@ pub fn tv_show_cardlet(props: &Props) -> Html {
     );
     let air_date = episode.air_date.format("%Y-%m-%d").to_string();
 
+    let route = Route::TvshowEpisodeView {
+        tvshow_id: episode.tvshow_id,
+        season_number: episode.season_number,
+        episode_number: episode.episode_number,
+    };
     html! {
-        <Link<Route> to={Route::TvshowSeasonView { tvshow_id: episode.tvshow_id, season_number: episode.season_number }} classes="w-full h-[250px] bg-white rounded-lg shadow-md overflow-hidden hover:shadow-md relative hover:shadow-lg transition">
+        <Link<Route> to={route} classes="w-full h-[250px] bg-white rounded-lg shadow-md overflow-hidden hover:shadow-md relative hover:shadow-lg transition">
             if let Some(poster_path) = &episode.image_path {
                 <img
                     src={format!("https://image.tmdb.org/t/p/w780{}", poster_path)}

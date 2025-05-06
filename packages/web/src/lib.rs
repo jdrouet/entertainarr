@@ -22,6 +22,12 @@ enum Route {
     TvshowView { tvshow_id: u64 },
     #[at("/tvshows/:tvshow_id/seasons/:season_number")]
     TvshowSeasonView { tvshow_id: u64, season_number: u64 },
+    #[at("/tvshows/:tvshow_id/seasons/:season_number/episodes/:episode_number")]
+    TvshowEpisodeView {
+        tvshow_id: u64,
+        season_number: u64,
+        episode_number: u64,
+    },
     #[not_found]
     #[at("/404")]
     NotFound,
@@ -51,6 +57,14 @@ fn switch(routes: Route) -> Html {
         } => {
             use view::tvshow_season_view::TVShowSeasonView;
             html! { <TVShowSeasonView {tvshow_id} {season_number} /> }
+        }
+        Route::TvshowEpisodeView {
+            tvshow_id,
+            season_number,
+            episode_number,
+        } => {
+            use view::tvshow_episode_view::TVShowEpisodeView;
+            html! { <TVShowEpisodeView {tvshow_id} {season_number} {episode_number} /> }
         }
         Route::NotFound => html! { <h1>{ "404" }</h1> },
     }
