@@ -22,13 +22,13 @@ fn is_false(value: &bool) -> bool {
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Response<V, R = (), M = ()>
 where
-    R: IsEmpty,
-    M: IsEmpty,
+    R: Default + IsEmpty,
+    M: Default + IsEmpty,
 {
     pub data: V,
-    #[serde(skip_serializing_if = "IsEmpty::is_empty")]
+    #[serde(default, skip_serializing_if = "IsEmpty::is_empty")]
     pub relationships: R,
-    #[serde(skip_serializing_if = "IsEmpty::is_empty")]
+    #[serde(default, skip_serializing_if = "IsEmpty::is_empty")]
     pub meta: M,
 }
 
@@ -54,7 +54,7 @@ impl<V> IsEmpty for Vec<V> {
     }
 }
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct MetaCount {
     pub count: u32,
 }

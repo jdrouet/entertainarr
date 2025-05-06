@@ -2,15 +2,32 @@ use entertainarr_api::tvshow_episode::TVShowEpisode;
 use yew::prelude::*;
 
 use crate::component::button::Button;
+use crate::hook::tvshow_episode::*;
 
 #[derive(Properties, PartialEq)]
 pub struct Props {
+    pub tvshow_id: u64,
+    pub season_number: u64,
     pub episode: TVShowEpisode,
+    pub onchange: Callback<TVShowEpisode>,
 }
 
 #[function_component(TVShowEpisodeListItem)]
 pub fn tv_show_episode_list_item(props: &Props) -> Html {
     let episode = &props.episode;
+
+    let watch = use_watch_tvshow_episode(
+        props.tvshow_id,
+        props.season_number,
+        episode.episode_number,
+        props.onchange.clone(),
+    );
+    let unwatch = use_unwatch_tvshow_episode(
+        props.tvshow_id,
+        props.season_number,
+        episode.episode_number,
+        props.onchange.clone(),
+    );
 
     let watch_status = if episode.watched() {
         html! { <span class="text-green-600 font-medium text-sm">{"Watched"}</span> }
@@ -22,14 +39,6 @@ pub fn tv_show_episode_list_item(props: &Props) -> Html {
         html! { <span class="text-blue-600 font-medium text-sm">{"Available"}</span> }
     } else {
         html! { <span class="text-red-500 font-medium text-sm">{"Not Available"}</span> }
-    };
-
-    let on_mark_watched = {
-        let episode_id = episode.id;
-        Callback::from(move |_| {
-            // TODO: implement real mutation call
-            web_sys::console::log_1(&format!("Mark episode {} as watched", episode_id).into());
-        })
     };
 
     html! {
@@ -64,11 +73,19 @@ pub fn tv_show_episode_list_item(props: &Props) -> Html {
                 </div>
             </div>
             <div class="mt-4 md:mt-0">
-                if !episode.watched() {
+                if episode.watched() {
                     <Button
-                        alt="Mark episode as watched"
-                        onclick={on_mark_watched}
-                        label="Mark as Watched"
+                        alt="Mark episode as not watched"
+                        disabled={unwatch.loading}
+                        onclick={move |_| unwatch.run()}
+                        label="Unwatch"
+                    />
+                } else {
+                    <Button
+                        alt="Mark all episodes as watched"
+                        disabled={watch.loading}
+                        onclick={move |_| watch.run()}
+                        label="Mark watched"
                     />
                 }
             </div>

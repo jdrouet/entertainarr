@@ -1,3 +1,4 @@
+use entertainarr_api::tvshow_episode::TVShowEpisode;
 use entertainarr_api::tvshow_season::TVShowSeason;
 use yew::prelude::*;
 
@@ -21,6 +22,25 @@ pub fn tvshow_season_view(props: &Props) -> Html {
     let tvshow = use_tvshow(props.tvshow_id);
     let season = use_tvshow_season(props.tvshow_id, props.season_number);
     let episodes = use_tvshow_episodes(props.tvshow_id, props.season_number);
+
+    let on_change_episode = {
+        let episodes = episodes.clone();
+        Callback::from(move |episode: TVShowEpisode| {
+            if let Some(ref data) = episodes.data {
+                let data = data
+                    .iter()
+                    .map(|item| {
+                        if item.episode_number == episode.episode_number {
+                            episode.clone()
+                        } else {
+                            item.clone()
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                episodes.update(data);
+            }
+        })
+    };
 
     let watch = {
         let season = season.clone();
@@ -114,7 +134,12 @@ pub fn tvshow_season_view(props: &Props) -> Html {
                     <div class="space-y-4">
                         { for episodes.iter().map(|episode| {
                             html! {
-                                <TVShowEpisodeListItem episode={episode.clone()} />
+                                <TVShowEpisodeListItem
+                                    tvshow_id={props.tvshow_id}
+                                    season_number={props.season_number}
+                                    episode={episode.clone()}
+                                    onchange={on_change_episode.clone()}
+                                />
                             }
                         }) }
                     </div>

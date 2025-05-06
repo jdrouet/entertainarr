@@ -175,6 +175,51 @@ WHERE user_id = ? AND episode_id IN (
     Ok(())
 }
 
+pub async fn find_by_number<'a, X>(
+    conn: X,
+    user_id: u64,
+    tvshow_id: u64,
+    season_number: u64,
+    episode_number: u64,
+) -> sqlx::Result<Option<Entity>>
+where
+    X: sqlx::Executor<'a, Database = sqlx::Sqlite>,
+{
+    let sql = r#"WITH tvshow_episode_file_count AS (
+    SELECT episode_id, count(file_id) AS file_count
+    FROM tvshow_episode_files
+    GROUP BY episode_id
+)
+SELECT
+    tvshow_episodes.id,
+    tvshow_episodes.season_id,
+    tvshow_episodes.name,
+    tvshow_episodes.air_date,
+    tvshow_episodes.overview,
+    tvshow_episodes.episode_number,
+    watched_tvshow_episodes.progress,
+    watched_tvshow_episodes.completed,
+    tvshow_episode_file_count.file_count
+FROM tvshow_episodes
+JOIN tvshow_seasons
+    ON tvshow_seasons.id = tvshow_episodes.season_id
+    AND tvshow_seasons.tvshow_id = ?
+    AND tvshow_seasons.season_number = ?
+LEFT OUTER JOIN watched_tvshow_episodes
+    ON watched_tvshow_episodes.episode_id = tvshow_episodes.id
+    AND watched_tvshow_episodes.user_id = ?
+LEFT OUTER JOIN tvshow_episode_file_count
+    on tvshow_episode_file_count.episode_id = tvshow_episodes.id
+WHERE tvshow_episodes.episode_number = ?"#;
+    sqlx::query_as(sql)
+        .bind(tvshow_id as i64)
+        .bind(season_number as i64)
+        .bind(user_id as i64)
+        .bind(episode_number as i64)
+        .fetch_optional(conn)
+        .await
+}
+
 #[derive(Debug)]
 pub struct EpisodeSearch {
     pub tvshow_id: u64,
