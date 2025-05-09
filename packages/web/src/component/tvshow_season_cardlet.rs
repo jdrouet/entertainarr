@@ -23,7 +23,7 @@ pub fn tv_show_cardlet(props: &Props) -> Html {
         <Link<Route> to={Route::TvshowSeasonView { tvshow_id: props.tvshow_id, season_number: props.season.season_number }} classes="w-[180px] bg-white rounded-lg shadow-md overflow-hidden hover:shadow-md relative hover:shadow-lg transition">
             if let Some(poster_path) = &season.poster_path {
                 <img
-                    src={format!("https://image.tmdb.org/t/p/w300{}", poster_path)}
+                    src={format!("/resources/tmdb/w300{}", poster_path)}
                     alt={season.name.clone()}
                     class="w-full h-[250px] object-cover"
                 />

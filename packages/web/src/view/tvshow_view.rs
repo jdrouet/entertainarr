@@ -116,7 +116,7 @@ pub fn tvshow_view(props: &Props) -> Html {
                             <div class="w-full md:w-1/5">
                                 <img
                                     class="max-h-[400px] mx-auto rounded-lg shadow-md"
-                                    src={format!("https://image.tmdb.org/t/p/w500{path}")}
+                                    src={format!("/resources/tmdb/w500{path}")}
                                     alt={data.name.clone()}
                                 />
                             </div>
