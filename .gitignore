@@ -1,4 +1,4 @@
 /target
 /packages/server/config.toml
 /assets
-http-cacache
+.cache
