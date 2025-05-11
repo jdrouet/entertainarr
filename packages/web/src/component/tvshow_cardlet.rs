@@ -28,7 +28,7 @@ pub fn tv_show_cardlet(props: &TVShowCardletProps) -> Html {
     let backdrop_url = show
         .backdrop_path
         .as_ref()
-        .map(|path| format!("https://image.tmdb.org/t/p/w780{}", path));
+        .map(|path| format!("/resources/tmdb/w780{}", path));
 
     html! {
         <Link<Route> to={Route::TvshowView { tvshow_id: props.show.id }} classes="w-full h-[250px] rounded-lg overflow-hidden shadow-md relative hover:shadow-lg transition">

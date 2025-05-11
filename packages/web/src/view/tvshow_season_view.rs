@@ -80,7 +80,7 @@ pub fn tvshow_season_view(props: &Props) -> Html {
                             <div class="w-full md:w-1/6">
                                 <img
                                     class="max-h-[300px] mx-auto rounded-lg shadow-md"
-                                    src={format!("https://image.tmdb.org/t/p/w500{path}")}
+                                    src={format!("/resources/tmdb/w500{path}")}
                                     alt={season.name.clone()}
                                 />
                             </div>

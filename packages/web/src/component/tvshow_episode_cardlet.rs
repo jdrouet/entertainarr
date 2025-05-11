@@ -28,7 +28,7 @@ pub fn tv_show_cardlet(props: &Props) -> Html {
         <Link<Route> to={route} classes="w-full h-[250px] bg-white rounded-lg shadow-md overflow-hidden hover:shadow-md relative hover:shadow-lg transition">
             if let Some(poster_path) = &episode.image_path {
                 <img
-                    src={format!("https://image.tmdb.org/t/p/w780{}", poster_path)}
+                    src={format!("/resources/tmdb/w780{}", poster_path)}
                     alt={title.clone()}
                     class="w-full h-[190px] object-cover"
                 />
