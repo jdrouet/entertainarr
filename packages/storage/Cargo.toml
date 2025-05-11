@@ -7,7 +7,7 @@ edition = "2024"
 bytes = "1.10.1"
 futures = "0.3.31"
 mime_guess = "2.0"
-pcloud = { version = "2.0" }
+pcloud = { version = "3.1" }
 reqwest = { version = "0.12", features = ["rustls-tls"] }
 serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1.44", features = ["fs"] }

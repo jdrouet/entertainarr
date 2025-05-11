@@ -2162,16 +2162,17 @@ checksum = "df94ce210e5bc13cb6651479fa48d14f601d9858cfe0467f43ae157023b938d3"
 
 [[package]]
 name = "pcloud"
-version = "2.0.0"
+version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1129eb2bde188ac30815eed790ea343bd9c1571aa6846d724997a635ab369479"
+checksum = "2ff21123da83433742ce2dbc41ccc487e9925bc1e8973a87810b5da6386e6a9f"
 dependencies = [
- "async-trait",
+ "bytes",
  "chrono",
+ "futures-core",
  "reqwest",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
+ "thiserror 2.0.12",
  "tracing",
 ]
 
@@ -3957,7 +3958,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
