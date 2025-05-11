@@ -605,7 +605,7 @@ name = "entertainarr-web"
 version = "0.1.0"
 dependencies = [
  "entertainarr-api",
- "gloo-net 0.4.0",
+ "gloo-net 0.5.0",
  "serde",
  "serde_json",
  "wasm-bindgen-futures",
