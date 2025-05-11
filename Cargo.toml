@@ -15,5 +15,5 @@ entertainarr-database = { path = "packages/database", version = "0.1" }
 entertainarr-storage = { path = "packages/storage", version = "0.1" }
 serde = { version = "1.0", features = ["derive"] }
 tmdb-api = { version = "=1.0.0-alpha.2", default-features = false }
-tokio = { version = "1.44", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.45", features = ["rt-multi-thread", "macros"] }
 tracing = { version = "0.1" }
