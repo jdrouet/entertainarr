@@ -1,4 +1,5 @@
 pub mod fetcher;
+pub mod storage;
 pub mod tmdb;
 pub mod worker;
 
@@ -8,6 +9,8 @@ pub struct Config {
     pub(crate) database: entertainarr_database::Config,
     #[serde(default)]
     pub(crate) fetcher: fetcher::Config,
+    #[serde(default)]
+    pub(crate) storage: storage::Config,
     pub(crate) tmdb: tmdb::Config,
     #[serde(default)]
     pub(crate) worker: worker::Config,

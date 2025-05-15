@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+any-storage = { version = "0.2", features = ["serde"] }
 axum = { version = "0.8", features = ["macros"] }
 axum-extra = { version = "0.10", features = ["cookie", "typed-header"] }
 chrono = { workspace = true, default-features = false, features = ["serde"] }

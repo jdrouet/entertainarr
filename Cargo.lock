@@ -48,6 +48,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "any-storage"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dba024a8dfe6cbd741070c60c781fdb19555e41d973f30f6f5e112aa96b5ba35"
+dependencies = [
+ "bytes",
+ "derive_more",
+ "futures",
+ "pcloud 4.0.0-alpha.1",
+ "percent-encoding",
+ "regex",
+ "reqwest",
+ "serde",
+ "time",
+ "tokio",
+ "tokio-util",
+]
+
+[[package]]
 name = "anyhow"
 version = "1.0.98"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -487,6 +506,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive_more"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "093242cf7570c207c83073cf82f79706fe7b8317e98620a47d5be7c3d8497678"
+dependencies = [
+ "derive_more-impl",
+]
+
+[[package]]
+name = "derive_more-impl"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bda628edc44c4bb645fbe0f758797143e4e07926f7ebf4e9bdfbd3d2ce621df3"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.100",
+]
+
+[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -560,6 +599,7 @@ dependencies = [
 name = "entertainarr-server"
 version = "0.1.0"
 dependencies = [
+ "any-storage",
  "axum",
  "axum-extra",
  "chrono",
@@ -593,7 +633,7 @@ dependencies = [
  "bytes",
  "futures",
  "mime_guess",
- "pcloud",
+ "pcloud 2.0.0",
  "reqwest",
  "serde",
  "tokio",
@@ -2172,6 +2212,23 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 1.0.69",
+ "tracing",
+]
+
+[[package]]
+name = "pcloud"
+version = "4.0.0-alpha.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "170e6e5a6c9849d5573a78bda7d9a3681d3572153c1412f8725e127023216741"
+dependencies = [
+ "bytes",
+ "chrono",
+ "futures-core",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha1",
+ "thiserror 2.0.12",
  "tracing",
 ]
 
@@ -3957,7 +4014,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
