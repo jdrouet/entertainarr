@@ -4,7 +4,6 @@ mod follow;
 mod get_by_id;
 mod list;
 mod search;
-mod season;
 mod sync;
 mod watch;
 mod watchlist;
@@ -25,7 +24,7 @@ pub(super) fn router() -> axum::Router {
             "/{tvshow_id}/watch",
             post(watch::create).delete(watch::delete),
         )
-        .nest("/{tvshow_id}/seasons", season::router())
+        .nest("/{tvshow_id}/seasons", super::tvshow_season::router())
 }
 
 fn tvshow_to_view(

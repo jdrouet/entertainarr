@@ -6,6 +6,8 @@ mod movie;
 mod status;
 mod storage;
 mod tvshow;
+mod tvshow_episode;
+mod tvshow_season;
 mod user;
 
 async fn not_found() -> error::ApiError {

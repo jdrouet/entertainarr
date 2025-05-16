@@ -1,6 +1,6 @@
 use axum::routing::{get, post};
 
-mod episode;
+// mod episode;
 mod get_by_number;
 mod list;
 mod watch;
@@ -24,7 +24,7 @@ pub(super) fn router() -> axum::Router {
     axum::Router::new()
         .route("/", get(list::handle))
         .route("/{season_number}", get(get_by_number::handle))
-        .nest("/{season_number}/episodes", episode::router())
+        .nest("/{season_number}/episodes", super::tvshow_episode::router())
         .route(
             "/{season_number}/watch",
             post(watch::create).delete(watch::delete),
