@@ -4,7 +4,6 @@ members = [
     "packages/api",
     "packages/database",
     "packages/server",
-    "packages/storage",
     "packages/web",
 ]
 
