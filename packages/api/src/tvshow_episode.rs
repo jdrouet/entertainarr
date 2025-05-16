@@ -37,3 +37,11 @@ pub struct TVShowEpisodeSmall {
     pub image_path: Option<String>,
     pub air_date: chrono::NaiveDate,
 }
+
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct WithFiles<Inner> {
+    #[serde(flatten)]
+    pub inner: Inner,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub files: Vec<crate::file::File>,
+}

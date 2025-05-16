@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use entertainarr_api::tvshow_episode::{TVShowEpisode, TVShowEpisodeSmall};
+use entertainarr_api::tvshow_episode::{TVShowEpisode, TVShowEpisodeSmall, WithFiles};
 use yew::prelude::*;
 use yew_hooks::{UseAsyncHandle, UseAsyncOptions, use_async, use_async_with_options};
 
@@ -105,7 +105,7 @@ async fn get_episode(
     tvshow_id: u64,
     season_number: u64,
     episode_number: u64,
-) -> Result<TVShowEpisode, Arc<gloo_net::Error>> {
+) -> Result<WithFiles<TVShowEpisode>, Arc<gloo_net::Error>> {
     let url = format!("/api/tvshows/{tvshow_id}/seasons/{season_number}/episodes/{episode_number}");
     let res = gloo_net::http::Request::get(url.as_str())
         .credentials(web_sys::RequestCredentials::Include)
@@ -120,7 +120,7 @@ pub fn use_tvshow_episode(
     tvshow_id: u64,
     season_number: u64,
     episode_number: u64,
-) -> UseAsyncHandle<TVShowEpisode, Arc<gloo_net::Error>> {
+) -> UseAsyncHandle<WithFiles<TVShowEpisode>, Arc<gloo_net::Error>> {
     use_async_with_options(
         get_episode(tvshow_id, season_number, episode_number),
         UseAsyncOptions::enable_auto(),

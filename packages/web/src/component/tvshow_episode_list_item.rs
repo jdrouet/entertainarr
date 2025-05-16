@@ -1,6 +1,8 @@
 use entertainarr_api::tvshow_episode::TVShowEpisode;
 use yew::prelude::*;
+use yew_router::prelude::*;
 
+use crate::Route;
 use crate::component::button::Button;
 use crate::hook::tvshow_episode::*;
 
@@ -41,8 +43,14 @@ pub fn tv_show_episode_list_item(props: &Props) -> Html {
         html! { <span class="text-red-500 font-medium text-sm">{"Not Available"}</span> }
     };
 
+    let href = Route::TvshowEpisodeView {
+        tvshow_id: props.tvshow_id,
+        season_number: props.season_number,
+        episode_number: props.episode.episode_number,
+    };
+
     html! {
-        <div class="bg-white rounded shadow p-4 flex flex-col md:flex-row md:justify-between md:items-start">
+        <Link<Route> to={href} classes="bg-white rounded shadow p-4 flex flex-col md:flex-row md:justify-between md:items-start">
             <div class="flex-1 pr-4">
                 <h3 class="text-lg font-semibold text-gray-800">
                     { format!("Episode {}: {}", episode.episode_number, episode.name) }
@@ -89,6 +97,6 @@ pub fn tv_show_episode_list_item(props: &Props) -> Html {
                     />
                 }
             </div>
-        </div>
+        </Link<Route>>
     }
 }

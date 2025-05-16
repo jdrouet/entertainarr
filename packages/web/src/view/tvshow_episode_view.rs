@@ -21,7 +21,12 @@ pub fn tvshow_episode_view(props: &Props) -> Html {
             <Header />
             <main class="max-w-6xl mx-auto p-4">
                 <video class="w-full" controls={true}>
-                    <source src="/api/files/42" type="video/mp4" />
+                    {episode.data.iter().flat_map(|item| item.files.clone().into_iter()).map(|item| html! {
+                        <source
+                            src={format!("/api/storages/tvshows/{}", item.path.to_string_lossy())}
+                            type={item.content_type.unwrap_or(String::from("video/mp4"))}
+                        />
+                    }).collect::<Html>()}
                 </video>
                 <div class="flex flex-row mb-1 items-center gap-4 my-4">
                     if let Some(ref tvshow) = tvshow.data {
@@ -31,13 +36,13 @@ pub fn tvshow_episode_view(props: &Props) -> Html {
                     } else {
                         <div class="h-[32px] w-[300px] animate-pulse rounded-xl bg-gray-300"></div>
                     }
-                    if let Some(air_date) = episode.data.as_ref().and_then(|item| item.air_date.map(|date| date.format("%Y-%m-%d").to_string())) {
+                    if let Some(air_date) = episode.data.as_ref().and_then(|item| item.inner.air_date.map(|date| date.format("%Y-%m-%d").to_string())) {
                         <h3 class="text-md text-gray-600">
                             {air_date}
                         </h3>
                     }
                 </div>
-                if let Some(overview) = episode.data.as_ref().and_then(|v| v.overview.as_ref()) {
+                if let Some(overview) = episode.data.as_ref().and_then(|v| v.inner.overview.as_ref()) {
                     <div>{overview}</div>
                 }
             </main>
