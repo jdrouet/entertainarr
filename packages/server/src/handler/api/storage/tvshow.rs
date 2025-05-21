@@ -1,14 +1,18 @@
 use std::ops::Bound;
 use std::path::PathBuf;
 
+use any_storage::any::AnyStoreFile;
 use any_storage::{Store, StoreFile, StoreMetadata};
 use axum::Extension;
 use axum::body::Body;
-use axum::extract::Path;
+use axum::extract::{Path, Query};
 use axum::http::{HeaderValue, Response, StatusCode};
 use axum_extra::TypedHeader;
 use axum_extra::headers::Range;
-use reqwest::header::CONTENT_TYPE;
+use entertainarr_transcode::video::Format;
+use reqwest::header::{
+    ACCEPT_RANGES, CONTENT_LENGTH, CONTENT_RANGE, CONTENT_TYPE, TRANSFER_ENCODING,
+};
 
 use crate::handler::api::error::ApiError;
 use crate::service::storage::Storage;
@@ -29,19 +33,35 @@ fn from_range((left, right): (Bound<u64>, Bound<u64>), size: u64, max_size: u64)
 
 const MAX_RANGE: u64 = 5 * 1024 * 1024; // 5MB
 
-pub(super) async fn handle(
-    Extension(storage): Extension<Storage>,
-    range: Option<TypedHeader<Range>>,
-    Path(path): Path<PathBuf>,
-) -> Result<Response<Body>, ApiError> {
-    let storage = storage
-        .tvshow
-        .ok_or_else(|| ApiError::not_found("tvshow storage not configured"))?;
-    let file = storage
-        .store
-        .get_file(&path)
+#[derive(Debug, Default, serde::Deserialize)]
+pub struct QueryParams {
+    #[serde(default)]
+    pub format: Option<Format>,
+}
+
+async fn handle_transcode(file: AnyStoreFile, format: Format) -> Result<Response<Body>, ApiError> {
+    let reader = file
+        .read(..)
         .await
         .map_err(|err| ApiError::new(StatusCode::BAD_GATEWAY, err.to_string()))?;
+
+    let stream =
+        entertainarr_transcode::video::Builder::new(format).build_stream_transcoder(reader)?;
+    let mut res = Response::new(Body::from_stream(stream));
+
+    let headers = res.headers_mut();
+
+    headers.append(CONTENT_TYPE, HeaderValue::from_static(format.as_mime()));
+    headers.append(TRANSFER_ENCODING, HeaderValue::from_static("chunked"));
+
+    Ok(res)
+}
+
+async fn handle_direct(
+    file: AnyStoreFile,
+    range: Option<TypedHeader<Range>>,
+    path: PathBuf,
+) -> Result<Response<Body>, ApiError> {
     let meta = file
         .metadata()
         .await
@@ -52,7 +72,7 @@ pub(super) async fn handle(
         .map(|bound| from_range(bound, meta.size(), MAX_RANGE))
         .unwrap_or((0, MAX_RANGE));
     let reader = file
-        .read(begin..end)
+        .read(..)
         .await
         .map_err(|err| ApiError::new(StatusCode::BAD_GATEWAY, err.to_string()))?;
 
@@ -70,16 +90,38 @@ pub(super) async fn handle(
     }
 
     if range.is_some() {
-        headers.append("Accept-Ranges", HeaderValue::from_static("bytes"));
+        headers.append(ACCEPT_RANGES, HeaderValue::from_static("bytes"));
 
         let value = format!("bytes {begin}-{end}/{}", meta.size());
-        headers.append("Content-Range", HeaderValue::from_str(&value).unwrap());
+        headers.append(CONTENT_RANGE, HeaderValue::from_str(&value).unwrap());
     }
 
     let value = format!("{}", end - begin - 1);
-    headers.append("Content-Length", HeaderValue::from_str(&value).unwrap());
+    headers.append(CONTENT_LENGTH, HeaderValue::from_str(&value).unwrap());
 
     Ok(res)
+}
+
+pub(super) async fn handle(
+    Extension(storage): Extension<Storage>,
+    range: Option<TypedHeader<Range>>,
+    Path(path): Path<PathBuf>,
+    Query(params): Query<QueryParams>,
+) -> Result<Response<Body>, ApiError> {
+    let storage = storage
+        .tvshow
+        .ok_or_else(|| ApiError::not_found("tvshow storage not configured"))?;
+    let file = storage
+        .store
+        .get_file(&path)
+        .await
+        .map_err(|err| ApiError::new(StatusCode::BAD_GATEWAY, err.to_string()))?;
+
+    if let Some(format) = params.format {
+        handle_transcode(file, format).await
+    } else {
+        handle_direct(file, range, path).await
+    }
 }
 
 #[cfg(test)]
@@ -87,11 +129,17 @@ mod tests {
     use std::{path::PathBuf, sync::Arc};
 
     use any_storage::{any::AnyStore, http::HttpStore};
-    use axum::{Extension, extract::Path};
+    use axum::{
+        Extension,
+        extract::{Path, Query},
+    };
     use axum_extra::{TypedHeader, headers::Range};
     use reqwest::StatusCode;
 
-    use crate::service::storage::{Storage, TVShowStorage};
+    use crate::{
+        handler::api::storage::tvshow::QueryParams,
+        service::storage::{Storage, TVShowStorage},
+    };
 
     const BASE_URL: &str = "https://download.blender.org/peach/bigbuckbunny_movies/";
 
@@ -105,6 +153,7 @@ mod tests {
             Extension(storage),
             Some(TypedHeader(Range::bytes(0..(1024 * 1024)).unwrap())),
             Path(PathBuf::from("big_buck_bunny_1080p_h264.mov")),
+            Query(QueryParams::default()),
         )
         .await
         .unwrap();
@@ -140,6 +189,7 @@ mod tests {
             Extension(storage),
             Some(TypedHeader(Range::bytes(0..(100 * 1024 * 1024)).unwrap())),
             Path(PathBuf::from("big_buck_bunny_1080p_h264.mov")),
+            Query(QueryParams::default()),
         )
         .await
         .unwrap();
@@ -174,6 +224,7 @@ mod tests {
             Extension(storage),
             None,
             Path(PathBuf::from("big_buck_bunny_1080p_h264.mov")),
+            Query(QueryParams::default()),
         )
         .await
         .unwrap();

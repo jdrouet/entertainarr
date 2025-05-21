@@ -11,6 +11,7 @@ chrono = { workspace = true, default-features = false, features = ["serde"] }
 config = { version = "0.15", default-features = false, features = ["toml"] }
 entertainarr-api = { workspace = true }
 entertainarr-database = { workspace = true }
+entertainarr-transcode = { workspace = true }
 http-cache-reqwest = { version = "0.15", default-features = false, features = [
     "manager-cacache",
 ] }

@@ -593,6 +593,7 @@ dependencies = [
  "config",
  "entertainarr-api",
  "entertainarr-database",
+ "entertainarr-transcode",
  "http-cache-reqwest",
  "include_dir",
  "limace",
@@ -620,6 +621,7 @@ version = "0.1.0"
 dependencies = [
  "any-storage",
  "regex",
+ "serde",
  "thiserror 2.0.12",
  "tokio",
  "tokio-stream",

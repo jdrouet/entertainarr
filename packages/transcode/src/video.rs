@@ -1,28 +1,57 @@
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio::process::Command;
 
-#[derive(Debug)]
-pub struct Size {
-    pub height: u16,
-    pub width: u16,
+#[derive(Clone, Copy, Debug, serde::Serialize, serde::Deserialize)]
+pub enum Format {
+    #[serde(rename = "mp4")]
+    Mp4,
+}
+
+impl Format {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Mp4 => "mp4",
+        }
+    }
+
+    pub fn as_mime(&self) -> &'static str {
+        match self {
+            Self::Mp4 => "video/mp4",
+        }
+    }
 }
 
 #[derive(Debug)]
-pub struct Params {
-    pub format: &'static str,
+pub struct Builder {
+    format: Format,
 }
 
-impl Params {
+impl Builder {
+    pub fn new(format: Format) -> Self {
+        Self { format }
+    }
+
     fn with_args<'a, 'b>(&'a self, cmd: &'b mut Command) -> &'b mut Command
     where
         'b: 'a,
     {
-        cmd.arg("-f")
-            .arg(self.format)
-            .arg("-c")
-            .arg("copy")
-            .arg("-movflags")
-            .arg("frag_keyframe+empty_moov")
+        match self.format {
+            Format::Mp4 => cmd
+                .arg("-ss")
+                .arg("0")
+                .arg("-f")
+                .arg("mp4")
+                .arg("-movflags")
+                .arg("frag_keyframe+empty_moov")
+                .arg("-c:v")
+                .arg("libx264")
+                .arg("-preset")
+                .arg("ultrafast")
+                .arg("-tune")
+                .arg("zerolatency")
+                .arg("-c:a")
+                .arg("aac"),
+        }
     }
 
     fn command(&self) -> Command {
@@ -34,35 +63,30 @@ impl Params {
         cmd.arg("pipe:1"); // output to stdout
         cmd
     }
-}
 
-#[derive(Debug)]
-pub struct Transcoder(crate::Transcoder);
-
-impl Transcoder {
-    pub async fn new(
+    pub fn build_transcoder(
+        &self,
         reader: impl AsyncRead + Unpin + Send + 'static,
         writer: impl AsyncWrite + Unpin + Send + 'static,
-        params: &Params,
-    ) -> std::io::Result<Self> {
-        crate::Transcoder::new(params.command(), reader, writer).map(Self)
+    ) -> std::io::Result<crate::Transcoder> {
+        crate::Transcoder::new(self.command(), reader, writer)
     }
 
-    pub fn abort(&self) {
-        self.0.abort();
-    }
-
-    pub async fn wait(self) {
-        self.0.wait().await;
+    pub fn build_stream_transcoder(
+        &self,
+        reader: impl AsyncRead + Unpin + Send + 'static,
+    ) -> std::io::Result<super::StreamTranscoder> {
+        crate::StreamTranscoder::new(self.command(), reader)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use any_storage::{Store, StoreFile, StoreMetadata, WriteOptions};
-
     // requires to download https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_640x360.m4v
     // and store it in the .tmp directory
+
+    use any_storage::{Store, StoreFile, StoreMetadata, WriteOptions};
+
     #[tokio::test]
     async fn should_transcode() {
         let storage = any_storage::local::LocalStore::new(".tmp");
@@ -73,10 +97,8 @@ mod tests {
         let target_file = storage.get_file("BigBuckBunny_640x360.mp4").await.unwrap();
         let target_writer = target_file.write(WriteOptions::create()).await.unwrap();
         //
-        let params = super::Params { format: "mp4" };
-        //
-        let transcoder = super::Transcoder::new(source_reader, target_writer, &params)
-            .await
+        let transcoder = super::Builder::new(super::Format::Mp4)
+            .build_transcoder(source_reader, target_writer)
             .unwrap();
         transcoder.wait().await;
         //

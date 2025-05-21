@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use yew::prelude::*;
 
 use crate::component::header::Header;
@@ -25,8 +23,8 @@ pub fn tvshow_episode_view(props: &Props) -> Html {
                 <video class="w-full" controls={true}>
                     {episode.data.iter().flat_map(|item| item.files.clone().into_iter()).map(|item| html! {
                         <source
-                            src={format!("/api/storages/tvshows/{}", item.path.to_string_lossy())}
-                            type={item.content_type.map(Cow::Owned).unwrap_or(Cow::Borrowed("video/mp4"))}
+                            src={format!("/api/storages/tvshows/{}?format=mp4", item.path.to_string_lossy())}
+                            type="video/mp4"
                         />
                     }).collect::<Html>()}
                 </video>
