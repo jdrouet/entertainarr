@@ -2,29 +2,50 @@ use tokio::io::{AsyncRead, AsyncWrite};
 use tokio::process::Command;
 
 #[derive(Debug)]
+pub struct Size {
+    pub height: u16,
+    pub width: u16,
+}
+
+#[derive(Debug)]
+pub struct Params {
+    pub format: &'static str,
+}
+
+impl Params {
+    fn with_args<'a, 'b>(&'a self, cmd: &'b mut Command) -> &'b mut Command
+    where
+        'b: 'a,
+    {
+        cmd.arg("-f")
+            .arg(self.format)
+            .arg("-c")
+            .arg("copy")
+            .arg("-movflags")
+            .arg("frag_keyframe+empty_moov")
+    }
+
+    fn command(&self) -> Command {
+        let mut cmd = Command::new("ffmpeg");
+        cmd.arg("-y") // overwrite existing files
+            .arg("-i")
+            .arg("pipe:0"); // input from stdin
+        self.with_args(&mut cmd);
+        cmd.arg("pipe:1"); // output to stdout
+        cmd
+    }
+}
+
+#[derive(Debug)]
 pub struct Transcoder(crate::Transcoder);
 
 impl Transcoder {
     pub async fn new(
         reader: impl AsyncRead + Unpin + Send + 'static,
         writer: impl AsyncWrite + Unpin + Send + 'static,
+        params: &Params,
     ) -> std::io::Result<Self> {
-        let mut cmd = Command::new("ffmpeg");
-        cmd.arg("-y") // overwrite existing files
-            .arg("-i")
-            .arg("pipe:0") // input from stdin
-            .arg("-vf")
-            .arg("pad=iw:ceil(ih/2)*2")
-            .arg("-f")
-            .arg("mp4") // output format
-            .arg("-c:v")
-            .arg("libx264")
-            .arg("-c:a")
-            .arg("aac")
-            .arg("-movflags")
-            .arg("frag_keyframe+empty_moov") // enable streaming output
-            .arg("pipe:1"); // output to stdout
-        crate::Transcoder::new(cmd, reader, writer).map(Self)
+        crate::Transcoder::new(params.command(), reader, writer).map(Self)
     }
 
     pub fn abort(&self) {
@@ -52,7 +73,9 @@ mod tests {
         let target_file = storage.get_file("BigBuckBunny_640x360.mp4").await.unwrap();
         let target_writer = target_file.write(WriteOptions::create()).await.unwrap();
         //
-        let transcoder = super::Transcoder::new(source_reader, target_writer)
+        let params = super::Params { format: "mp4" };
+        //
+        let transcoder = super::Transcoder::new(source_reader, target_writer, &params)
             .await
             .unwrap();
         transcoder.wait().await;
