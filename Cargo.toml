@@ -4,10 +4,12 @@ members = [
     "packages/api",
     "packages/database",
     "packages/server",
+    "packages/transcode",
     "packages/web",
 ]
 
 [workspace.dependencies]
+any-storage = { version = "0.3" }
 chrono = { version = "0.4", default-features = false, features = ["serde"] }
 entertainarr-api = { path = "packages/api", version = "0.1" }
 entertainarr-database = { path = "packages/database", version = "0.1" }
