@@ -3,7 +3,7 @@ pub struct LoginPayload {
     pub username: String,
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct User {
     pub id: u64,
     pub name: Box<str>,

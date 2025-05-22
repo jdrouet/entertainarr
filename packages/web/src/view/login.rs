@@ -22,8 +22,13 @@ async fn post_login(username: String) -> Result<u16, Arc<gloo_net::Error>> {
         .map_err(Arc::new)
 }
 
+#[derive(Properties, PartialEq)]
+pub struct Props {
+    pub redirect: Option<Route>,
+}
+
 #[function_component(Login)]
-pub fn login() -> Html {
+pub fn login(props: &Props) -> Html {
     let username = use_state(String::default);
     let username_value = (*username).clone();
 
@@ -56,9 +61,10 @@ pub fn login() -> Html {
     };
 
     let login_done = login.data.is_some();
+    let redirect_route = props.redirect.clone().unwrap_or(Route::Home);
     use_effect(move || {
         if login_done {
-            navigator.push(&Route::Home);
+            navigator.push(&redirect_route);
         }
     });
 
