@@ -39,7 +39,7 @@ impl ButtonSize {
     const fn classes(&self) -> &'static str {
         match self {
             Self::Normal => "text-sm px-4 py-2",
-            Self::Small => "text-xd px-3 py-1",
+            Self::Small => "text-xs px-3 py-1",
         }
     }
 }
