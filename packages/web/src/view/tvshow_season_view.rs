@@ -1,11 +1,14 @@
 use entertainarr_api::tvshow_episode::TVShowEpisode;
 use entertainarr_api::tvshow_season::TVShowSeason;
 use yew::prelude::*;
+use yew_router::prelude::*;
 
+use crate::Route;
 use crate::component::button::Button;
 use crate::component::error_message::ErrorMessage;
 use crate::component::header::Header;
 use crate::component::loading::Loading;
+use crate::component::text::{Text, TextSize};
 use crate::component::tvshow_episode_list_item::TVShowEpisodeListItem;
 use crate::hook::tvshow::*;
 use crate::hook::tvshow_episode::*;
@@ -71,7 +74,12 @@ pub fn tvshow_season_view(props: &Props) -> Html {
     html! {
         <div class="bg-gray-100 min-h-screen">
             <Header />
-            <main class="max-w-6xl mx-auto px-4 py-8">
+            <main class="max-w-6xl mx-auto p-4">
+                <div class="flex flex-row items-center gap-3 mb-4">
+                    <Link<Route> to={Route::TvshowView { tvshow_id: props.tvshow_id }} classes="text-sm">{"TV Show"}</Link<Route>>
+                    {" / "}
+                    <Text size={TextSize::Sm} value="Season" />
+                </div>
                 if let Some(err) = &season.error {
                     <ErrorMessage error={err.to_string()} />
                 } else if let Some(season) = &season.data {

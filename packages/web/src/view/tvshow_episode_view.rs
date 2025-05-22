@@ -1,9 +1,10 @@
 use yew::prelude::*;
+use yew_router::prelude::*;
 
+use crate::Route;
 use crate::component::button::Button;
 use crate::component::header::Header;
-use crate::component::text::TextColor;
-use crate::component::text::TextSize;
+use crate::component::text::{Text, TextColor, TextSize};
 use crate::component::text_placeholder::TextPlaceholder;
 use crate::hook::tvshow::*;
 use crate::hook::tvshow_episode::*;
@@ -24,6 +25,13 @@ pub fn tvshow_episode_view(props: &Props) -> Html {
         <div class="bg-gray-100 min-h-screen">
             <Header />
             <main class="max-w-6xl mx-auto p-4">
+                <div class="flex flex-row items-center gap-3 mb-4">
+                    <Link<Route> to={Route::TvshowView { tvshow_id: props.tvshow_id }} classes="text-sm">{"TV Show"}</Link<Route>>
+                    {" / "}
+                    <Link<Route> to={Route::TvshowSeasonView { tvshow_id: props.tvshow_id, season_number: props.season_number }} classes="text-sm">{"Season"}</Link<Route>>
+                    {" / "}
+                    <Text size={TextSize::Sm} value="Episode" />
+                </div>
                 <video class="w-full" controls={true}>
                     // {episode.data.iter().flat_map(|item| item.files.clone().into_iter()).map(|item| html! {
                     //     <source
