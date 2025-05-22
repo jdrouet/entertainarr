@@ -37,20 +37,12 @@ impl Builder {
     {
         match self.format {
             Format::Mp4 => cmd
-                .arg("-ss")
-                .arg("0")
                 .arg("-f")
                 .arg("mp4")
+                .arg("-c")
+                .arg("copy")
                 .arg("-movflags")
-                .arg("frag_keyframe+empty_moov")
-                .arg("-c:v")
-                .arg("libx264")
-                .arg("-preset")
-                .arg("ultrafast")
-                .arg("-tune")
-                .arg("zerolatency")
-                .arg("-c:a")
-                .arg("aac"),
+                .arg("frag_keyframe+empty_moov"),
         }
     }
 

@@ -35,6 +35,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - name: prepare requirements
+        run: |
+          mkdir -p packages/transcode/.tmp
+          curl https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_640x360.m4v -o packages/transcode/.tmp/BigBuckBunny_640x360.m4v
       - run: cargo test
 
   dependencies:
