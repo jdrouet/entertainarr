@@ -7,8 +7,6 @@ edition = "2024"
 entertainarr-api = { workspace = true }
 gloo-net = { version = "0.4", features = ["http"] }
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-wasm-bindgen-futures = "0.4"
 web-sys = { version = "0.3" }
 # this is the development version of Yew
 yew = { version = "0.21", features = ["csr"] }

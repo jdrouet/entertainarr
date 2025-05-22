@@ -565,7 +565,6 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "serde",
- "tmdb-api",
 ]
 
 [[package]]
@@ -599,7 +598,6 @@ dependencies = [
  "limace",
  "mime_guess",
  "mockito",
- "regex",
  "reqwest",
  "reqwest-middleware",
  "serde",
@@ -609,7 +607,6 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tokio-util",
- "toml",
  "tower-http",
  "tracing",
  "tracing-subscriber",
@@ -620,9 +617,7 @@ name = "entertainarr-transcode"
 version = "0.1.0"
 dependencies = [
  "any-storage",
- "regex",
  "serde",
- "thiserror 2.0.12",
  "tokio",
  "tokio-stream",
  "tokio-util",
@@ -635,8 +630,6 @@ dependencies = [
  "entertainarr-api",
  "gloo-net 0.4.0",
  "serde",
- "serde_json",
- "wasm-bindgen-futures",
  "web-sys",
  "yew",
  "yew-hooks",
@@ -3430,15 +3423,8 @@ dependencies = [
  "serde",
  "serde_spanned",
  "toml_datetime",
- "toml_write",
  "winnow 0.7.10",
 ]
-
-[[package]]
-name = "toml_write"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfb942dfe1d8e29a7ee7fcbde5bd2b9a25fb89aa70caea2eba3bee836ff41076"
 
 [[package]]
 name = "tower"
