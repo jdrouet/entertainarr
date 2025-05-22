@@ -47,6 +47,8 @@ enum Route {
     Home,
     #[at("/login")]
     Login,
+    #[at("/tvshows")]
+    TvshowIndex,
     #[at("/tvshows/search")]
     TvshowSearch,
     #[at("/tvshows/:tvshow_id")]
@@ -85,6 +87,10 @@ fn switch(routes: Route) -> Html {
         }
         Route::Login => {
             html! { <Redirect<Route> to={Route::Home} /> }
+        }
+        Route::TvshowIndex => {
+            use view::tvshow_index_view::TVShowIndex;
+            html! { <TVShowIndex /> }
         }
         Route::TvshowSearch => {
             use view::tvshow_search::TVShowSearch;
