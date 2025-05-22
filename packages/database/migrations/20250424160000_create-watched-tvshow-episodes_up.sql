@@ -1,4 +1,4 @@
-CREATE TABLE watched_tvshow_episodes (
+CREATE TABLE IF NOT EXISTS watched_tvshow_episodes (
     user_id INTEGER REFERENCES users (id) ON DELETE CASCADE,
     episode_id INTEGER NOT NULL REFERENCES tvshow_episodes (id) ON DELETE CASCADE,
     progress INTEGER DEFAULT 0,

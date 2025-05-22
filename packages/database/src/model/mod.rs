@@ -1,4 +1,3 @@
-pub mod file;
 pub mod tvshow;
 pub mod tvshow_episode;
 pub mod tvshow_episode_file;

@@ -1,4 +1,4 @@
-CREATE TABLE tvshows (
+CREATE TABLE IF NOT EXISTS tvshows (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
     original_name TEXT NOT NULL,

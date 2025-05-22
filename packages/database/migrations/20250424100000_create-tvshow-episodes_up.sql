@@ -1,4 +1,4 @@
-CREATE TABLE tvshow_episodes (
+CREATE TABLE IF NOT EXISTS tvshow_episodes (
     id INTEGER PRIMARY KEY,
     season_id INTEGER NOT NULL REFERENCES tvshow_seasons (id) ON DELETE CASCADE,
     name TEXT NOT NULL,
