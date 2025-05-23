@@ -3,7 +3,7 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 
 use crate::Route;
-use crate::component::button::Button;
+use crate::component::watch_button::WatchButton;
 use crate::hook::tvshow_episode::*;
 
 #[derive(Properties, PartialEq)]
@@ -49,6 +49,20 @@ pub fn tv_show_episode_list_item(props: &Props) -> Html {
         episode_number: props.episode.episode_number,
     };
 
+    let on_toggle_watch = {
+        let watched = episode.watched();
+        let watch = watch.clone();
+        let unwatch = unwatch.clone();
+
+        Callback::from(move |_: web_sys::MouseEvent| {
+            if watched {
+                unwatch.run();
+            } else {
+                watch.run();
+            }
+        })
+    };
+
     html! {
         <Link<Route> to={href} classes="bg-white rounded shadow p-4 flex flex-col md:flex-row md:justify-between md:items-start">
             <div class="flex-1 pr-4">
@@ -81,21 +95,11 @@ pub fn tv_show_episode_list_item(props: &Props) -> Html {
                 </div>
             </div>
             <div class="mt-4 md:mt-0">
-                if episode.watched() {
-                    <Button
-                        alt="Mark episode as not watched"
-                        disabled={unwatch.loading}
-                        onclick={move |_| unwatch.run()}
-                        label="Unwatch"
-                    />
-                } else {
-                    <Button
-                        alt="Mark all episodes as watched"
-                        disabled={watch.loading}
-                        onclick={move |_| watch.run()}
-                        label="Mark watched"
-                    />
-                }
+                <WatchButton
+                    completed={episode.watched()}
+                    loading={watch.loading || unwatch.loading}
+                    onclick={on_toggle_watch}
+                />
             </div>
         </Link<Route>>
     }

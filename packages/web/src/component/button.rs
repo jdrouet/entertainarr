@@ -56,7 +56,7 @@ pub struct Props {
     #[prop_or_default]
     pub size: ButtonSize,
     pub label: String,
-    pub onclick: Callback<MouseEvent>,
+    pub onclick: Callback<web_sys::MouseEvent>,
 }
 
 #[function_component(Button)]

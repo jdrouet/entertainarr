@@ -8,6 +8,7 @@ use crate::component::follow_button::FollowButton;
 use crate::component::header::Header;
 use crate::component::loading::Loading;
 use crate::component::tvshow_season_cardlet::TVShowSeasonCardlet;
+use crate::component::watch_button::WatchButton;
 use crate::hook::tvshow::*;
 use crate::hook::tvshow_season::*;
 
@@ -92,17 +93,21 @@ pub fn tvshow_view(props: &Props) -> Html {
         })
     };
 
-    let on_click_unwatch = {
-        let trigger = unwatch_tvshow.clone();
-        Callback::from(move |_: MouseEvent| {
-            trigger.run();
-        })
-    };
-
-    let on_click_watch = {
-        let trigger = watch_tvshow.clone();
-        Callback::from(move |_: MouseEvent| {
-            trigger.run();
+    let on_toggle_watch = {
+        let watch = watch_tvshow.clone();
+        let unwatch = unwatch_tvshow.clone();
+        let watched = tvshow
+            .data
+            .as_ref()
+            .map(|value| value.watch_completed())
+            .unwrap_or(false);
+        Callback::from(move |event: web_sys::MouseEvent| {
+            event.stop_propagation();
+            if watched {
+                unwatch.run();
+            } else {
+                watch.run();
+            }
         })
     };
 
@@ -171,21 +176,11 @@ pub fn tvshow_view(props: &Props) -> Html {
                                             "Refresh"
                                         }}
                                     />
-                                    if data.watch_completed() {
-                                        <Button
-                                            alt="Mark all episodes as not watched"
-                                            disabled={unwatch_tvshow.loading}
-                                            onclick={on_click_unwatch}
-                                            label="Unwatch all"
-                                        />
-                                    } else {
-                                        <Button
-                                            alt="Mark all episodes as watched"
-                                            disabled={watch_tvshow.loading}
-                                            onclick={on_click_watch}
-                                            label="Mark all watched"
-                                        />
-                                    }
+                                    <WatchButton
+                                        completed={data.watch_completed()}
+                                        loading={unwatch_tvshow.loading || watch_tvshow.loading}
+                                        onclick={on_toggle_watch}
+                                    />
                                 }
                             </div>
                         </div>
@@ -193,7 +188,7 @@ pub fn tvshow_view(props: &Props) -> Html {
                 } else if tvshow.loading {
                     <Loading />
                 } else if let Some(err) = &tvshow.error {
-                    <div class="text-red-600">{ format!("Error: {}", err) }</div>
+                    <ErrorMessage message={err.to_string()} />
                 }
                 <section class="mt-12">
                     <h2 class="text-2xl font-semibold text-gray-900 mb-4">{"Seasons"}</h2>

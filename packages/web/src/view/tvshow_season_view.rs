@@ -4,12 +4,12 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 
 use crate::Route;
-use crate::component::button::Button;
 use crate::component::error_message::ErrorMessage;
 use crate::component::header::Header;
 use crate::component::loading::Loading;
 use crate::component::text::{Text, TextSize};
 use crate::component::tvshow_episode_list_item::TVShowEpisodeListItem;
+use crate::component::watch_button::WatchButton;
 use crate::hook::tvshow::*;
 use crate::hook::tvshow_episode::*;
 use crate::hook::tvshow_season::*;
@@ -69,6 +69,25 @@ pub fn tvshow_season_view(props: &Props) -> Html {
         use_unwatch_tvshow_season(props.tvshow_id, props.season_number, callback)
     };
 
+    let on_toggle_watch = {
+        let watched = tvshow
+            .data
+            .as_ref()
+            .map(|inner| inner.watch_completed())
+            .unwrap_or(false);
+        let watch = watch.clone();
+        let unwatch = unwatch.clone();
+
+        Callback::from(move |event: web_sys::MouseEvent| {
+            event.stop_propagation();
+            if watched {
+                unwatch.run();
+            } else {
+                watch.run();
+            }
+        })
+    };
+
     let tvshow_name = tvshow.data.as_ref().map(|inner| inner.name.as_str());
 
     html! {
@@ -81,7 +100,7 @@ pub fn tvshow_season_view(props: &Props) -> Html {
                     <Text size={TextSize::Sm} value="Season" />
                 </div>
                 if let Some(err) = &season.error {
-                    <ErrorMessage message={err.to_string()} />
+                    <ErrorMessage classes="min-h-[300px]" message={err.to_string()} />
                 } else if let Some(season) = &season.data {
                     <div class="flex flex-col md:flex-row gap-6 mb-6">
                         if let Some(path) = season.poster_path.as_ref() {
@@ -115,25 +134,16 @@ pub fn tvshow_season_view(props: &Props) -> Html {
                                 { format!("{} episodes • {} watched", season.episode_count, season.watched_episode_count) }
                             </p>
                             <div>
-                                if season.watch_completed() {
-                                    <Button
-                                        alt="Mark all episodes as not watched"
-                                        label="Unwatched all"
-                                        onclick={move |_: MouseEvent| unwatch.run()}
-                                    />
-                                } else {
-                                    <Button
-                                        alt="Mark all episodes as watched"
-                                        label="Mark all watched"
-                                        onclick={move |_: MouseEvent| watch.run()}
-                                    />
-                                }
-
+                                <WatchButton
+                                    completed={season.watch_completed()}
+                                    loading={watch.loading || unwatch.loading}
+                                    onclick={on_toggle_watch}
+                                />
                             </div>
                         </div>
                     </div>
                 } else {
-                    <Loading />
+                    <Loading classes="flex-col min-h-[300px]" />
                 }
 
                 if let Some(err) = &episodes.error {
@@ -152,7 +162,7 @@ pub fn tvshow_season_view(props: &Props) -> Html {
                         }) }
                     </div>
                 } else {
-                    <Loading />
+                    <Loading classes="flex-col min-h-[400px]" />
                 }
             </main>
         </div>
