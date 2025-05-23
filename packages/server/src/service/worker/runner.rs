@@ -54,10 +54,22 @@ impl Runner {
                     });
                 }
             }
-            super::ActionParams::SyncTvShow(ref inner) => {
+            super::ActionParams::SyncTVShow(ref inner) => {
                 if let Err(err) = inner.execute(&self.context).await {
                     tracing::warn!(
                         message = "unable to synchronize tvshow",
+                        cause = %err,
+                    );
+                    let _ = self.context.sender.send(Action {
+                        params: action.params,
+                        retry: action.retry + 1,
+                    });
+                }
+            }
+            super::ActionParams::TranscodeTVShowEpisode(ref inner) => {
+                if let Err(err) = inner.execute(&self.context).await {
+                    tracing::warn!(
+                        message = "unable to transcode tvshow episode",
                         cause = %err,
                     );
                     let _ = self.context.sender.send(Action {

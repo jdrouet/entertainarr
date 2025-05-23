@@ -10,7 +10,7 @@ use tokio_util::bytes::Bytes;
 use tokio_util::io::ReaderStream;
 use tokio_util::sync::CancellationToken;
 
-// mod progress;
+pub mod info;
 pub mod video;
 
 fn stdio_unavailable() -> std::io::Error {

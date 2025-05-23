@@ -11,6 +11,7 @@ mod runner;
 
 mod sync_every_tvshow;
 mod sync_tvshow;
+mod transcode_tvshow_episode;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config {
@@ -96,7 +97,8 @@ enum Error {
 #[derive(Debug)]
 enum ActionParams {
     SyncEveryTVShow(sync_every_tvshow::SyncEveryTVShow),
-    SyncTvShow(sync_tvshow::SyncTVShow),
+    SyncTVShow(sync_tvshow::SyncTVShow),
+    TranscodeTVShowEpisode(transcode_tvshow_episode::TranscodeTVShowEpisode),
 }
 
 #[derive(Debug)]
@@ -115,7 +117,16 @@ impl Action {
 
     pub fn sync_tvshow(tvshow_id: u64) -> Self {
         Self {
-            params: ActionParams::SyncTvShow(sync_tvshow::SyncTVShow { tvshow_id }),
+            params: ActionParams::SyncTVShow(sync_tvshow::SyncTVShow { tvshow_id }),
+            retry: 0,
+        }
+    }
+
+    pub fn transcode_tvshow_episode(episode_id: u64) -> Self {
+        Self {
+            params: ActionParams::TranscodeTVShowEpisode(
+                transcode_tvshow_episode::TranscodeTVShowEpisode { episode_id },
+            ),
             retry: 0,
         }
     }

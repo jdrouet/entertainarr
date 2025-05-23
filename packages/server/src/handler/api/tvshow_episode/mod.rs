@@ -2,6 +2,7 @@ use axum::routing::{get, post};
 
 mod get_by_number;
 mod list;
+mod transcode;
 mod watch;
 
 fn episode_to_view(
@@ -32,4 +33,5 @@ pub(super) fn router() -> axum::Router {
             "/{episode_number}/watch",
             post(watch::create).delete(watch::delete),
         )
+        .route("/{episode_number}/transcode", post(transcode::handle))
 }
