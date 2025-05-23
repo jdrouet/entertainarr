@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 entertainarr-api = { workspace = true }
-gloo-net = { version = "0.4", features = ["http"] }
+gloo-net = { version = "0.6", features = ["http"] }
 serde = { version = "1.0", features = ["derive"] }
 web-sys = { version = "0.3" }
 # this is the development version of Yew
