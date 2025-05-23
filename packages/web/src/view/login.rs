@@ -74,9 +74,7 @@ pub fn login(props: &Props) -> Html {
                 <h1 class="text-2xl font-semibold text-gray-800 mb-6 text-center">{"Login"}</h1>
                 <form {onsubmit}>
                     <div class="mb-4">
-                        <label for="username" class="block text-gray-700 mb-2">{"Username"}</label>
                         <input
-                            id="username"
                             type="text"
                             class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
                             value={username_value}

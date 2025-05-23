@@ -197,19 +197,19 @@ pub fn tvshow_view(props: &Props) -> Html {
                 }
                 <section class="mt-12">
                     <h2 class="text-2xl font-semibold text-gray-900 mb-4">{"Seasons"}</h2>
-                        if seasons.loading {
-                            <Loading />
-                        } else if let Some(err) = &seasons.error {
-                            <ErrorMessage error={err.to_string()} />
-                        } else if let Some(season_list) = &seasons.data {
-                            <div class="flex flex-row flex-wrap gap-3">
-                                {for season_list.iter().map(|season| {
-                                    html! {
-                                        <TVShowSeasonCardlet tvshow_id={props.tvshow_id} season={season.clone()} />
-                                    }
-                                })}
-                            </div>
-                        }
+                    if seasons.loading {
+                        <Loading />
+                    } else if let Some(err) = &seasons.error {
+                        <ErrorMessage message={err.to_string()} />
+                    } else if let Some(season_list) = &seasons.data {
+                        <div class="flex flex-row flex-wrap gap-3">
+                            {for season_list.iter().map(|season| {
+                                html! {
+                                    <TVShowSeasonCardlet tvshow_id={props.tvshow_id} season={season.clone()} />
+                                }
+                            })}
+                        </div>
+                    }
                 </section>
             </main>
         </div>

@@ -81,7 +81,7 @@ pub fn tvshow_season_view(props: &Props) -> Html {
                     <Text size={TextSize::Sm} value="Season" />
                 </div>
                 if let Some(err) = &season.error {
-                    <ErrorMessage error={err.to_string()} />
+                    <ErrorMessage message={err.to_string()} />
                 } else if let Some(season) = &season.data {
                     <div class="flex flex-col md:flex-row gap-6 mb-6">
                         if let Some(path) = season.poster_path.as_ref() {
@@ -137,7 +137,7 @@ pub fn tvshow_season_view(props: &Props) -> Html {
                 }
 
                 if let Some(err) = &episodes.error {
-                    <ErrorMessage error={err.to_string()} />
+                    <ErrorMessage message={err.to_string()} />
                 } else if let Some(episodes) = &episodes.data {
                     <div class="space-y-4">
                         { for episodes.iter().map(|episode| {

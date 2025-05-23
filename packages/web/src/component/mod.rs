@@ -1,5 +1,6 @@
 pub mod badge;
 pub mod button;
+pub mod empty_state;
 pub mod error_message;
 pub mod follow_button;
 pub mod header;

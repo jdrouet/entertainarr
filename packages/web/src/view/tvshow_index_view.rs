@@ -2,7 +2,10 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 
 use crate::Route;
+use crate::component::empty_state::EmptyState;
+use crate::component::error_message::ErrorMessage;
 use crate::component::header::Header;
+use crate::component::loading::Loading;
 use crate::component::tvshow_cardlet::TVShowCardlet;
 use crate::hook::tvshow::use_followed_tvshows;
 
@@ -20,56 +23,22 @@ pub fn tvshow_index() -> Html {
                     </h1>
                     <Link<Route> to={Route::TvshowSearch} classes="text-sm px-4 py-2 rounded bg-blue-500 text-white">{"Search"}</Link<Route>>
                 </div>
-                {
-                    if tvshows.loading {
-                        html! {
-                            <div class="flex justify-center py-16">
-                                <div class="flex flex-col items-center space-y-2 text-gray-500">
-                                    <svg class="animate-spin h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                                    </svg>
-                                    <p class="text-sm mt-2">{"Loading TV shows..."}</p>
-                                </div>
-                            </div>
-                        }
-                    } else if let Some(err) = &tvshows.error {
-                        html! {
-                            <div class="flex flex-col items-center justify-center text-center text-red-500 py-16 space-y-3">
-                                <svg class="w-12 h-12 text-red-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M12 6a9 9 0 110 18 9 9 0 010-18z" />
-                                </svg>
-                                <h3 class="text-lg font-semibold">{"Oops! Something went wrong."}</h3>
-                                <p class="text-sm text-red-400 max-w-md">
-                                    { format!("We couldn’t load your TV shows: {}", err) }
-                                </p>
-                            </div>
-                        }
-                    } else if let Some(shows) = &tvshows.data {
-                        if shows.data.is_empty() {
-                            html! {
-                                <div class="flex flex-col items-center justify-center text-center text-gray-500 py-16">
-                                    <svg class="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16h16M4 12h8m-8-4h16" />
-                                    </svg>
-                                    <p class="text-lg font-medium">{"No TV shows found"}</p>
-                                    <p class="text-sm mt-1">
-                                        <Link<Route> to={Route::TvshowSearch}>{"Add shows or check back later."}</Link<Route>>
-                                    </p>
-                                </div>
-                            }
-                        } else {
-                            html! {
-                                <div class="grid grid-cols-3 gap-4">
-                                    { for shows.data.iter().map(|show| html! {
-                                        <TVShowCardlet show={show.clone()} />
-                                    }) }
-                                </div>
-                            }
-                        }
+                if tvshows.loading {
+                    <Loading classes="flex-col min-h-[200px]" />
+                } else if tvshows.error.is_some() {
+                    <ErrorMessage classes="min-h-[200px]" message="Couldn't load your TV shows..." />
+                } else if let Some(shows) = &tvshows.data {
+                    if shows.data.is_empty() {
+                        <EmptyState title="No TV shows found" subtitle="Add some shows in order to see them here..." />
                     } else {
-                        html! { <p>{"No shows found."}</p> }
+                        <div class="grid grid-cols-3 gap-4">
+                            { for shows.data.iter().map(|show| html! {
+                                <TVShowCardlet show={show.clone()} />
+                            }) }
+                        </div>
                     }
+                } else {
+                    <EmptyState title="No TV shows found" subtitle="Add some shows in order to see them here..." />
                 }
             </main>
         </div>

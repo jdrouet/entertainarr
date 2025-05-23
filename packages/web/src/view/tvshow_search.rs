@@ -3,12 +3,41 @@ use yew_hooks::prelude::*;
 use yew_router::hooks::use_navigator;
 
 use crate::Route;
+use crate::component::empty_state::EmptyState;
+use crate::component::error_message::ErrorMessage;
 use crate::component::header::Header;
+use crate::component::loading::Loading;
 use crate::component::tvshow_cardlet::TVShowCardlet;
 
 #[derive(Debug, serde::Serialize)]
 struct QueryParams {
     q: String,
+}
+
+#[derive(Properties, PartialEq)]
+struct SearchButtonProps {
+    #[prop_or_default]
+    loading: bool,
+}
+
+#[function_component(SearchButton)]
+fn search_button(props: &SearchButtonProps) -> Html {
+    html! {
+        <button
+            class="flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition"
+            disabled={props.loading}
+            type="submit"
+        >
+            if props.loading {
+                <svg class="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+            } else {
+                <span>{"Search"}</span>
+            }
+        </button>
+    }
 }
 
 #[function_component(TVShowSearch)]
@@ -64,74 +93,24 @@ pub fn tvshow_search() -> Html {
                         class="flex-1 px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         placeholder="Search for TV shows..."
                     />
-                    <button
-                        class="flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 transition"
-                        disabled={list.loading}
-                        type="submit"
-                    >
-                        {
-                            if list.loading {
-                                html! {
-                                    <svg class="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                                    </svg>
-                                }
-                            } else {
-                                html! { <span>{"Search"}</span> }
-                            }
-                        }
-                    </button>
+                    <SearchButton loading={list.loading} />
                 </form>
-
-                {
-                    if list.loading {
-                        html! {
-                            <div class="flex justify-center py-16">
-                                <div class="flex flex-col items-center space-y-2 text-gray-500">
-                                    <svg class="animate-spin h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                                    </svg>
-                                    <p class="text-sm mt-2">{"Loading TV shows..."}</p>
-                                </div>
-                            </div>
-                        }
-                    } else if let Some(err) = &list.error {
-                        html! {
-                            <div class="flex flex-col items-center justify-center text-center text-red-500 py-16 space-y-3">
-                                <svg class="w-12 h-12 text-red-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M12 6a9 9 0 110 18 9 9 0 010-18z" />
-                                </svg>
-                                <h3 class="text-lg font-semibold">{"Oops! Something went wrong."}</h3>
-                                <p class="text-sm text-red-400 max-w-md">
-                                    { format!("We couldn’t load your TV shows: {}", err) }
-                                </p>
-                            </div>
-                        }
-                    } else if let Some(shows) = &list.data {
-                        if shows.is_empty() {
-                            html! {
-                                <div class="flex flex-col items-center justify-center text-center text-gray-500 py-16">
-                                    <svg class="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16h16M4 12h8m-8-4h16" />
-                                    </svg>
-                                    <p class="text-lg font-medium">{"No TV shows found"}</p>
-                                    <p class="text-sm mt-1">{"Try updating the query."}</p>
-                                </div>
-                            }
-                        } else {
-                            html! {
-                                <div class="grid grid-cols-3 gap-4">
-                                    { for shows.iter().map(|show| html! {
-                                        <TVShowCardlet show={show.clone()} />
-                                    }) }
-                                </div>
-                            }
-                        }
+                if list.loading {
+                    <Loading classes="flex-col min-h-[400px]" />
+                } else if list.error.is_some() {
+                    <ErrorMessage classes="min-h-[400px]" message="Couldn't search for TV shows..." />
+                } else if let Some(shows) = &list.data {
+                    if shows.is_empty() {
+                        <EmptyState classes="min-h-[400px]" title="No TV shows found" subtitle="Try updating the query..." />
                     } else {
-                        html! { <p>{"No shows found."}</p> }
+                        <div class="grid grid-cols-3 gap-4">
+                            { for shows.iter().map(|show| html! {
+                                <TVShowCardlet show={show.clone()} />
+                            }) }
+                        </div>
                     }
+                } else {
+                    <EmptyState classes="min-h-[400px]" title="No TV shows found" subtitle="Try updating the query..." />
                 }
             </main>
         </div>
