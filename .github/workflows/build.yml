@@ -21,3 +21,24 @@ jobs:
 
       - uses: actions/checkout@v4
       - run: cd packages/web && trunk build --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-release
+          path: packages/web/dist
+
+  server:
+    runs-on: ubuntu-latest
+    needs:
+      - web
+    steps:
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-release
+          path: packages/server/public
+      - run: cargo build --release --package entertainarr-server
+      - uses: actions/upload-artifact@v4
+        with:
+          name: server-release
+          path: target/release/entertainarr-server
