@@ -35,6 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: FedericoCarboni/setup-ffmpeg@v3
       - name: prepare requirements
         run: |
           mkdir -p packages/transcode/.tmp
