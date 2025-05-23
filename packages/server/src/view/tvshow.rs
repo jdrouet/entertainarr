@@ -84,7 +84,7 @@ pub(crate) async fn find_episode_files(
     season: u64,
     episode: u64,
 ) -> std::io::Result<Vec<any_storage::any::AnyStoreFile>> {
-    let base = folder_name(&tvshow);
+    let base = folder_name(tvshow);
     let filename = format!("{base}_S{season:0>2}E{episode:0>2}");
     let season_dir = PathBuf::from(base).join(format!("S{season:0>2}"));
     let dir = storage.get_dir(season_dir).await?;

@@ -279,7 +279,7 @@ mod tests {
         let list = super::list(db.as_ref(), 1, 1).await?;
         assert_eq!(list.len(), 2);
 
-        let season = list.get(0).unwrap();
+        let season = list.first().unwrap();
         assert_eq!(season.episode_count, 3);
         assert_eq!(
             season.watched_episode_count, 1,
