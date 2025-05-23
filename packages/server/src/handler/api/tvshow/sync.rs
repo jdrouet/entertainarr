@@ -5,7 +5,7 @@ use entertainarr_database::Database;
 
 use crate::handler::api::error::ApiError;
 use crate::service::tmdb::Tmdb;
-use crate::service::worker::{Action, Worker};
+use crate::service::worker::{Worker, action::Action};
 
 pub(super) async fn single(
     Extension(db): Extension<Database>,

@@ -4,13 +4,12 @@ use entertainarr_database::Database;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
+use self::action::Action;
 use super::tmdb::Tmdb;
 
+pub mod action;
 mod queue;
 mod runner;
-
-mod sync_every_tvshow;
-mod sync_tvshow;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config {
@@ -93,30 +92,12 @@ enum Error {
     Tmdb(#[from] tmdb_api::error::Error),
 }
 
-#[derive(Debug)]
-enum ActionParams {
-    SyncEveryTVShow(sync_every_tvshow::SyncEveryTVShow),
-    SyncTvShow(sync_tvshow::SyncTVShow),
-}
-
-#[derive(Debug)]
-pub struct Action {
-    params: ActionParams,
-    retry: u8,
-}
-
-impl Action {
-    pub fn sync_every_tvshow() -> Self {
-        Self {
-            params: ActionParams::SyncEveryTVShow(sync_every_tvshow::SyncEveryTVShow),
-            retry: 0,
-        }
-    }
-
-    pub fn sync_tvshow(tvshow_id: u64) -> Self {
-        Self {
-            params: ActionParams::SyncTvShow(sync_tvshow::SyncTVShow { tvshow_id }),
-            retry: 0,
+impl From<crate::view::Error> for Error {
+    fn from(value: crate::view::Error) -> Self {
+        match value {
+            crate::view::Error::Database(inner) => Error::Database(inner),
+            crate::view::Error::Io(inner) => Error::Io(inner),
+            crate::view::Error::Tmdb(inner) => Error::Tmdb(inner),
         }
     }
 }

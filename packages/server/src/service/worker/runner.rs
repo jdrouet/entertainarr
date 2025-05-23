@@ -5,20 +5,20 @@ use tokio_util::sync::CancellationToken;
 
 use crate::service::tmdb::Tmdb;
 
-use super::Action;
+use super::action::Action;
 
 pub(super) struct Runner {
     cancel: CancellationToken,
     context: super::Context,
-    receiver: super::queue::Receiver<super::Action>,
+    receiver: super::queue::Receiver<Action>,
     tick: tokio::time::Interval,
 }
 
 impl Runner {
     pub(super) fn new(
         cancel: CancellationToken,
-        sender: super::queue::Sender<super::Action>,
-        receiver: super::queue::Receiver<super::Action>,
+        sender: super::queue::Sender<Action>,
+        receiver: super::queue::Receiver<Action>,
         tick_period: Duration,
         database: Database,
         tmdb: Tmdb,
@@ -36,35 +36,11 @@ impl Runner {
     }
 
     #[tracing::instrument(skip_all, fields(retry = action.retry))]
-    async fn handle_action(&self, action: Action) {
-        if action.retry > 10 {
-            tracing::error!(message = "too many retry, aborting", action = ?action);
-            return;
-        }
-        match action.params {
-            super::ActionParams::SyncEveryTVShow(ref inner) => {
-                if let Err(err) = inner.execute(&self.context).await {
-                    tracing::warn!(
-                        message = "unable to trigger sync of every tvshow",
-                        cause = %err,
-                    );
-                    let _ = self.context.sender.send(Action {
-                        params: action.params,
-                        retry: action.retry + 1,
-                    });
-                }
-            }
-            super::ActionParams::SyncTvShow(ref inner) => {
-                if let Err(err) = inner.execute(&self.context).await {
-                    tracing::warn!(
-                        message = "unable to synchronize tvshow",
-                        cause = %err,
-                    );
-                    let _ = self.context.sender.send(Action {
-                        params: action.params,
-                        retry: action.retry + 1,
-                    });
-                }
+    async fn handle_action(&self, action: super::action::Action) {
+        if let Err(err) = action.execute(&self.context).await {
+            tracing::warn!(message = "unable to execute action", cause = %err);
+            if let Some(retry) = action.retry() {
+                let _ = self.context.sender.send(retry);
             }
         }
     }

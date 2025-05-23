@@ -1,11 +1,13 @@
 use entertainarr_database::model;
 
+use crate::service::worker::Context;
+
 #[derive(Debug)]
 pub(super) struct SyncEveryTVShow;
 
 impl SyncEveryTVShow {
     #[tracing::instrument(name = "sync_every_tvshow", skip_all)]
-    pub(super) async fn execute(&self, ctx: &super::Context) -> Result<(), super::Error> {
+    pub(super) async fn execute(&self, ctx: &Context) -> Result<(), crate::service::worker::Error> {
         let ids = model::tvshow::list_needing_update(ctx.database.as_ref()).await?;
         tracing::debug!(message = "triggering tvshow sync", count = %ids.len());
         for tvshow_id in ids {

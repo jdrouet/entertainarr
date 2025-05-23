@@ -6,7 +6,7 @@ use entertainarr_database::model::tvshow;
 
 use crate::handler::api::authentication::Authentication;
 use crate::handler::api::error::ApiError;
-use crate::service::worker::{Action, Worker};
+use crate::service::worker::{Worker, action::Action};
 
 use super::tvshow_to_view;
 
