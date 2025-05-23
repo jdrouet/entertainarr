@@ -1,0 +1,23 @@
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+name: Building
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: cargo-bins/cargo-binstall@main
+      - run: cargo binstall trunk
+      - run: cargo binstall wasm-bindgen-cli
+
+      - uses: actions/checkout@v4
+      - run: cd packages/web && trunk build --release
