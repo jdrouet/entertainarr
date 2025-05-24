@@ -50,12 +50,11 @@ dependencies = [
 [[package]]
 name = "any-storage"
 version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ede326d8913254d10bede0f9adff02c20e7649bf1f1e2d090b8989b194619219"
 dependencies = [
  "bytes",
  "derive_more",
  "futures",
+ "mime_guess",
  "pcloud",
  "percent-encoding",
  "regex",

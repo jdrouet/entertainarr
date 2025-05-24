@@ -3,7 +3,7 @@ use std::time::Duration;
 use entertainarr_database::Database;
 use tokio_util::sync::CancellationToken;
 
-use crate::service::tmdb::Tmdb;
+use crate::service::{storage::Storage, tmdb::Tmdb};
 
 use super::action::Action;
 
@@ -21,6 +21,7 @@ impl Runner {
         receiver: super::queue::Receiver<Action>,
         tick_period: Duration,
         database: Database,
+        storage: Storage,
         tmdb: Tmdb,
     ) -> Self {
         Self {
@@ -28,6 +29,7 @@ impl Runner {
             context: super::Context {
                 sender,
                 database,
+                storage,
                 tmdb,
             },
             receiver,
@@ -53,6 +55,7 @@ impl Runner {
             _ = self.tick.tick() => {
                 tracing::debug!("tick");
                 let _ = self.context.sender.send(Action::sync_every_tvshow());
+                let _ = self.context.sender.send(Action::scan_tvshow_storage());
             },
             maybe_action = self.receiver.recv() => {
                 if let Some(action) = maybe_action {

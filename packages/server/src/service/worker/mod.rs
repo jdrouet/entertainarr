@@ -5,7 +5,7 @@ use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
 use self::action::Action;
-use super::tmdb::Tmdb;
+use super::{storage::Storage, tmdb::Tmdb};
 
 pub mod action;
 mod queue;
@@ -37,8 +37,18 @@ impl Config {
         60
     }
 
-    pub fn build(&self, database: Database, tmdb: Tmdb) -> std::io::Result<Worker> {
-        Worker::new(Duration::from_secs(self.tick_interval), database, tmdb)
+    pub fn build(
+        &self,
+        database: Database,
+        storage: Storage,
+        tmdb: Tmdb,
+    ) -> std::io::Result<Worker> {
+        Worker::new(
+            Duration::from_secs(self.tick_interval),
+            database,
+            storage,
+            tmdb,
+        )
     }
 }
 
@@ -51,7 +61,12 @@ pub struct Worker {
 }
 
 impl Worker {
-    pub fn new(tick_interval: Duration, database: Database, tmdb: Tmdb) -> std::io::Result<Self> {
+    pub fn new(
+        tick_interval: Duration,
+        database: Database,
+        storage: Storage,
+        tmdb: Tmdb,
+    ) -> std::io::Result<Self> {
         let cancel = CancellationToken::new();
         let (sender, receiver) = queue::channel();
         let task = runner::Runner::new(
@@ -60,6 +75,7 @@ impl Worker {
             receiver,
             tick_interval,
             database,
+            storage,
             tmdb,
         );
         let task = tokio::spawn(async move { task.run().await });
@@ -79,6 +95,7 @@ impl Worker {
 struct Context {
     sender: queue::Sender<Action>,
     database: Database,
+    storage: Storage,
     tmdb: Tmdb,
 }
 

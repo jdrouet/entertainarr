@@ -65,7 +65,10 @@ impl Config {
         let fetcher = self.service.fetcher.build()?;
         let storage = self.service.storage.build()?;
         let tmdb = self.service.tmdb.build()?;
-        let worker = self.service.worker.build(database.clone(), tmdb.clone())?;
+        let worker = self
+            .service
+            .worker
+            .build(database.clone(), storage.clone(), tmdb.clone())?;
         Ok(Server {
             database,
             fetcher,
