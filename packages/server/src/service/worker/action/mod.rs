@@ -1,48 +1,60 @@
 mod sync_every_tvshow;
 mod sync_tvshow;
 
-#[derive(Debug)]
-enum ActionParams {
-    SyncEveryTVShow(sync_every_tvshow::SyncEveryTVShow),
-    SyncTvShow(sync_tvshow::SyncTVShow),
+use std::{sync::Arc, time::Duration};
+
+use entertainarr_database::Database;
+use tokio_util::sync::CancellationToken;
+
+use crate::service::tmdb::Tmdb;
+
+pub(super) trait Executable<Action> {
+    fn execute(&self, action: &Action) -> impl Future<Output = Result<(), super::Error>>;
 }
 
-#[derive(Debug)]
-pub(crate) struct Action {
-    params: ActionParams,
-    pub(crate) retry: u8,
+pub(super) struct Runner {
+    cancel: CancellationToken,
+    database: Database,
+    tmdb: Tmdb,
+    notify: Arc<tokio::sync::Notify>,
+    tick: tokio::time::Interval,
 }
 
-impl Action {
-    pub fn sync_every_tvshow() -> Self {
+impl Runner {
+    pub(super) fn new(
+        cancel: CancellationToken,
+        notify: Arc<tokio::sync::Notify>,
+        tick_period: Duration,
+        database: Database,
+        tmdb: Tmdb,
+    ) -> Self {
         Self {
-            params: ActionParams::SyncEveryTVShow(sync_every_tvshow::SyncEveryTVShow),
-            retry: 0,
+            cancel,
+            database,
+            tmdb,
+            notify,
+            tick: tokio::time::interval(tick_period),
         }
     }
 
-    pub fn sync_tvshow(tvshow_id: u64) -> Self {
-        Self {
-            params: ActionParams::SyncTvShow(sync_tvshow::SyncTVShow { tvshow_id }),
-            retry: 0,
-        }
-    }
+    async fn tick(&mut self) {}
 
-    pub(super) async fn execute(&self, ctx: &super::Context) -> Result<(), super::Error> {
-        match self.params {
-            ActionParams::SyncTvShow(ref inner) => inner.execute(ctx).await,
-            ActionParams::SyncEveryTVShow(ref inner) => inner.execute(ctx).await,
-        }
-    }
+    async fn iterate(&mut self) {}
 
-    pub fn retry(self) -> Option<Self> {
-        if self.retry > 10 {
-            None
-        } else {
-            Some(Self {
-                params: self.params,
-                retry: self.retry + 1,
-            })
+    pub(super) async fn run(mut self) {
+        while !self.cancel.is_cancelled() {
+            tokio::select! {
+                _ = self.cancel.cancelled() => {
+                    tracing::info!("worker is being stopped");
+                },
+                _ = self.tick.tick() => {
+                    self.tick().await;
+                },
+                _ = self.notify.notified() => {
+                    self.iterate().await;
+                },
+            }
         }
+        tracing::info!("runner shutdown");
     }
 }

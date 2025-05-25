@@ -1,4 +1,5 @@
 pub mod file;
+pub mod task;
 pub mod tvshow;
 pub mod tvshow_episode;
 pub mod tvshow_season;

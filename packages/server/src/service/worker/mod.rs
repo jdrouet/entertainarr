@@ -1,15 +1,12 @@
 use std::{sync::Arc, time::Duration};
 
-use entertainarr_database::Database;
+use entertainarr_database::{Database, model::task};
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
-use self::action::Action;
 use super::tmdb::Tmdb;
 
 pub mod action;
-mod queue;
-mod runner;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Config {
@@ -46,40 +43,40 @@ impl Config {
 #[derive(Clone, Debug)]
 pub struct Worker {
     cancel: CancellationToken,
-    sender: queue::Sender<Action>,
+    database: Database,
+    notify: Arc<tokio::sync::Notify>,
     task: Arc<JoinHandle<()>>,
 }
 
 impl Worker {
     pub fn new(tick_interval: Duration, database: Database, tmdb: Tmdb) -> std::io::Result<Self> {
         let cancel = CancellationToken::new();
-        let (sender, receiver) = queue::channel();
-        let task = runner::Runner::new(
+        let notify = Arc::new(tokio::sync::Notify::new());
+        let task = action::Runner::new(
             cancel.clone(),
-            sender.clone(),
-            receiver,
+            notify.clone(),
             tick_interval,
-            database,
+            database.clone(),
             tmdb,
         );
         let task = tokio::spawn(async move { task.run().await });
         Ok(Self {
             cancel,
-            sender,
+            database,
+            notify,
             task: Arc::new(task),
         })
     }
 
-    pub async fn push(&self, action: Action) {
-        let _ = self.sender.send(action);
+    pub async fn push(&self, action: task::Action) {
+        if let Err(err) = task::CreateTask::new(action, task::Status::Waiting)
+            .save(self.database.as_ref())
+            .await
+        {
+            tracing::error!(message = "unable to create task", cause = %err);
+        }
+        self.notify.notify_waiters();
     }
-}
-
-#[derive(Debug)]
-struct Context {
-    sender: queue::Sender<Action>,
-    database: Database,
-    tmdb: Tmdb,
 }
 
 #[derive(Debug, thiserror::Error)]

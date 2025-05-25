@@ -5,6 +5,7 @@ mod error;
 mod movie;
 mod status;
 mod storage;
+mod task;
 mod tvshow;
 mod tvshow_episode;
 mod tvshow_season;
@@ -19,6 +20,7 @@ pub(crate) fn router() -> axum::Router {
         .route("/status", head(status::handle))
         .nest("/movies", movie::router())
         .nest("/storages", storage::router())
+        .nest("/tasks", task::router())
         .nest("/tvshows", tvshow::router())
         .nest("/users", user::router())
         .fallback(not_found)

@@ -2,10 +2,11 @@ use axum::Extension;
 use axum::extract::Path;
 use axum::http::StatusCode;
 use entertainarr_database::Database;
+use entertainarr_database::model::task;
 
 use crate::handler::api::error::ApiError;
 use crate::service::tmdb::Tmdb;
-use crate::service::worker::{Worker, action::Action};
+use crate::service::worker::Worker;
 
 pub(super) async fn single(
     Extension(db): Extension<Database>,
@@ -19,6 +20,10 @@ pub(super) async fn single(
 }
 
 pub(super) async fn all(Extension(worker): Extension<Worker>) -> Result<StatusCode, ApiError> {
-    worker.push(Action::sync_every_tvshow()).await;
+    worker
+        .push(task::Action::SynchronizeEveryTVShow(
+            task::SynchronizeEveryTVShow,
+        ))
+        .await;
     Ok(StatusCode::CREATED)
 }
