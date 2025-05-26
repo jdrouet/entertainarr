@@ -49,13 +49,14 @@ dependencies = [
 
 [[package]]
 name = "any-storage"
-version = "0.3.1"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ede326d8913254d10bede0f9adff02c20e7649bf1f1e2d090b8989b194619219"
+checksum = "37a85518da04b1f979af32bf16b101c7517f75fa74e70b195b21d4efa653a860"
 dependencies = [
  "bytes",
  "derive_more",
  "futures",
+ "mime_guess",
  "pcloud",
  "percent-encoding",
  "regex",
@@ -363,7 +364,7 @@ version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fde0e0ec90c9dfb3b4b1a0891a7dcd0e2bffde2f7efed5fe7c9bb00e5bfb915e"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -3844,7 +3845,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
