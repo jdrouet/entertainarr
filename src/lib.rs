@@ -1,26 +1,31 @@
+mod adapter;
+
 /// Entertainarr main configuration
 pub struct Config {
-    // TODO
+    http_server: adapter::http_server::Config,
 }
 
 impl Config {
     pub fn from_env() -> anyhow::Result<Self> {
-        Ok(Self {})
+        Ok(Self {
+            http_server: adapter::http_server::Config::from_env()?,
+        })
     }
 
     pub fn build(self) -> anyhow::Result<Application> {
-        Ok(Application {})
+        Ok(Application {
+            http_server: self.http_server.build()?,
+        })
     }
 }
 
 /// Entertainarr application
 pub struct Application {
-    // TODO
+    http_server: adapter::http_server::HttpServer,
 }
 
 impl Application {
     pub async fn run(self) -> anyhow::Result<()> {
-        // TODO
-        Ok(())
+        self.http_server.run().await
     }
 }
