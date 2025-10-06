@@ -14,7 +14,7 @@ impl Config {
 
     pub fn build(self) -> anyhow::Result<Application> {
         Ok(Application {
-            http_server: self.http_server.build()?,
+            http_server: self.http_server.builder()?.build()?,
         })
     }
 }

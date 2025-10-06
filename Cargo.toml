@@ -8,3 +8,8 @@ anyhow = { version = "1.0" }
 axum = { version = "0.8" }
 thiserror = { version = "2.0" }
 tokio = { version = "1.47", features = ["macros", "rt-multi-thread"] }
+tower-http = { version = "0.6", features = ["trace"] }
+tracing = "0.1"
+
+[dev-dependencies]
+tower = "0.5"
