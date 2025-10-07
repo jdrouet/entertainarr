@@ -38,6 +38,14 @@ impl ApiError {
         }
     }
 
+    pub fn conflict(message: impl Into<Cow<'static, str>>) -> ApiError {
+        ApiError {
+            status_code: axum::http::StatusCode::CONFLICT,
+            message: message.into(),
+            detail: None,
+        }
+    }
+
     pub fn bad_request(message: impl Into<Cow<'static, str>>) -> ApiError {
         ApiError {
             status_code: axum::http::StatusCode::BAD_REQUEST,

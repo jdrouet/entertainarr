@@ -14,20 +14,45 @@ where
 {
     async fn login(
         &self,
-        res: prelude::LoginRequest,
+        req: prelude::LoginRequest,
     ) -> Result<prelude::LoginSuccess, prelude::LoginError> {
-        let email = res.email.into_inner();
+        let email = req.email.into_inner();
+        let password = req.password.into_inner();
+        let password_hash = hash_password(&email, &password);
         let profile = self
             .authentication_repository
-            .find_by_email(email.as_str())
+            .find_by_credentials(email.as_str(), password_hash.as_str())
             .await?
             .ok_or(prelude::LoginError::InvalidCredentials)?;
-        let password = res.password.into_inner();
-        if !profile.compare_password(&password) {
-            tracing::warn!("invalid password");
-            return Err(prelude::LoginError::InvalidCredentials);
-        }
+
         let token = self.token_repository.create_token(&profile).await?;
         Ok(prelude::LoginSuccess { token })
     }
+
+    async fn signup(
+        &self,
+        req: prelude::SignupRequest,
+    ) -> Result<prelude::LoginSuccess, prelude::SignupError> {
+        let email = req.email.into_inner();
+        let password = req.password.into_inner();
+        let password_hash = hash_password(&email, &password);
+        let profile = self
+            .authentication_repository
+            .create(email.as_str(), password_hash.as_str())
+            .await?;
+
+        let token = self.token_repository.create_token(&profile).await?;
+        Ok(prelude::LoginSuccess { token })
+    }
+}
+
+fn hash_password(email: &str, password: &str) -> String {
+    use base64ct::Encoding;
+    use sha2::Digest;
+
+    let mut hasher = sha2::Sha256::new();
+    hasher.update(email.as_bytes());
+    hasher.update(password.as_bytes());
+    let hash = hasher.finalize();
+    base64ct::Base64::encode_string(&hash)
 }
