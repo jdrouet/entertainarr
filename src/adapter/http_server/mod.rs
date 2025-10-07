@@ -83,6 +83,7 @@ impl HttpServer {
         let listener = tokio::net::TcpListener::bind(self.socket_address)
             .await
             .context("unable to bind socket")?;
+        tracing::info!(address = ?self.socket_address, "starting server");
         axum::serve(listener, self.router)
             .await
             .context("server shutdown")

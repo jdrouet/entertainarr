@@ -11,14 +11,20 @@ bon = "3.8"
 chrono = { version = "0.4", default-features = false, features = ["now"] }
 jsonwebtoken = { version = "9.3", default-features = false }
 nutype = "0.6"
+opentelemetry = { version = "0.31", default-features = false }
+opentelemetry-appender-tracing = { version = "0.31", default-features = false }
+opentelemetry-otlp = { version = "0.31", features = ["grpc-tonic", "tls-roots"] }
+opentelemetry-semantic-conventions = { version = "0.31", default-features = false }
+opentelemetry_sdk = { version = "0.31", default-features = false, features = ["logs", "metrics", "rt-tokio", "trace"] }
 serde = { version = "1.0", features = ["derive"] }
 sha2 = "0.10"
 sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
 thiserror = { version = "2.0" }
 tokio = { version = "1.47", features = ["macros", "rt-multi-thread"] }
 tower-http = { version = "0.6", features = ["trace"] }
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", default-features = false, features = ["env-filter", "fmt"] }
+tracing = { version = "0.1" }
+tracing-opentelemetry = { version = "0.32", default-features = false, features = ["metrics"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "registry"] }
 
 [dev-dependencies]
 mockall = "0.13"

@@ -2,6 +2,7 @@ use crate::domain::auth::AuthenticationService;
 
 mod adapter;
 pub(crate) mod domain;
+pub mod tracing;
 
 /// Entertainarr main configuration
 pub struct Config {

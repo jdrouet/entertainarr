@@ -5,7 +5,7 @@ pub mod jsonwebtoken;
 pub mod sqlite;
 
 #[inline]
-fn with_env_or(name: &str, value: &'static str) -> Cow<'static, str> {
+pub(crate) fn with_env_or(name: &str, value: &'static str) -> Cow<'static, str> {
     std::env::var(name)
         .ok()
         .map(Cow::Owned)
@@ -13,7 +13,7 @@ fn with_env_or(name: &str, value: &'static str) -> Cow<'static, str> {
 }
 
 #[inline]
-fn with_env_as_or<T>(name: &str, value: T) -> anyhow::Result<T>
+pub(crate) fn with_env_as_or<T>(name: &str, value: T) -> anyhow::Result<T>
 where
     T: std::str::FromStr,
     T::Err: std::error::Error + Send + Sync + 'static,
