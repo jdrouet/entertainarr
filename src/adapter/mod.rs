@@ -1,4 +1,16 @@
+use std::borrow::Cow;
+
 pub mod http_server;
+pub mod jsonwebtoken;
+pub mod sqlite;
+
+#[inline]
+fn with_env_or(name: &str, value: &'static str) -> Cow<'static, str> {
+    std::env::var(name)
+        .ok()
+        .map(Cow::Owned)
+        .unwrap_or(Cow::Borrowed(value))
+}
 
 #[inline]
 fn with_env_as_or<T>(name: &str, value: T) -> anyhow::Result<T>

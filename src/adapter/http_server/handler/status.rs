@@ -12,13 +12,20 @@ mod tests {
 
 #[cfg(test)]
 mod integration {
+    use std::sync::Arc;
+
     use tower::ServiceExt;
 
-    use crate::adapter::http_server;
+    use crate::adapter::http_server::{self, ServerState};
 
     #[tokio::test]
     async fn should_answer() {
-        let router = http_server::handler::create();
+        let state = ServerState {
+            authentication_service: Arc::new(
+                crate::domain::auth::prelude::MockAuthenticationService::new(),
+            ),
+        };
+        let router = http_server::handler::create().with_state(state);
         let res = router
             .oneshot(
                 axum::http::Request::builder()

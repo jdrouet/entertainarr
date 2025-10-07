@@ -9,7 +9,7 @@ pub struct Config {
     port: u16,
 }
 
-const DEFAULT_ADDRESS: std::net::IpAddr = std::net::IpAddr::V4(std::net::Ipv4Addr::BROADCAST);
+const DEFAULT_ADDRESS: std::net::IpAddr = std::net::IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED);
 
 impl Config {
     pub fn from_env() -> anyhow::Result<Self> {
@@ -19,20 +19,42 @@ impl Config {
         })
     }
 
-    pub fn builder(self) -> anyhow::Result<HttpServerBuilder> {
+    pub fn builder(self) -> anyhow::Result<HttpServerBuilder<()>> {
         Ok(HttpServerBuilder {
             socket_address: std::net::SocketAddr::from((self.address, self.port)),
+            authentication_service: (),
         })
     }
 }
 
-pub struct HttpServerBuilder {
+pub struct HttpServerBuilder<AS> {
     socket_address: std::net::SocketAddr,
+    authentication_service: AS,
 }
 
-impl HttpServerBuilder {
+impl<AS> HttpServerBuilder<AS> {
+    pub fn with_authentication_service<AS2>(self, service: AS2) -> HttpServerBuilder<AS2>
+    where
+        AS2: crate::domain::auth::prelude::AuthenticationService,
+    {
+        HttpServerBuilder {
+            socket_address: self.socket_address,
+            authentication_service: service,
+        }
+    }
+}
+
+impl<AS> HttpServerBuilder<AS>
+where
+    AS: crate::domain::auth::prelude::AuthenticationService + Clone,
+{
     pub fn router(self) -> axum::Router {
-        handler::create().layer(middleware::tracing::layer())
+        let state = ServerState {
+            authentication_service: self.authentication_service,
+        };
+        handler::create::<AS>()
+            .layer(middleware::tracing::layer())
+            .with_state(state)
     }
 
     pub fn build(self) -> anyhow::Result<HttpServer> {
@@ -44,6 +66,11 @@ impl HttpServerBuilder {
             socket_address,
         })
     }
+}
+
+#[derive(Clone, Debug)]
+pub struct ServerState<AS> {
+    authentication_service: AS,
 }
 
 pub struct HttpServer {

@@ -43,13 +43,7 @@ impl<B> MakeSpan<B> for SpanCreator {
             "otel.name" = span_name,
             "otel.status_code" = tracing::field::Empty,
             "otel.status_description" = tracing::field::Empty,
-            "resource.name" = span_name,
-            "server.address" = tracing::field::Empty,
-            "server.port" = tracing::field::Empty,
-            "span.name" = span_name,
-            "span.kind" = "server",
             "span.type" = "web",
-            "url.full" = %uri,
             "url.path" = uri.path(),
             "url.query" = tracing::field::Empty,
             "url.scheme" = tracing::field::Empty,
@@ -59,12 +53,6 @@ impl<B> MakeSpan<B> for SpanCreator {
         }
         if let Some(scheme) = uri.scheme_str() {
             span.record("url.scheme", scheme);
-        }
-        if let Some(host) = uri.host() {
-            span.record("server.address", host);
-        }
-        if let Some(port) = uri.port_u16() {
-            span.record("server.port", port);
         }
         span
     }
