@@ -1,15 +1,13 @@
 use axum::routing::post;
 
-use crate::adapter::http_server::ServerState;
-
 mod login;
 mod signup;
 
-pub fn create<AS>() -> axum::Router<ServerState<AS>>
+pub fn create<S>() -> axum::Router<S>
 where
-    AS: crate::domain::auth::prelude::AuthenticationService + Clone,
+    S: crate::adapter::http_server::prelude::ServerState + Clone,
 {
     axum::Router::new()
-        .route("/login", post(login::handle::<AS>))
-        .route("/signup", post(signup::handle::<AS>))
+        .route("/auth/login", post(login::handle::<S>))
+        .route("/auth/signup", post(signup::handle::<S>))
 }

@@ -17,25 +17,26 @@ impl Config {
 
     pub fn build(self) -> anyhow::Result<JsonWebToken> {
         let algorithm = jsonwebtoken::Algorithm::HS512;
-        // let decoding = jsonwebtoken::DecodingKey::from_secret(self.secret.as_ref().as_bytes());
+        let decoding = jsonwebtoken::DecodingKey::from_secret(self.secret.as_ref().as_bytes());
         let encoding = jsonwebtoken::EncodingKey::from_secret(self.secret.as_ref().as_bytes());
         let header = jsonwebtoken::Header::new(algorithm);
+        let validation = jsonwebtoken::Validation::new(algorithm);
         Ok(JsonWebToken(Arc::new(Inner {
-            // algorithm,
-            // decoding,
+            decoding,
             duration: std::time::Duration::from_secs(self.duration),
             encoding,
             header,
+            validation,
         })))
     }
 }
 
 struct Inner {
-    // algorithm: jsonwebtoken::Algorithm,
-    // decoding: jsonwebtoken::DecodingKey,
+    decoding: jsonwebtoken::DecodingKey,
     duration: std::time::Duration,
     encoding: jsonwebtoken::EncodingKey,
     header: jsonwebtoken::Header,
+    validation: jsonwebtoken::Validation,
 }
 
 #[derive(Clone)]

@@ -2,6 +2,7 @@ use std::borrow::Cow;
 
 pub mod http_server;
 pub mod jsonwebtoken;
+pub mod rss;
 pub mod sqlite;
 
 #[inline]

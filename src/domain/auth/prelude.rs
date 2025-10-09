@@ -36,6 +36,16 @@ pub enum SignupError {
     Internal(#[from] anyhow::Error),
 }
 
+#[derive(Debug, thiserror::Error)]
+pub enum VerifyError {
+    #[error("expired token")]
+    ExpiredToken,
+    #[error("invalid token")]
+    InvalidToken,
+    #[error(transparent)]
+    Internal(#[from] anyhow::Error),
+}
+
 pub trait AuthenticationService: Send + Sync + 'static {
     fn login(
         &self,
@@ -45,6 +55,7 @@ pub trait AuthenticationService: Send + Sync + 'static {
         &self,
         request: SignupRequest,
     ) -> impl Future<Output = Result<LoginSuccess, SignupError>> + Send;
+    fn verify(&self, token: &str) -> impl Future<Output = Result<Profile, VerifyError>> + Send;
 }
 
 #[cfg(test)]
@@ -54,6 +65,9 @@ impl<S: AuthenticationService> AuthenticationService for Arc<S> {
     }
     async fn signup(&self, request: SignupRequest) -> Result<LoginSuccess, SignupError> {
         self.as_ref().signup(request).await
+    }
+    async fn verify(&self, token: &str) -> Result<Profile, VerifyError> {
+        self.as_ref().verify(token).await
     }
 }
 
@@ -70,6 +84,7 @@ mockall::mock! {
             &self,
             request: SignupRequest,
         ) -> impl Future<Output = Result<LoginSuccess, SignupError>> + Send;
+        fn verify(&self, token: &str) -> impl Future<Output = Result<Profile, VerifyError>> + Send;
     }
 }
 
@@ -91,4 +106,8 @@ pub trait TokenRepository: Send + Sync + 'static {
         &self,
         profile: &Profile,
     ) -> impl Future<Output = anyhow::Result<String>> + Send;
+    fn decode_token(
+        &self,
+        token: &str,
+    ) -> impl Future<Output = Result<Profile, VerifyError>> + Send;
 }

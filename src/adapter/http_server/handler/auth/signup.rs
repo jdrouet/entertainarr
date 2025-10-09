@@ -1,13 +1,10 @@
 use axum::{Json, extract::State};
 
 use crate::{
-    adapter::http_server::{
-        ServerState,
-        handler::{ApiError, ApiErrorDetail},
-    },
+    adapter::http_server::handler::{ApiError, ApiErrorDetail},
     domain::auth::{
         entity::{Email, EmailError, Password, PasswordError},
-        prelude::{SignupError, SignupRequest},
+        prelude::{AuthenticationService, SignupError, SignupRequest},
     },
 };
 
@@ -22,12 +19,12 @@ pub struct SignupResponse {
     token: String,
 }
 
-pub async fn handle<AS>(
-    State(state): State<ServerState<AS>>,
+pub async fn handle<S>(
+    State(state): State<S>,
     Json(payload): Json<SignupPayload>,
 ) -> Result<Json<SignupResponse>, ApiError>
 where
-    AS: crate::domain::auth::prelude::AuthenticationService,
+    S: crate::adapter::http_server::prelude::ServerState,
 {
     let email = Email::try_new(payload.email).map_err(|err| {
         let reason = match err {
@@ -45,7 +42,7 @@ where
             .with_detail(ApiErrorDetail::new("password", reason))
     })?;
     state
-        .authentication_service
+        .authentication_service()
         .signup(SignupRequest { email, password })
         .await
         .map(|res| Json(SignupResponse { token: res.token }))
@@ -61,12 +58,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
     use axum::{Json, extract::State, http::StatusCode};
 
     use crate::{
-        adapter::http_server::ServerState,
+        adapter::http_server::prelude::tests::MockServerState,
         domain::auth::prelude::{LoginSuccess, MockAuthenticationService},
     };
 
@@ -83,9 +78,9 @@ mod tests {
                 })
             })
         });
-        let state = ServerState {
-            authentication_service: Arc::new(auth_service),
-        };
+        let state = MockServerState::builder()
+            .authentication(auth_service)
+            .build();
         let payload = super::SignupPayload {
             email: String::from("user@example.com"),
             password: String::from("password"),
@@ -95,9 +90,7 @@ mod tests {
 
     #[tokio::test]
     async fn should_fail_validation_invalid_username() {
-        let state = ServerState {
-            authentication_service: Arc::new(MockAuthenticationService::new()),
-        };
+        let state = MockServerState::default();
         let payload = super::SignupPayload {
             email: String::from("  "),
             password: String::from("password"),
@@ -114,9 +107,7 @@ mod tests {
 
     #[tokio::test]
     async fn should_fail_validation_empty_password() {
-        let state = ServerState {
-            authentication_service: Arc::new(MockAuthenticationService::new()),
-        };
+        let state = MockServerState::default();
         let payload = super::SignupPayload {
             email: String::from("user@example.com"),
             password: String::from("          "),
@@ -133,9 +124,7 @@ mod tests {
 
     #[tokio::test]
     async fn should_fail_validation_invalid_password() {
-        let state = ServerState {
-            authentication_service: Arc::new(MockAuthenticationService::new()),
-        };
+        let state = MockServerState::default();
         let payload = super::SignupPayload {
             email: String::from("user@example.com"),
             password: String::from("foo"),
@@ -159,9 +148,9 @@ mod tests {
 
             Box::pin(async move { Err(crate::domain::auth::prelude::SignupError::EmailConflict) })
         });
-        let state = ServerState {
-            authentication_service: Arc::new(auth_service),
-        };
+        let state = MockServerState::builder()
+            .authentication(auth_service)
+            .build();
         let payload = super::SignupPayload {
             email: String::from("user@example.com"),
             password: String::from("password"),
@@ -179,18 +168,16 @@ mod tests {
 
 #[cfg(test)]
 mod integration {
-    use std::sync::Arc;
-
     use tower::ServiceExt;
 
     use crate::{
-        adapter::http_server::{self, ServerState},
+        adapter::http_server::prelude::tests::MockServerState,
         domain::auth::prelude::{LoginSuccess, MockAuthenticationService},
     };
 
     #[tokio::test]
     async fn should_answer() {
-        let router = http_server::handler::create();
+        let router = crate::adapter::http_server::handler::create();
         let mut auth_service = MockAuthenticationService::new();
         auth_service.expect_signup().returning(|req| {
             assert_eq!(req.email.into_inner(), "user@example.com");
@@ -202,9 +189,9 @@ mod integration {
                 })
             })
         });
-        let state = ServerState {
-            authentication_service: Arc::new(auth_service),
-        };
+        let state = MockServerState::builder()
+            .authentication(auth_service)
+            .build();
         let res = router
             .with_state(state)
             .oneshot(

@@ -1,3 +1,4 @@
+use reqwest::header::{CONTENT_LENGTH, CONTENT_TYPE, USER_AGENT};
 use tower_http::{
     classify::{ServerErrorsAsFailures, SharedClassifier},
     trace::{
@@ -29,13 +30,16 @@ impl<B> MakeSpan<B> for SpanCreator {
     fn make_span(&mut self, req: &axum::http::Request<B>) -> tracing::Span {
         let uri = req.uri();
         let span_name = format!("{} {uri}", req.method());
+        let headers = req.headers();
         let span = tracing::info_span!(
             parent: None,
             "http.server.request",
             "error.type" = tracing::field::Empty,
             "exception.message" = tracing::field::Empty,
             "exception.stacktrace" = tracing::field::Empty,
-            "http.request.header" = ?req.headers(),
+            "http.request.header.content-length" = ?headers.get(CONTENT_LENGTH),
+            "http.request.header.content-type" = ?headers.get(CONTENT_TYPE),
+            "http.request.header.user-agent" = ?headers.get(USER_AGENT),
             "http.request.method" = %req.method(),
             "http.response.status_code" = tracing::field::Empty,
             "network.protocol.version" = ?req.version(),

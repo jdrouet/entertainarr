@@ -1,4 +1,8 @@
 use anyhow::Context;
+use jsonwebtoken::TokenData;
+
+use crate::domain::auth::entity::Profile;
+use crate::domain::auth::prelude::VerifyError;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 struct Claims {
@@ -25,5 +29,16 @@ impl crate::domain::auth::prelude::TokenRepository for super::JsonWebToken {
         };
         jsonwebtoken::encode(&self.0.header, &claims, &self.0.encoding)
             .context("unable to create token")
+    }
+
+    #[tracing::instrument(skip_all, err(Debug))]
+    async fn decode_token(&self, token: &str) -> Result<Profile, VerifyError> {
+        jsonwebtoken::decode(token, &self.0.decoding, &self.0.validation)
+            .map(|res: TokenData<Claims>| Profile { id: res.claims.sub })
+            .map_err(|err| match err.kind() {
+                jsonwebtoken::errors::ErrorKind::ExpiredSignature => VerifyError::ExpiredToken,
+                jsonwebtoken::errors::ErrorKind::InvalidToken => VerifyError::InvalidToken,
+                _ => VerifyError::Internal(err.into()),
+            })
     }
 }

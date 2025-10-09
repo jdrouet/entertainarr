@@ -44,6 +44,10 @@ where
         let token = self.token_repository.create_token(&profile).await?;
         Ok(prelude::LoginSuccess { token })
     }
+
+    async fn verify(&self, token: &str) -> Result<entity::Profile, prelude::VerifyError> {
+        self.token_repository.decode_token(token).await
+    }
 }
 
 fn hash_password(email: &str, password: &str) -> String {

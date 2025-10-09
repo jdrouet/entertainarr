@@ -24,6 +24,7 @@ mod integration {
             authentication_service: Arc::new(
                 crate::domain::auth::prelude::MockAuthenticationService::new(),
             ),
+            podcast_service: Arc::new(crate::domain::podcast::prelude::MockPodcastService::new()),
         };
         let router = http_server::handler::create().with_state(state);
         let res = router

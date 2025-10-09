@@ -33,13 +33,7 @@ impl crate::domain::auth::prelude::AuthenticationRepository for super::Pool {
             .bind(password)
             .fetch_optional(&self.0)
             .await
-            .inspect(|row| {
-                let span = tracing::Span::current();
-                span.record(
-                    "db.response.returned_rows",
-                    if row.is_some() { 1 } else { 0 },
-                );
-            })
+            .inspect(super::record_optional)
             .inspect_err(|err| {
                 let span = tracing::Span::current();
                 span.record(

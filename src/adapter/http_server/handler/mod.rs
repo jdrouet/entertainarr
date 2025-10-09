@@ -1,17 +1,23 @@
 use std::borrow::Cow;
 
-use axum::{Json, response::IntoResponse, routing::head};
+use axum::Json;
+use axum::response::IntoResponse;
+use axum::routing::head;
 
 mod auth;
+mod podcast;
 mod status;
 
-pub fn create<AS>() -> axum::Router<super::ServerState<AS>>
+pub fn create<S>() -> axum::Router<S>
 where
-    AS: crate::domain::auth::prelude::AuthenticationService + Clone,
+    S: crate::adapter::http_server::prelude::ServerState + Clone,
 {
+    let api = axum::Router::new()
+        .merge(auth::create::<S>())
+        .merge(podcast::create::<S>());
     axum::Router::new()
         .route("/api", head(status::handle))
-        .nest("/api/auth", auth::create::<AS>())
+        .nest("/api", api)
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -38,6 +44,14 @@ impl ApiError {
         }
     }
 
+    pub fn bad_request(message: impl Into<Cow<'static, str>>) -> ApiError {
+        ApiError {
+            status_code: axum::http::StatusCode::BAD_REQUEST,
+            message: message.into(),
+            detail: None,
+        }
+    }
+
     pub fn conflict(message: impl Into<Cow<'static, str>>) -> ApiError {
         ApiError {
             status_code: axum::http::StatusCode::CONFLICT,
@@ -46,9 +60,9 @@ impl ApiError {
         }
     }
 
-    pub fn bad_request(message: impl Into<Cow<'static, str>>) -> ApiError {
+    pub fn unauthorized(message: impl Into<Cow<'static, str>>) -> ApiError {
         ApiError {
-            status_code: axum::http::StatusCode::BAD_REQUEST,
+            status_code: axum::http::StatusCode::UNAUTHORIZED,
             message: message.into(),
             detail: None,
         }
@@ -76,4 +90,9 @@ impl ApiErrorDetail {
             reason: reason.into(),
         }
     }
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct ApiResource<T> {
+    data: T,
 }
