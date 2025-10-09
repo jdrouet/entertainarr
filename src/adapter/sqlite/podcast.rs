@@ -94,7 +94,7 @@ impl crate::domain::podcast::prelude::PodcastRepository for super::Pool {
         qb.push_values(entity.episodes.iter(), |mut b, item| {
             b.push_bind(podcast.id as i64)
                 .push_bind(&item.guid)
-                .push_bind(&item.published_at)
+                .push_bind(item.published_at)
                 .push_bind(&item.title)
                 .push_bind(&item.description)
                 .push_bind(&item.link)

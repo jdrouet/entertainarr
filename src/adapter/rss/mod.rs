@@ -15,7 +15,7 @@ impl Config {
     pub fn build(self) -> anyhow::Result<RssClient> {
         let client = reqwest::Client::new();
         let client = reqwest_middleware::ClientBuilder::new(client)
-            .with(tracing::TracingMiddleware::default())
+            .with(tracing::TracingMiddleware)
             .build();
         Ok(RssClient { client })
     }

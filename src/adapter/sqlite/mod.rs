@@ -75,6 +75,7 @@ fn record_optional<T>(item: &Option<T>) {
     );
 }
 
+#[allow(clippy::ptr_arg, reason = "needed by sqlx")]
 fn record_all<T>(list: &Vec<T>) {
     let span = tracing::Span::current();
     span.record("db.response.returned_rows", list.len());

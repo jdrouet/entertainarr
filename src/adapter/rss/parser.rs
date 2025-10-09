@@ -88,11 +88,8 @@ impl super::Channel {
         &mut self,
         node: roxmltree::Node<'a, 'input>,
     ) -> anyhow::Result<()> {
-        match node.tag_name().name() {
-            "link" => {
-                self.atom_link_href = node.attribute("href").map(String::from);
-            }
-            _ => {}
+        if node.tag_name().name() == "link" {
+            self.atom_link_href = node.attribute("href").map(String::from);
         }
         Ok(())
     }
@@ -230,11 +227,8 @@ impl super::ChannelItem {
         &mut self,
         node: roxmltree::Node<'a, 'input>,
     ) -> anyhow::Result<()> {
-        match node.tag_name().name() {
-            "encoded" => {
-                self.content_encoded = parse_text(node);
-            }
-            _ => {}
+        if node.tag_name().name() == "encoded" {
+            self.content_encoded = parse_text(node);
         }
         Ok(())
     }
