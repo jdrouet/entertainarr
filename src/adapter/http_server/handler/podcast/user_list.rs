@@ -5,11 +5,6 @@ use crate::adapter::http_server::extractor::user::CurrentUser;
 use crate::adapter::http_server::handler::{ApiError, ApiResource};
 use crate::domain::podcast::prelude::PodcastService;
 
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct SubscribePayload {
-    feed_url: String,
-}
-
 pub async fn handle<S>(
     State(state): State<S>,
     CurrentUser(user_id): CurrentUser,
