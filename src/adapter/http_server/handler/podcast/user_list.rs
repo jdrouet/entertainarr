@@ -27,3 +27,87 @@ where
             .collect::<Vec<_>>(),
     }))
 }
+
+#[cfg(test)]
+mod integration {
+
+    use tower::ServiceExt;
+
+    use crate::{
+        adapter::http_server::prelude::tests::MockServerState,
+        domain::{
+            auth::{entity::Profile, prelude::MockAuthenticationService},
+            podcast::prelude::MockPodcastService,
+        },
+    };
+
+    #[tokio::test]
+    async fn should_fail_if_anonymous() {
+        let router = crate::adapter::http_server::handler::create();
+        let state = MockServerState::builder().build();
+        let res = router
+            .with_state(state)
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/api/users/me/podcasts")
+                    .method(axum::http::Method::GET)
+                    .header("Content-Type", "application/json")
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), axum::http::StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn should_fail_if_token_malformed() {
+        let router = crate::adapter::http_server::handler::create();
+        let state = MockServerState::builder().build();
+        let res = router
+            .with_state(state)
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/api/users/me/podcasts")
+                    .method(axum::http::Method::GET)
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", "nope")
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), axum::http::StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn should_answer_if_autheticated() {
+        let router = crate::adapter::http_server::handler::create();
+        let mut auth_service = MockAuthenticationService::new();
+        auth_service
+            .expect_verify()
+            .returning(|_| Box::pin(async { Ok(Profile { id: 1 }) }));
+        let mut podcast_service = MockPodcastService::new();
+        podcast_service
+            .expect_subscriptions()
+            .returning(|_| Box::pin(async { Ok(Vec::default()) }));
+        let state = MockServerState::builder()
+            .authentication(auth_service)
+            .podcast(podcast_service)
+            .build();
+        let res = router
+            .with_state(state)
+            .oneshot(
+                axum::http::Request::builder()
+                    .uri("/api/users/me/podcasts")
+                    .method(axum::http::Method::GET)
+                    .header("Authorization", "Bearer fake")
+                    .header("Content-Type", "application/json")
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(res.status(), axum::http::StatusCode::OK);
+    }
+}
