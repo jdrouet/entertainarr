@@ -23,6 +23,14 @@ where
 #[serde(rename_all = "camelCase")]
 pub struct PodcastDocument {
     pub id: u64,
+    #[serde(rename = "type")]
+    pub kind: monostate::MustBe!("podcasts"),
+    pub attributes: PodcastAttributes,
+}
+
+#[derive(Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PodcastAttributes {
     pub title: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
@@ -41,14 +49,17 @@ impl From<crate::domain::podcast::entity::Podcast> for PodcastDocument {
     fn from(value: crate::domain::podcast::entity::Podcast) -> Self {
         Self {
             id: value.id,
-            title: value.title,
-            description: value.description,
-            image_url: value.image_url,
-            language: value.language,
-            feed_url: value.feed_url,
-            website: value.website,
-            created_at: value.created_at,
-            updated_at: value.updated_at,
+            kind: Default::default(),
+            attributes: PodcastAttributes {
+                title: value.title,
+                description: value.description,
+                image_url: value.image_url,
+                language: value.language,
+                feed_url: value.feed_url,
+                website: value.website,
+                created_at: value.created_at,
+                updated_at: value.updated_at,
+            },
         }
     }
 }

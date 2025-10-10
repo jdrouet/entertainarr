@@ -36,6 +36,7 @@ where
     async fn subscriptions(&self, user_id: u64) -> anyhow::Result<Vec<self::entity::Podcast>> {
         self.podcast_subscription_repository.list(user_id).await
     }
+
     async fn subscribe(
         &self,
         user_id: u64,
@@ -47,6 +48,7 @@ where
             .await?;
         Ok(subscription)
     }
+
     async fn unsubscribe(&self, user_id: u64, podcast_id: u64) -> anyhow::Result<()> {
         self.podcast_subscription_repository
             .delete(user_id, podcast_id)

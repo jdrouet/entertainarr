@@ -11,6 +11,7 @@ base64ct = { version = "1.8", features = ["alloc"] }
 bon = "3.8"
 chrono = { version = "0.4", default-features = false, features = ["now", "serde"] }
 jsonwebtoken = { version = "9.3", default-features = false }
+monostate = "1.0"
 nutype = "0.6"
 opentelemetry = { version = "0.31", default-features = false }
 opentelemetry-appender-tracing = { version = "0.31", default-features = false }
