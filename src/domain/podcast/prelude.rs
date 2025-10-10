@@ -1,26 +1,20 @@
+use super::entity::{Podcast, PodcastInput};
+
 pub trait RssFeedLoader: Send + Sync + 'static {
-    fn load(
-        &self,
-        feed_url: &str,
-    ) -> impl Future<Output = anyhow::Result<super::entity::PodcastWithEpisodes>> + Send;
+    fn load(&self, feed_url: &str) -> impl Future<Output = anyhow::Result<PodcastInput>> + Send;
 }
 
 pub trait PodcastRepository: Send + Sync + 'static {
     fn find_by_feed_url(
         &self,
         feed_url: &str,
-    ) -> impl Future<Output = anyhow::Result<Option<super::entity::Podcast>>> + Send;
-    fn upsert(
-        &self,
-        entity: &super::entity::PodcastWithEpisodes,
-    ) -> impl Future<Output = anyhow::Result<super::entity::Podcast>> + Send;
+    ) -> impl Future<Output = anyhow::Result<Option<Podcast>>> + Send;
+    fn upsert(&self, entity: &PodcastInput)
+    -> impl Future<Output = anyhow::Result<Podcast>> + Send;
 }
 
 pub trait PodcastSubscriptionRepository: Send + Sync + 'static {
-    fn list(
-        &self,
-        user_id: u64,
-    ) -> impl Future<Output = anyhow::Result<Vec<super::entity::Podcast>>> + Send;
+    fn list(&self, user_id: u64) -> impl Future<Output = anyhow::Result<Vec<Podcast>>> + Send;
     fn create(
         &self,
         user_id: u64,

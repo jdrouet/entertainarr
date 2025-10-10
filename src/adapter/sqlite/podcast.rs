@@ -1,10 +1,8 @@
 use anyhow::Context;
 use tracing::Instrument;
 
-use crate::{
-    adapter::sqlite::Wrapper,
-    domain::podcast::entity::{Podcast, PodcastWithEpisodes},
-};
+use crate::adapter::sqlite::Wrapper;
+use crate::domain::podcast::entity::{Podcast, PodcastInput};
 
 const FIND_PODCAST_BY_FEED_URL_QUERY: &str = "select id, feed_url, title, description, image_url, language, website, created_at, updated_at from podcasts where feed_url like ? limit 1";
 const UPSERT_PODCAST_QUERY: &str = r#"insert into podcasts (feed_url, title, description, image_url, language, website)
@@ -54,7 +52,7 @@ impl crate::domain::podcast::prelude::PodcastRepository for super::Pool {
             .context("unable to query podcasts by feed url")
     }
 
-    async fn upsert(&self, entity: &PodcastWithEpisodes) -> anyhow::Result<Podcast> {
+    async fn upsert(&self, entity: &PodcastInput) -> anyhow::Result<Podcast> {
         let mut tx = self
             .0
             .begin()
@@ -75,11 +73,12 @@ impl crate::domain::podcast::prelude::PodcastRepository for super::Pool {
             error.stacktrace = tracing::field::Empty,
         );
         let podcast: Podcast = sqlx::query_as(UPSERT_PODCAST_QUERY)
-            .bind(&entity.podcast.feed_url)
-            .bind(&entity.podcast.title)
-            .bind(entity.podcast.description.as_ref())
-            .bind(entity.podcast.image_url.as_ref())
-            .bind(entity.podcast.website.as_ref())
+            .bind(&entity.feed_url)
+            .bind(&entity.title)
+            .bind(entity.description.as_ref())
+            .bind(entity.image_url.as_ref())
+            .bind(entity.language.as_ref())
+            .bind(entity.website.as_ref())
             .fetch_one(&mut *tx)
             .instrument(span)
             .await
@@ -235,12 +234,10 @@ impl<'r> sqlx::FromRow<'r, sqlx::sqlite::SqliteRow> for super::Wrapper<Podcast> 
 
 #[cfg(test)]
 mod tests {
-    use chrono::Utc;
-
     use crate::{
         adapter::sqlite::Pool,
         domain::podcast::{
-            entity::{Podcast, PodcastEpisode, PodcastWithEpisodes},
+            entity::{PodcastEpisodeInput, PodcastInput},
             prelude::PodcastRepository,
         },
     };
@@ -289,20 +286,15 @@ mod tests {
     #[tokio::test]
     async fn should_upsert_podcast_and_episodes() {
         let pool = crate::adapter::sqlite::Pool::test().await;
-        let content = PodcastWithEpisodes {
-            podcast: Podcast {
-                id: 0,
-                feed_url: "http://example.com/atom.rss".into(),
-                title: "Example".into(),
-                description: None,
-                image_url: None,
-                language: None,
-                website: None,
-                created_at: Utc::now(),
-                updated_at: Utc::now(),
-            },
+        let content = PodcastInput {
+            feed_url: "http://example.com/atom.rss".into(),
+            title: "Example".into(),
+            description: None,
+            image_url: None,
+            language: None,
+            website: None,
             episodes: vec![
-                PodcastEpisode {
+                PodcastEpisodeInput {
                     guid: Some("aaaaa".into()),
                     published_at: None,
                     title: "First episode".into(),
@@ -313,7 +305,7 @@ mod tests {
                     file_size: None,
                     file_type: None,
                 },
-                PodcastEpisode {
+                PodcastEpisodeInput {
                     guid: Some("aaaab".into()),
                     published_at: None,
                     title: "Second episode".into(),

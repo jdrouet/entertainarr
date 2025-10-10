@@ -30,6 +30,9 @@ pub struct PodcastDocument {
     pub image_url: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub language: Option<String>,
+    pub feed_url: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub website: Option<String>,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
@@ -42,6 +45,8 @@ impl From<crate::domain::podcast::entity::Podcast> for PodcastDocument {
             description: value.description,
             image_url: value.image_url,
             language: value.language,
+            feed_url: value.feed_url,
+            website: value.website,
             created_at: value.created_at,
             updated_at: value.updated_at,
         }
