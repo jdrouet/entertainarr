@@ -41,6 +41,25 @@ mod tests {
     };
 
     #[tokio::test]
+    async fn should_fail_if_service_fails() {
+        let mut podcast_service = MockPodcastService::new();
+        podcast_service
+            .expect_subscribe()
+            .return_once(|user_id, _feed_url| {
+                assert_eq!(user_id, 1);
+                Box::pin(async move { Err(anyhow::anyhow!("oops")) })
+            });
+        let state = MockServerState::builder().podcast(podcast_service).build();
+        let payload = super::SubscribePayload {
+            feed_url: "http://example.org/feed.rss".into(),
+        };
+        let err = super::handle(State(state), CurrentUser(1), Json(payload))
+            .await
+            .unwrap_err();
+        assert_eq!(err.status_code, StatusCode::INTERNAL_SERVER_ERROR);
+    }
+
+    #[tokio::test]
     async fn should_succeed() {
         let mut podcast_service = MockPodcastService::new();
         podcast_service
