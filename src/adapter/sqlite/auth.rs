@@ -34,19 +34,7 @@ impl crate::domain::auth::prelude::AuthenticationRepository for super::Pool {
             .fetch_optional(&self.0)
             .await
             .inspect(super::record_optional)
-            .inspect_err(|err| {
-                let span = tracing::Span::current();
-                span.record(
-                    "error.type",
-                    if err.as_database_error().is_some() {
-                        "client"
-                    } else {
-                        "server"
-                    },
-                );
-                span.record("error.message", err.to_string());
-                span.record("error.stacktrace", format!("{err:?}"));
-            })
+            .inspect_err(super::record_error)
             .map(super::Wrapper::maybe_inner)
             .context("unable to fetch profile by credentials")
     }
@@ -73,23 +61,8 @@ impl crate::domain::auth::prelude::AuthenticationRepository for super::Pool {
             .bind(password)
             .fetch_one(&self.0)
             .await
-            .inspect(|_| {
-                let span = tracing::Span::current();
-                span.record("db.response.returned_rows", 1);
-            })
-            .inspect_err(|err| {
-                let span = tracing::Span::current();
-                span.record(
-                    "error.type",
-                    if err.as_database_error().is_some() {
-                        "client"
-                    } else {
-                        "server"
-                    },
-                );
-                span.record("error.message", err.to_string());
-                span.record("error.stacktrace", format!("{err:?}"));
-            })
+            .inspect(super::record_one)
+            .inspect_err(super::record_error)
             .map(super::Wrapper::inner)
             .map_err(|err| match err.as_database_error() {
                 Some(dberr) if dberr.is_unique_violation() => SignupError::EmailConflict,
@@ -108,5 +81,53 @@ impl<'r> sqlx::FromRow<'r, sqlx::sqlite::SqliteRow>
         Ok(Self(Profile {
             id: row.try_get(0)?,
         }))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::domain::auth::prelude::{AuthenticationRepository, SignupError};
+
+    #[tokio::test]
+    async fn should_not_find_user_by_creds_when_missing() {
+        let pool = crate::adapter::sqlite::Pool::test().await;
+        let res = pool
+            .find_by_credentials("user@example.com", "password")
+            .await
+            .unwrap();
+        assert!(res.is_none());
+    }
+
+    #[tokio::test]
+    async fn should_find_user_by_creds_when_exists() {
+        let pool = crate::adapter::sqlite::Pool::test().await;
+        sqlx::query("insert into users (email, password) values ('user@example.com', 'password')")
+            .execute(&pool.0)
+            .await
+            .unwrap();
+        let res = pool
+            .find_by_credentials("user@example.com", "password")
+            .await
+            .unwrap();
+        assert!(res.is_some());
+    }
+
+    #[tokio::test]
+    async fn should_create() {
+        let pool = crate::adapter::sqlite::Pool::test().await;
+        let res = pool.create("user@example.com", "password").await.unwrap();
+        assert_eq!(res.id, 1);
+    }
+
+    #[tokio::test]
+    async fn should_not_create_if_exists() {
+        let pool = crate::adapter::sqlite::Pool::test().await;
+        let res = pool.create("user@example.com", "password").await.unwrap();
+        assert_eq!(res.id, 1);
+        let err = pool
+            .create("user@example.com", "password")
+            .await
+            .unwrap_err();
+        assert!(matches!(err, SignupError::EmailConflict));
     }
 }
