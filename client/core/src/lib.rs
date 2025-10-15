@@ -4,34 +4,14 @@ use crux_core::Command;
 use crux_core::macros::effect;
 use crux_core::render::RenderOperation;
 use crux_core::render::render;
-use crux_http::HttpError;
-use crux_http::command::Http;
 use crux_http::protocol::HttpRequest;
+
+use crate::authentication::api::LoginPayload;
 
 pub mod authentication;
 pub mod init;
 
 // ANCHOR: model
-
-pub enum AuthenticationModel {
-    Anonymous {
-        base_url: Option<String>,
-        email: Option<String>,
-    },
-    Authenticated {
-        base_url: String,
-        token: String,
-    },
-}
-
-impl Default for AuthenticationModel {
-    fn default() -> Self {
-        Self::Anonymous {
-            base_url: None,
-            email: None,
-        }
-    }
-}
 
 #[derive(Default)]
 pub struct Model {
@@ -58,6 +38,10 @@ impl Default for View {
     }
 }
 
+pub struct ViewModel {
+    pub view: View,
+}
+
 #[effect(typegen)]
 #[derive(Debug)]
 pub enum Effect {
@@ -67,19 +51,13 @@ pub enum Effect {
     Http(HttpRequest),
 }
 
-#[derive(serde::Serialize)]
-struct LoginRequest {
-    email: String,
-    password: String,
-}
-
 #[derive(Default)]
 pub struct Application;
 
 impl crux_core::App for Application {
     type Model = crate::Model;
     type Event = crate::Event;
-    type ViewModel = crate::View;
+    type ViewModel = crate::ViewModel;
     type Capabilities = ();
     type Effect = crate::Effect;
 
@@ -97,17 +75,7 @@ impl crux_core::App for Application {
                 let Some(server_url) = model.server_url.as_ref() else {
                     return render();
                 };
-                let url = format!("{server_url}/api/auth/login");
-                Http::post(url)
-                    .body_json(&LoginRequest { email, password })
-                    .unwrap()
-                    .expect_json()
-                    .build()
-                    .then_send(|res| {
-                        Self::Event::Authentication(crate::authentication::Event::LoginCallback(
-                            res,
-                        ))
-                    })
+                crate::authentication::api::login(server_url, &LoginPayload { email, password })
             }
             Self::Event::Authentication(crate::authentication::Event::Signup {
                 email,
@@ -116,17 +84,7 @@ impl crux_core::App for Application {
                 let Some(server_url) = model.server_url.as_ref() else {
                     return render();
                 };
-                let url = format!("{server_url}/api/auth/signup");
-                Http::post(url)
-                    .body_json(&LoginRequest { email, password })
-                    .unwrap()
-                    .expect_json()
-                    .build()
-                    .then_send(|res| {
-                        Self::Event::Authentication(crate::authentication::Event::LoginCallback(
-                            res,
-                        ))
-                    })
+                crate::authentication::api::signup(server_url, &LoginPayload { email, password })
             }
             Self::Event::Authentication(crate::authentication::Event::LoginCallback(Ok(
                 mut res,
@@ -135,18 +93,7 @@ impl crux_core::App for Application {
                 model.auth_token = Some(payload.token);
                 render()
             }
-            Self::Event::Authentication(crate::authentication::Event::LoginCallback(Err(
-                HttpError::Http {
-                    code,
-                    message,
-                    body: _,
-                },
-            ))) => {
-                eprintln!("code={code} message={message:?}");
-                render()
-            }
-            Self::Event::Authentication(crate::authentication::Event::LoginCallback(Err(err))) => {
-                eprintln!("error: {err:?}");
+            Self::Event::Authentication(crate::authentication::Event::LoginCallback(Err(_))) => {
                 render()
             }
             Self::Event::Init(event) => {
@@ -158,11 +105,17 @@ impl crux_core::App for Application {
 
     fn view(&self, model: &Self::Model) -> Self::ViewModel {
         if model.server_url.is_none() {
-            return View::Init(Default::default());
+            return ViewModel {
+                view: View::Init(Default::default()),
+            };
         }
         if model.auth_token.is_none() {
-            return View::Authentication(Default::default());
+            return ViewModel {
+                view: View::Authentication(Default::default()),
+            };
         }
-        View::Authentication(Default::default())
+        ViewModel {
+            view: View::Authentication(Default::default()),
+        }
     }
 }

@@ -1,3 +1,5 @@
+pub mod api;
+
 #[derive(Clone, Debug, Eq, PartialEq, serde::Serialize)]
 pub enum Event {
     Login {

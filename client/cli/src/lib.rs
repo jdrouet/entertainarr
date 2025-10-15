@@ -5,7 +5,7 @@ use crux_http::{
     HttpError,
     protocol::{HttpHeader, HttpRequest, HttpResponse},
 };
-use entertainarr_client_core::Effect;
+use entertainarr_client_core::{Effect, ViewModel};
 use reqwest::Method;
 
 use crate::view::Render;
@@ -85,7 +85,15 @@ impl Application {
     }
 
     fn handle_http(&self, mut req: crux_core::Request<HttpRequest>) -> anyhow::Result<()> {
-        let res = self.perform_http_request(&req.operation);
+        println!("% Calling server...");
+        let res = self
+            .perform_http_request(&req.operation)
+            .inspect(|res| match res.status {
+                0..400 => println!("% Request completed"),
+                400..500 => eprintln!("% Request failed, invalid input"),
+                500.. => eprintln!("% Request failed, server error"),
+            })
+            .inspect_err(|err| eprintln!("% Request failed: {err:?}"));
 
         for effect in self.core.resolve(&mut req, res.into())? {
             let _ = self.sender.send(effect);
@@ -95,8 +103,8 @@ impl Application {
     }
 
     fn handle_render(&self) -> anyhow::Result<()> {
-        let view_model = self.core.view();
-        let event = view_model.render()?;
+        let ViewModel { view } = self.core.view();
+        let event = view.render()?;
         for effect in self.core.process_event(event) {
             let _ = self.sender.send(effect);
         }
