@@ -1,7 +1,11 @@
 [package]
 name = "entertainarr"
 version = "0.1.0"
-edition = "2024"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+keywords.workspace = true
+rust-version.workspace = true
 
 [dependencies]
 anyhow = { version = "1.0" }

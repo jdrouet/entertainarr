@@ -5,3 +5,10 @@ members = [
   "client/core",
   "server",
 ]
+
+[workspace.package]
+authors = ["Jeremie Drouet <jeremie.drouet@gmail.com>"]
+edition = "2024"
+license = "MIT"
+keywords = ["crux"]
+rust-version = "1.89"

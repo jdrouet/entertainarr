@@ -9,6 +9,7 @@ use crux_http::protocol::HttpRequest;
 use crate::authentication::api::LoginPayload;
 
 pub mod authentication;
+pub mod home;
 pub mod init;
 
 // ANCHOR: model
@@ -25,11 +26,13 @@ pub struct Model {
 pub enum Event {
     Authentication(crate::authentication::Event),
     Init(crate::init::Event),
+    Noop,
 }
 
 pub enum View {
     Authentication(crate::authentication::View),
     Init(crate::init::View),
+    Home(crate::home::View),
 }
 
 impl Default for View {
@@ -68,6 +71,7 @@ impl crux_core::App for Application {
         _caps: &(),
     ) -> Command<Self::Effect, Self::Event> {
         match msg {
+            Self::Event::Noop => render(),
             Self::Event::Authentication(crate::authentication::Event::Login {
                 email,
                 password,
@@ -115,7 +119,7 @@ impl crux_core::App for Application {
             };
         }
         ViewModel {
-            view: View::Authentication(Default::default()),
+            view: View::Home(home::View::default()),
         }
     }
 }
