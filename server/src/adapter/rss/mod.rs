@@ -4,14 +4,10 @@ mod parser;
 mod podcast;
 mod tracing;
 
-#[derive(Debug)]
+#[derive(Default, serde::Deserialize)]
 pub struct Config;
 
 impl Config {
-    pub fn from_env() -> anyhow::Result<Self> {
-        Ok(Self)
-    }
-
     pub fn build(self) -> anyhow::Result<RssClient> {
         let client = reqwest::Client::new();
         let client = reqwest_middleware::ClientBuilder::new(client)

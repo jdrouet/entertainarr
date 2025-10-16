@@ -6,19 +6,32 @@ mod middleware;
 mod prelude;
 
 /// HTTP server configuration
+#[derive(serde::Deserialize)]
 pub struct Config {
+    #[serde(default = "Config::default_address")]
     address: std::net::IpAddr,
+    #[serde(default = "Config::default_port")]
     port: u16,
 }
 
 const DEFAULT_ADDRESS: std::net::IpAddr = std::net::IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED);
 
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            address: Self::default_address(),
+            port: Self::default_port(),
+        }
+    }
+}
+
 impl Config {
-    pub fn from_env() -> anyhow::Result<Self> {
-        Ok(Self {
-            address: super::with_env_as_or("HTTP_ADDRESS", DEFAULT_ADDRESS)?,
-            port: super::with_env_as_or("HTTP_PORT", 3000)?,
-        })
+    pub const fn default_address() -> std::net::IpAddr {
+        DEFAULT_ADDRESS
+    }
+
+    pub const fn default_port() -> u16 {
+        3000
     }
 
     pub fn builder(self) -> anyhow::Result<HttpServerBuilder<(), ()>> {

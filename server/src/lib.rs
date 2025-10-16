@@ -1,3 +1,5 @@
+use anyhow::Context;
+
 use crate::domain::{auth::AuthenticationService, podcast::PodcastService};
 
 mod adapter;
@@ -5,21 +7,22 @@ pub(crate) mod domain;
 pub mod tracing;
 
 /// Entertainarr main configuration
+#[derive(serde::Deserialize)]
 pub struct Config {
+    #[serde(default)]
     http_server: adapter::http_server::Config,
+    #[serde(default)]
     jsonwebtoken: adapter::jsonwebtoken::Config,
+    #[serde(default)]
     rss: adapter::rss::Config,
+    #[serde(default)]
     sqlite: adapter::sqlite::Config,
 }
 
 impl Config {
-    pub fn from_env() -> anyhow::Result<Self> {
-        Ok(Self {
-            http_server: adapter::http_server::Config::from_env()?,
-            jsonwebtoken: adapter::jsonwebtoken::Config::from_env()?,
-            rss: adapter::rss::Config::from_env()?,
-            sqlite: adapter::sqlite::Config::from_env()?,
-        })
+    pub fn from_path<P: AsRef<std::path::Path>>(path: P) -> anyhow::Result<Self> {
+        let data = std::fs::read(path).context("unable to open configuration file")?;
+        toml::from_slice(data.as_ref()).context("unable to deserialize config")
     }
 
     pub async fn build(self) -> anyhow::Result<Application> {

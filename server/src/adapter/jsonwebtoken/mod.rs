@@ -2,17 +2,30 @@ use std::{borrow::Cow, sync::Arc};
 
 mod auth;
 
+#[derive(serde::Deserialize)]
 pub struct Config {
+    #[serde(default = "Config::default_secret")]
     secret: Cow<'static, str>,
+    #[serde(default = "Config::default_duration")]
     duration: u64,
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            secret: Self::default_secret(),
+            duration: Self::default_duration(),
+        }
+    }
+}
+
 impl Config {
-    pub fn from_env() -> anyhow::Result<Self> {
-        Ok(Self {
-            secret: super::with_env_or("JWT_SECRET", "this-is-a-secret"),
-            duration: super::with_env_as_or("JWT_DURATION", 60 * 60 * 12)?,
-        })
+    pub const fn default_secret() -> Cow<'static, str> {
+        Cow::Borrowed("this-is-a-secret")
+    }
+
+    pub const fn default_duration() -> u64 {
+        60 * 60 * 12
     }
 
     pub fn build(self) -> anyhow::Result<JsonWebToken> {

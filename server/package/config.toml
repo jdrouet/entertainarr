@@ -1,0 +1,10 @@
+[http_server]
+address = "0.0.0.0"
+port = 3000
+
+[jsonwebtoken]
+secret = "this is a secret"
+duration = 43200 # 12h
+
+[sqlite]
+url = "/var/lib/entertainarr/storage.db"

@@ -5,15 +5,23 @@ use anyhow::Context;
 mod auth;
 mod podcast;
 
+#[derive(serde::Deserialize)]
 pub struct Config {
+    #[serde(default = "Config::default_url")]
     url: Cow<'static, str>,
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            url: Self::default_url(),
+        }
+    }
+}
+
 impl Config {
-    pub fn from_env() -> anyhow::Result<Self> {
-        Ok(Self {
-            url: super::with_env_or("DATABASE_URL", ":memory:"),
-        })
+    pub const fn default_url() -> Cow<'static, str> {
+        Cow::Borrowed(":memory:")
     }
 
     pub async fn build(self) -> anyhow::Result<Pool> {
