@@ -25,9 +25,14 @@ impl Config {
     }
 
     pub async fn build(self) -> anyhow::Result<Pool> {
+        let options = sqlx::sqlite::SqliteConnectOptions::new();
+        let options = match self.url.as_ref() {
+            ":memory:" => options.in_memory(true).create_if_missing(true),
+            path => options.filename(path),
+        };
         let pool = sqlx::sqlite::SqlitePoolOptions::new()
             .min_connections(1)
-            .connect(self.url.as_ref())
+            .connect_with(options)
             .await?;
 
         sqlx::migrate!()

@@ -21,7 +21,8 @@ pub struct Config {
 
 impl Config {
     pub fn from_path<P: AsRef<std::path::Path>>(path: P) -> anyhow::Result<Self> {
-        let data = std::fs::read(path).context("unable to open configuration file")?;
+        let data = std::fs::read(path.as_ref())
+            .with_context(|| format!("unable to open configuration file on {:?}", path.as_ref()))?;
         toml::from_slice(data.as_ref()).context("unable to deserialize config")
     }
 
