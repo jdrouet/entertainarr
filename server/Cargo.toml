@@ -38,3 +38,19 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "regist
 [dev-dependencies]
 mockall = "0.13"
 tower = "0.5"
+
+[package.metadata.deb]
+name = "entertainarr"
+maintainer-scripts = "package/scripts"
+conf-files = ["/etc/default/entertainarr"]
+assets = [
+    ["target/release/entertainarr", "/usr/bin/", "755"],
+    ["package/systemd/entertainarr.default", "/etc/default/entertainarr", "600"],
+    ["package/config.toml", "/etc/entertainarr/config.toml.example", "600"],
+]
+
+[package.metadata.deb.systemd-units]
+unit-scripts = "package/systemd/"
+enable = true
+restart-after-upgrade = true
+start = true

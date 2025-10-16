@@ -1,0 +1,13 @@
+# /etc/default/entertainarr
+# Example environment variables for entertainarr
+
+# when tracing to console
+TRACING_MODE=console
+TRACING_CONSOLE_COLOR=false
+
+# when tracing to otel in grpc
+# TRACING_MODE=otel
+# TRACING_OTEL_ENDPOINT=http://localhost:4317
+# TRACING_OTEL_INTERNAL_LEVEL=error
+
+CONFIG_PATH=/etc/entertainarr/config.toml

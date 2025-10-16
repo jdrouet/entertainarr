@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+# Add entertainarr:entertainarr user & group
+id --user entertainarr >/dev/null 2>&1 || \
+  useradd --system --shell /sbin/nologin --home-dir /var/lib/entertainarr --user-group \
+    --comment "entertainarr proxy" entertainarr
+
+# Create default entertainarr data directory
+mkdir -p /var/lib/entertainarr
+mkdir -p /etc/entertainarr
+
+# Make entertainarr:entertainarr the owner of the entertainarr data directory
+chown -R entertainarr:entertainarr /var/lib/entertainarr
+chown -R entertainarr:entertainarr /etc/entertainarr
+
+#DEBHELPER#
