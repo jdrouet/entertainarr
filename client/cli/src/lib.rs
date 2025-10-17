@@ -1,10 +1,8 @@
 use std::sync::Arc;
 
 use crux_core::render::RenderOperation;
-use crux_http::{
-    HttpError,
-    protocol::{HttpHeader, HttpRequest, HttpResponse},
-};
+use crux_http::HttpError;
+use crux_http::protocol::{HttpHeader, HttpRequest, HttpResponse};
 use entertainarr_client_core::{Effect, ViewModel};
 use reqwest::Method;
 
@@ -19,8 +17,8 @@ pub struct Application {
     receiver: std::sync::mpsc::Receiver<Effect>,
 }
 
-impl Application {
-    pub fn new() -> Self {
+impl Default for Application {
+    fn default() -> Self {
         let (sender, receiver) = std::sync::mpsc::sync_channel::<Effect>(1024);
         let _ = sender.send(Effect::Render(crux_core::Request {
             operation: RenderOperation,
@@ -33,7 +31,9 @@ impl Application {
             receiver,
         }
     }
+}
 
+impl Application {
     fn perform_http_request(&self, req: &HttpRequest) -> Result<HttpResponse, HttpError> {
         let method = Method::from_bytes(req.method.as_bytes())
             .map_err(|err| HttpError::Url(err.to_string()))?;
