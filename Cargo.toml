@@ -15,5 +15,6 @@ keywords = ["crux"]
 rust-version = "1.89"
 
 [workspace.dependencies]
+anyhow = { version = "1.0" }
 entertainarr-adapter-http = { path = "./adapter-http" }
 serde = { version = "1.0", features = ["derive"] }

@@ -9,7 +9,7 @@ use crate::domain::podcast::prelude::PodcastService;
 pub async fn handle<S>(
     State(state): State<S>,
     CurrentUser(user_id): CurrentUser,
-    Json(payload): Json<SubscriptionRequest>,
+    Json(payload): Json<SubscriptionRequest<'static>>,
 ) -> Result<axum::http::StatusCode, ApiError>
 where
     S: crate::adapter::http_server::prelude::ServerState,

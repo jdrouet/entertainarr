@@ -1,7 +1,9 @@
+use std::borrow::Cow;
+
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SubscriptionRequest {
-    pub feed_url: String,
+pub struct SubscriptionRequest<'a> {
+    pub feed_url: Cow<'a, str>,
 }
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]

@@ -16,7 +16,7 @@ pub struct SignupResponse {
 
 pub async fn handle<S>(
     State(state): State<S>,
-    Json(payload): Json<AuthenticationRequest>,
+    Json(payload): Json<AuthenticationRequest<'static>>,
 ) -> Result<Json<SignupResponse>, ApiError>
 where
     S: crate::adapter::http_server::prelude::ServerState,
@@ -78,8 +78,8 @@ mod tests {
             .authentication(auth_service)
             .build();
         let payload = AuthenticationRequest {
-            email: String::from("user@example.com"),
-            password: String::from("password"),
+            email: "user@example.com".into(),
+            password: "password".into(),
         };
         assert!(super::handle(State(state), Json(payload)).await.is_ok());
     }
@@ -88,8 +88,8 @@ mod tests {
     async fn should_fail_validation_invalid_username() {
         let state = MockServerState::default();
         let payload = AuthenticationRequest {
-            email: String::from("  "),
-            password: String::from("password"),
+            email: "  ".into(),
+            password: "password".into(),
         };
         let err = super::handle(State(state), Json(payload))
             .await
@@ -105,8 +105,8 @@ mod tests {
     async fn should_fail_validation_empty_password() {
         let state = MockServerState::default();
         let payload = AuthenticationRequest {
-            email: String::from("user@example.com"),
-            password: String::from("          "),
+            email: "user@example.com".into(),
+            password: "          ".into(),
         };
         let err = super::handle(State(state), Json(payload))
             .await
@@ -122,8 +122,8 @@ mod tests {
     async fn should_fail_validation_invalid_password() {
         let state = MockServerState::default();
         let payload = AuthenticationRequest {
-            email: String::from("user@example.com"),
-            password: String::from("foo"),
+            email: "user@example.com".into(),
+            password: "foo".into(),
         };
         let err = super::handle(State(state), Json(payload))
             .await
@@ -148,8 +148,8 @@ mod tests {
             .authentication(auth_service)
             .build();
         let payload = AuthenticationRequest {
-            email: String::from("user@example.com"),
-            password: String::from("password"),
+            email: "user@example.com".into(),
+            password: "password".into(),
         };
         let err = super::handle(State(state), Json(payload))
             .await
