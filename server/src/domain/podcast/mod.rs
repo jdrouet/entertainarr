@@ -1,3 +1,5 @@
+use crate::domain::podcast::prelude::PodcastEpisodeRepository;
+
 pub mod entity;
 pub mod prelude;
 
@@ -33,6 +35,10 @@ where
     PR: Clone + prelude::PodcastRepository,
     PSR: Clone + prelude::PodcastSubscriptionRepository,
 {
+    async fn list_by_ids(&self, podcast_ids: &[u64]) -> anyhow::Result<Vec<entity::Podcast>> {
+        self.podcast_repository.list_by_ids(podcast_ids).await
+    }
+
     async fn subscriptions(&self, user_id: u64) -> anyhow::Result<Vec<self::entity::Podcast>> {
         self.podcast_subscription_repository.list(user_id).await
     }
@@ -53,5 +59,22 @@ where
         self.podcast_subscription_repository
             .delete(user_id, podcast_id)
             .await
+    }
+}
+
+#[derive(Clone, Debug, bon::Builder)]
+pub struct PodcastEpisodeService<PER> {
+    podcast_episode_repository: PER,
+}
+
+impl<PER> prelude::PodcastEpisodeService for PodcastEpisodeService<PER>
+where
+    PER: PodcastEpisodeRepository,
+{
+    async fn list(
+        &self,
+        params: prelude::ListPodcastEpisodeParams,
+    ) -> anyhow::Result<Vec<self::entity::PodcastEpisode>> {
+        self.podcast_episode_repository.list(params).await
     }
 }

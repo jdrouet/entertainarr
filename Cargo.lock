@@ -722,8 +722,10 @@ dependencies = [
  "reqwest-middleware",
  "roxmltree",
  "serde",
+ "serde_qs 0.15.0",
  "sha2",
  "sqlx",
+ "tempfile",
  "thiserror 2.0.17",
  "tokio",
  "toml",
@@ -2829,6 +2831,8 @@ version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f3faaf9e727533a19351a43cc5a8de957372163c7d35cc48c90b75cdda13c352"
 dependencies = [
+ "axum",
+ "futures",
  "percent-encoding",
  "serde",
  "thiserror 2.0.17",

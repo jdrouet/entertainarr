@@ -90,7 +90,8 @@ mod tests {
 
     #[tokio::test]
     async fn should_not_find_user_by_creds_when_missing() {
-        let pool = crate::adapter::sqlite::Pool::test().await;
+        let tmpdir = tempfile::tempdir().unwrap();
+        let pool = crate::adapter::sqlite::Pool::test(&tmpdir.path().join("db")).await;
         let res = pool
             .find_by_credentials("user@example.com", "password")
             .await
@@ -100,7 +101,8 @@ mod tests {
 
     #[tokio::test]
     async fn should_find_user_by_creds_when_exists() {
-        let pool = crate::adapter::sqlite::Pool::test().await;
+        let tmpdir = tempfile::tempdir().unwrap();
+        let pool = crate::adapter::sqlite::Pool::test(&tmpdir.path().join("db")).await;
         sqlx::query("insert into users (email, password) values ('user@example.com', 'password')")
             .execute(&pool.0)
             .await
@@ -114,14 +116,16 @@ mod tests {
 
     #[tokio::test]
     async fn should_create() {
-        let pool = crate::adapter::sqlite::Pool::test().await;
+        let tmpdir = tempfile::tempdir().unwrap();
+        let pool = crate::adapter::sqlite::Pool::test(&tmpdir.path().join("db")).await;
         let res = pool.create("user@example.com", "password").await.unwrap();
         assert_eq!(res.id, 1);
     }
 
     #[tokio::test]
     async fn should_not_create_if_exists() {
-        let pool = crate::adapter::sqlite::Pool::test().await;
+        let tmpdir = tempfile::tempdir().unwrap();
+        let pool = crate::adapter::sqlite::Pool::test(&tmpdir.path().join("db")).await;
         let res = pool.create("user@example.com", "password").await.unwrap();
         assert_eq!(res.id, 1);
         let err = pool

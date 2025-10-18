@@ -52,6 +52,44 @@ impl crate::domain::podcast::prelude::PodcastRepository for super::Pool {
             .context("unable to query podcasts by feed url")
     }
 
+    #[tracing::instrument(
+        skip_all,
+        fields(
+            otel.kind = "client",
+            db.system = "sqlite",
+            db.name = "podcast",
+            db.operation = "SELECT",
+            db.sql.table = "podcasts",
+            db.query.text = tracing::field::Empty,
+            db.response.returned_rows = tracing::field::Empty,
+            error.type = tracing::field::Empty,
+            error.message = tracing::field::Empty,
+            error.stacktrace = tracing::field::Empty,
+        ),
+        err(Debug),
+    )]
+    async fn list_by_ids(&self, podcast_ids: &[u64]) -> anyhow::Result<Vec<Podcast>> {
+        if podcast_ids.is_empty() {
+            return Ok(Vec::default());
+        }
+        let mut qb = sqlx::QueryBuilder::new(
+            "select podcasts.id, podcasts.feed_url, podcasts.title, podcasts.description, podcasts.image_url, podcasts.language, podcasts.website, podcasts.created_at, podcasts.updated_at from podcasts where",
+        );
+        for (index, id) in podcast_ids.iter().enumerate() {
+            if index > 0 {
+                qb.push(" and");
+            }
+            qb.push(" id = ").push_bind(*id as i64);
+        }
+        qb.build_query_as()
+            .fetch_all(&self.0)
+            .await
+            .inspect(super::record_all)
+            .inspect_err(super::record_error)
+            .map(Wrapper::list)
+            .context("unable to query podcasts by feed url")
+    }
+
     async fn upsert(&self, entity: &PodcastInput) -> anyhow::Result<Podcast> {
         let mut tx = self
             .0
@@ -244,7 +282,8 @@ mod tests {
 
     #[tokio::test]
     async fn should_find_episode_by_feed_url_when_existing() {
-        let pool = crate::adapter::sqlite::Pool::test().await;
+        let tmpdir = tempfile::tempdir().unwrap();
+        let pool = crate::adapter::sqlite::Pool::test(&tmpdir.path().join("db")).await;
 
         let id: u64 = sqlx::query_scalar(
             "insert into podcasts (feed_url, title) values ('http://foo.bar/atom.rss', 'Foo Bar') returning id",
@@ -264,7 +303,8 @@ mod tests {
 
     #[tokio::test]
     async fn should_find_episode_by_feed_url_when_missing() {
-        let pool = crate::adapter::sqlite::Pool::test().await;
+        let tmpdir = tempfile::tempdir().unwrap();
+        let pool = crate::adapter::sqlite::Pool::test(&tmpdir.path().join("db")).await;
         let res = pool.find_by_feed_url("missing_url").await.unwrap();
         assert!(res.is_none());
     }
@@ -285,7 +325,9 @@ mod tests {
 
     #[tokio::test]
     async fn should_upsert_podcast_and_episodes() {
-        let pool = crate::adapter::sqlite::Pool::test().await;
+        let tmpdir = tempfile::tempdir().unwrap();
+        let pool = crate::adapter::sqlite::Pool::test(&tmpdir.path().join("db")).await;
+
         let content = PodcastInput {
             feed_url: "http://example.com/atom.rss".into(),
             title: "Example".into(),

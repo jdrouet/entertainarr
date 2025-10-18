@@ -6,6 +6,8 @@ use axum::routing::head;
 
 mod auth;
 mod podcast;
+mod podcast_episode;
+mod prelude;
 mod status;
 
 pub fn create<S>() -> axum::Router<S>
@@ -14,7 +16,8 @@ where
 {
     let api = axum::Router::new()
         .merge(auth::create::<S>())
-        .merge(podcast::create::<S>());
+        .merge(podcast::create::<S>())
+        .merge(podcast_episode::create::<S>());
     axum::Router::new()
         .route("/api", head(status::handle))
         .nest("/api", api)
@@ -93,6 +96,13 @@ impl ApiErrorDetail {
 }
 
 #[derive(Debug, serde::Serialize)]
-pub struct ApiResource<T> {
+pub struct ApiResource<T, I = ()> {
+    data: T,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    includes: Vec<I>,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct Relation<T> {
     data: T,
 }

@@ -25,6 +25,7 @@ where
             .into_iter()
             .map(super::PodcastDocument::from)
             .collect::<Vec<_>>(),
+        includes: Vec::new(),
     }))
 }
 

@@ -30,6 +30,14 @@ pub struct PodcastDocument {
 
 #[derive(Debug, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct PodcastEntity {
+    pub id: u64,
+    #[serde(rename = "type")]
+    pub kind: monostate::MustBe!("podcasts"),
+}
+
+#[derive(Debug, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PodcastAttributes {
     pub title: String,
     #[serde(skip_serializing_if = "Option::is_none")]

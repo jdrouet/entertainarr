@@ -17,6 +17,7 @@ pub struct Podcast {
 #[allow(unused, reason = "no methods to list episodes yet")]
 pub struct PodcastEpisode {
     pub id: u64,
+    pub podcast_id: u64,
     pub guid: Option<String>,
     pub published_at: Option<chrono::DateTime<chrono::Utc>>,
     pub title: String,

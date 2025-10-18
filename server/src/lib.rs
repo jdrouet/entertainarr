@@ -1,6 +1,9 @@
 use anyhow::Context;
 
-use crate::domain::{auth::AuthenticationService, podcast::PodcastService};
+use crate::domain::{
+    auth::AuthenticationService,
+    podcast::{PodcastEpisodeService, PodcastService},
+};
 
 mod adapter;
 pub(crate) mod domain;
@@ -38,11 +41,15 @@ impl Config {
         let podcast_service = PodcastService::builder()
             .rss_feed_loader(rss_client)
             .podcast_repository(sqlite_pool.clone())
-            .podcast_subscription_repository(sqlite_pool)
+            .podcast_subscription_repository(sqlite_pool.clone())
+            .build();
+        let podcast_episode_service = PodcastEpisodeService::builder()
+            .podcast_episode_repository(sqlite_pool)
             .build();
         let http_server = http_server
             .with_authentication_service(authentication_service)
             .with_podcast_service(podcast_service)
+            .with_podcast_episode_service(podcast_episode_service)
             .build()?;
         Ok(Application { http_server })
     }

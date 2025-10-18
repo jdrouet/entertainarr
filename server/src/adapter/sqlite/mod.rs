@@ -4,6 +4,7 @@ use anyhow::Context;
 
 mod auth;
 mod podcast;
+mod podcast_episode;
 
 #[derive(serde::Deserialize)]
 pub struct Config {
@@ -27,14 +28,15 @@ impl Config {
     pub async fn build(self) -> anyhow::Result<Pool> {
         let options = sqlx::sqlite::SqliteConnectOptions::new();
         let options = match self.url.as_ref() {
-            ":memory:" => options.in_memory(true).create_if_missing(true),
-            path => options.filename(path),
+            ":memory:" => options.in_memory(true),
+            path => options.filename(path).create_if_missing(true),
         };
         let pool = sqlx::sqlite::SqlitePoolOptions::new()
             .min_connections(1)
             .connect_with(options)
             .await?;
 
+        tracing::info!("running migrations");
         sqlx::migrate!()
             .run(&pool)
             .await
@@ -47,11 +49,17 @@ impl Config {
 #[derive(Debug, Clone)]
 pub struct Pool(sqlx::SqlitePool);
 
+impl AsRef<sqlx::SqlitePool> for Pool {
+    fn as_ref(&self) -> &sqlx::SqlitePool {
+        &self.0
+    }
+}
+
 #[cfg(test)]
 impl Pool {
-    pub async fn test() -> Self {
+    pub async fn test(path: &std::path::Path) -> Self {
         Config {
-            url: Cow::Borrowed(":memory:"),
+            url: Cow::Owned(path.to_string_lossy().to_string()),
         }
         .build()
         .await
