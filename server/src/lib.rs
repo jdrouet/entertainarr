@@ -6,10 +6,6 @@ use entertainarr_domain::{
 
 pub mod tracing;
 
-// pub use adapter::http_server::Config as HttpServerConfig;
-// pub use adapter::jsonwebtoken::Config as JsonWebTokenConfig;
-// pub use adapter::sqlite::Config as SqliteConfig;
-
 /// Entertainarr main configuration
 #[derive(serde::Deserialize)]
 pub struct Config {
