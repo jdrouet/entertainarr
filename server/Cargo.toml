@@ -9,32 +9,20 @@ rust-version.workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
-async-trait = "0.1"
-axum = { version = "0.8", features = ["macros"] }
-base64ct = { version = "1.8", features = ["alloc"] }
-bon = "3.8"
-chrono = { version = "0.4", default-features = false, features = ["now", "serde"] }
 entertainarr-adapter-http = { workspace = true }
-jsonwebtoken = { version = "9.3", default-features = false }
-monostate = "1.0"
-nutype = "0.6"
+entertainarr-adapter-jsonwebtoken = { workspace = true }
+entertainarr-adapter-rss = { workspace = true }
+entertainarr-adapter-sqlite = { workspace = true }
+entertainarr-domain = { workspace = true }
 opentelemetry = { version = "0.31", default-features = false }
 opentelemetry-appender-tracing = { version = "0.31", default-features = false }
 opentelemetry-otlp = { version = "0.31", features = ["grpc-tonic", "tls-roots"] }
 opentelemetry-semantic-conventions = { version = "0.31", default-features = false }
 opentelemetry_sdk = { version = "0.31", default-features = false, features = ["logs", "metrics", "rt-tokio", "trace"] }
-reqwest = { version = "0.12", default-features = false, features = ["http2", "rustls-tls"] }
-reqwest-middleware = { version = "0.4", default-features = false, features = ["http2", "rustls-tls"] }
-roxmltree = { version = "0.21" }
 serde = { workspace = true }
-serde_qs = { version = "0.15", features = ["axum"] }
-sha2 = "0.10"
-sqlx = { version = "0.8", features = ["chrono", "runtime-tokio", "sqlite"] }
-thiserror = { version = "2.0" }
-tokio = { version = "1.47", features = ["macros", "rt-multi-thread"] }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 toml = "0.9"
-tower-http = { version = "0.6", features = ["trace"] }
-tracing = { version = "0.1" }
+tracing = { workspace = true }
 tracing-opentelemetry = { version = "0.32", default-features = false, features = ["metrics"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "registry"] }
 

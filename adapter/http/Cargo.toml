@@ -1,0 +1,30 @@
+[package]
+name = "entertainarr-adapter-http"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+keywords.workspace = true
+rust-version.workspace = true
+
+[features]
+default = ["server"]
+client = ["dep:anyhow", "dep:reqwest"]
+server = ["dep:anyhow"]
+
+[dependencies]
+anyhow = { workspace = true, optional = true }
+axum = { version = "0.8", features = ["macros"] }
+chrono = { workspace = true, default-features = false, features = ["now", "serde"] }
+entertainarr-domain = { workspace = true }
+monostate = "1.0"
+reqwest = { version = "0.12", default-features = false, features = ["http2", "json", "rustls-tls"], optional = true }
+serde = { workspace = true }
+serde_qs = { version = "0.15", features = ["axum"] }
+tokio = { workspace = true }
+tower-http = { version = "0.6", features = ["trace"] }
+tracing = { workspace = true }
+
+[dev-dependencies]
+entertainarr-domain = { workspace = true, features = ["mocks"] }
+tower = "0.5"

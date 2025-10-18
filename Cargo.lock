@@ -704,35 +704,24 @@ name = "entertainarr"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "async-trait",
- "axum",
- "base64ct",
- "bon",
- "chrono",
  "entertainarr-adapter-http",
- "jsonwebtoken",
+ "entertainarr-adapter-jsonwebtoken",
+ "entertainarr-adapter-rss",
+ "entertainarr-adapter-sqlite",
+ "entertainarr-domain",
  "mockall",
- "monostate",
- "nutype",
  "opentelemetry",
  "opentelemetry-appender-tracing",
  "opentelemetry-otlp",
  "opentelemetry-semantic-conventions",
  "opentelemetry_sdk",
  "reqwest",
- "reqwest-middleware",
- "roxmltree",
  "serde",
  "serde_json",
- "serde_qs 0.15.0",
- "sha2",
- "sqlx",
  "tempfile",
- "thiserror 2.0.17",
  "tokio",
  "toml",
  "tower",
- "tower-http",
  "tracing",
  "tracing-opentelemetry",
  "tracing-subscriber",
@@ -743,10 +732,62 @@ name = "entertainarr-adapter-http"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "axum",
  "chrono",
+ "entertainarr-domain",
  "monostate",
  "reqwest",
  "serde",
+ "serde_qs 0.15.0",
+ "tokio",
+ "tower",
+ "tower-http",
+ "tracing",
+]
+
+[[package]]
+name = "entertainarr-adapter-jsonwebtoken"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "entertainarr-domain",
+ "jsonwebtoken",
+ "serde",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "entertainarr-adapter-rss"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "chrono",
+ "entertainarr-domain",
+ "http",
+ "opentelemetry-semantic-conventions",
+ "reqwest",
+ "reqwest-middleware",
+ "roxmltree",
+ "serde",
+ "tracing",
+]
+
+[[package]]
+name = "entertainarr-adapter-sqlite"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "entertainarr-domain",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tempfile",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -754,13 +795,11 @@ name = "entertainarr-client-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "crossbeam-channel",
  "crux_core",
  "crux_http",
  "entertainarr-client-core",
  "inquire",
  "reqwest",
- "tokio",
 ]
 
 [[package]]
@@ -770,7 +809,20 @@ dependencies = [
  "crux_core",
  "crux_http",
  "serde",
- "serde_json",
+]
+
+[[package]]
+name = "entertainarr-domain"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64ct",
+ "bon",
+ "chrono",
+ "mockall",
+ "nutype",
+ "sha2",
+ "thiserror 2.0.17",
 ]
 
 [[package]]

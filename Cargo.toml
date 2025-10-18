@@ -1,9 +1,13 @@
 [workspace]
 resolver = "2"
 members = [
-  "adapter-http",
+  "adapter/http",
+  "adapter/jsonwebtoken",
+  "adapter/rss",
+  "adapter/sqlite",
   "client/cli",
   "client/core",
+  "domain",
   "server",
 ]
 
@@ -16,5 +20,12 @@ rust-version = "1.89"
 
 [workspace.dependencies]
 anyhow = { version = "1.0" }
-entertainarr-adapter-http = { path = "./adapter-http" }
+chrono = { version = "0.4", default-features = false }
+entertainarr-adapter-http = { path = "./adapter/http" }
+entertainarr-adapter-jsonwebtoken = { path = "./adapter/jsonwebtoken" }
+entertainarr-adapter-rss = { path = "./adapter/rss" }
+entertainarr-adapter-sqlite = { path = "./adapter/sqlite" }
+entertainarr-domain = { path = "./domain" }
 serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.47" }
+tracing = { version = "0.1" }

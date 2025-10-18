@@ -1,29 +1,26 @@
 use anyhow::Context;
-
-use crate::domain::{
+use entertainarr_domain::{
     auth::AuthenticationService,
     podcast::{PodcastEpisodeService, PodcastService},
 };
 
-mod adapter;
-pub(crate) mod domain;
 pub mod tracing;
 
-pub use adapter::http_server::Config as HttpServerConfig;
-pub use adapter::jsonwebtoken::Config as JsonWebTokenConfig;
-pub use adapter::sqlite::Config as SqliteConfig;
+// pub use adapter::http_server::Config as HttpServerConfig;
+// pub use adapter::jsonwebtoken::Config as JsonWebTokenConfig;
+// pub use adapter::sqlite::Config as SqliteConfig;
 
 /// Entertainarr main configuration
 #[derive(serde::Deserialize)]
 pub struct Config {
     #[serde(default)]
-    pub http_server: HttpServerConfig,
+    pub http_server: entertainarr_adapter_http::server::Config,
     #[serde(default)]
-    pub jsonwebtoken: JsonWebTokenConfig,
+    pub jsonwebtoken: entertainarr_adapter_jsonwebtoken::Config,
     #[serde(default)]
-    pub rss: adapter::rss::Config,
+    pub rss: entertainarr_adapter_rss::Config,
     #[serde(default)]
-    pub sqlite: SqliteConfig,
+    pub sqlite: entertainarr_adapter_sqlite::Config,
 }
 
 impl Config {
@@ -61,7 +58,7 @@ impl Config {
 
 /// Entertainarr application
 pub struct Application {
-    http_server: adapter::http_server::HttpServer,
+    http_server: entertainarr_adapter_http::server::HttpServer,
 }
 
 impl Application {

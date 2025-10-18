@@ -1,0 +1,17 @@
+[package]
+name = "entertainarr-adapter-jsonwebtoken"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+keywords.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+chrono = { workspace = true, default-features = false, features = ["now", "serde"] }
+entertainarr-domain = { workspace = true }
+jsonwebtoken = { version = "9.3", default-features = false }
+serde = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tracing = { workspace = true }

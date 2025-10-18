@@ -1,0 +1,22 @@
+[package]
+name = "entertainarr-domain"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+keywords.workspace = true
+rust-version.workspace = true
+
+[features]
+default = []
+mocks = ["dep:mockall"]
+
+[dependencies]
+anyhow = { workspace = true }
+base64ct = { version = "1.8", features = ["alloc"] }
+bon = "3.8"
+chrono = { workspace = true, features = ["now"] }
+mockall = { version = "0.13", optional = true }
+nutype = "0.6"
+sha2 = "0.10"
+thiserror = { version = "2.0" }

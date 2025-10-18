@@ -43,7 +43,7 @@ pub struct ConsoleConfig {
 impl ConsoleConfig {
     fn from_env() -> anyhow::Result<Self> {
         Ok(Self {
-            color: crate::adapter::with_env_as_or("TRACING_CONSOLE_COLOR", true)?,
+            color: with_env_as_or("TRACING_CONSOLE_COLOR", true)?,
         })
     }
 
@@ -70,9 +70,9 @@ pub struct OtelConfig {
 impl OtelConfig {
     fn from_env() -> anyhow::Result<Self> {
         Ok(Self {
-            endpoint: crate::adapter::with_env_or("TRACING_OTEL_ENDPOINT", "http://localhost:4317"),
-            internal_level: crate::adapter::with_env_or("TRACING_OTEL_INTERNAL_LEVEL", "error"),
-            environment: crate::adapter::with_env_or("ENV", "local"),
+            endpoint: with_env_or("TRACING_OTEL_ENDPOINT", "http://localhost:4317"),
+            internal_level: with_env_or("TRACING_OTEL_INTERNAL_LEVEL", "error"),
+            environment: with_env_or("ENV", "local"),
         })
     }
 
@@ -210,4 +210,24 @@ impl TracingProvider {
             }
         }
     }
+}
+
+#[inline]
+pub(crate) fn with_env_or(name: &str, value: &'static str) -> Cow<'static, str> {
+    std::env::var(name)
+        .ok()
+        .map(Cow::Owned)
+        .unwrap_or(Cow::Borrowed(value))
+}
+
+#[inline]
+pub(crate) fn with_env_as_or<T>(name: &str, value: T) -> anyhow::Result<T>
+where
+    T: std::str::FromStr,
+    T::Err: std::error::Error + Send + Sync + 'static,
+{
+    let Ok(value) = std::env::var(name) else {
+        return Ok(value);
+    };
+    value.parse::<T>().map_err(anyhow::Error::from)
 }

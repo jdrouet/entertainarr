@@ -10,13 +10,13 @@ impl Server {
     pub async fn new() -> Self {
         let tmpdir = tempfile::tempdir().unwrap();
         let config = entertainarr::Config {
-            http_server: entertainarr::HttpServerConfig {
+            http_server: entertainarr_adapter_http::server::Config {
                 address: std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST),
                 port: 3000,
             },
             jsonwebtoken: Default::default(),
             rss: Default::default(),
-            sqlite: entertainarr::SqliteConfig {
+            sqlite: entertainarr_adapter_sqlite::Config {
                 url: Cow::Owned(
                     tmpdir
                         .path()
