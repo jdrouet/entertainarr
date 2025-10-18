@@ -1,4 +1,5 @@
 use axum::routing::{delete, post};
+use entertainarr_adapter_http::entity::podcast::{PodcastAttributes, PodcastDocument};
 
 pub mod subscribe;
 pub mod unsubscribe;
@@ -17,40 +18,6 @@ where
             "/users/me/podcasts/{podcast_id}",
             delete(unsubscribe::handle::<S>),
         )
-}
-
-#[derive(Debug, serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PodcastDocument {
-    pub id: u64,
-    #[serde(rename = "type")]
-    pub kind: monostate::MustBe!("podcasts"),
-    pub attributes: PodcastAttributes,
-}
-
-#[derive(Debug, serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PodcastEntity {
-    pub id: u64,
-    #[serde(rename = "type")]
-    pub kind: monostate::MustBe!("podcasts"),
-}
-
-#[derive(Debug, serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PodcastAttributes {
-    pub title: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub image_url: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub language: Option<String>,
-    pub feed_url: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub website: Option<String>,
-    pub created_at: chrono::DateTime<chrono::Utc>,
-    pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
 impl From<crate::domain::podcast::entity::Podcast> for PodcastDocument {

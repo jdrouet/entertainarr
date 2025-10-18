@@ -1,11 +1,15 @@
-use std::{str::FromStr, time::Duration};
+use std::str::FromStr;
 
 use axum::routing::get;
-
-use crate::{
-    adapter::http_server::handler::{Relation, podcast::PodcastEntity},
-    domain::podcast::entity::PodcastEpisode,
+use entertainarr_adapter_http::entity::{
+    Relation,
+    podcast::PodcastEntity,
+    podcast_episode::{
+        PodcastEpisodeAttributes, PodcastEpisodeDocument, PodcastEpisodeRelationship,
+    },
 };
+
+use crate::domain::podcast::entity::PodcastEpisode;
 
 pub mod list;
 
@@ -14,16 +18,6 @@ where
     S: crate::adapter::http_server::prelude::ServerState + Clone,
 {
     axum::Router::new().route("/podcast-episodes", get(list::handle::<S>))
-}
-
-#[derive(Debug, serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PodcastEpisodeDocument {
-    pub id: u64,
-    #[serde(rename = "type")]
-    pub kind: monostate::MustBe!("podcast-episodes"),
-    pub attributes: PodcastEpisodeAttributes,
-    pub relationship: PodcastEpisodeRelationship,
 }
 
 impl From<PodcastEpisode> for PodcastEpisodeDocument {
@@ -54,29 +48,6 @@ impl From<PodcastEpisode> for PodcastEpisodeDocument {
             },
         }
     }
-}
-
-#[derive(Debug, serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PodcastEpisodeAttributes {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub guid: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub published_at: Option<chrono::DateTime<chrono::Utc>>,
-    pub title: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub link: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub duration: Option<Duration>,
-    pub file_url: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub file_size: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub file_type: Option<String>,
-    pub created_at: chrono::DateTime<chrono::Utc>,
-    pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
 #[derive(Clone, Copy, Debug, serde::Deserialize)]
@@ -125,15 +96,4 @@ impl FromStr for PodcastEpisodeField {
 #[serde(rename_all = "kebab-case")]
 pub enum PodcastEpisodeInclude {
     Podcast,
-}
-
-#[derive(Debug, serde::Serialize)]
-#[serde(untagged)]
-pub enum PodcastEpisodeRelation {
-    Podcast(super::podcast::PodcastDocument),
-}
-
-#[derive(Debug, serde::Serialize)]
-pub struct PodcastEpisodeRelationship {
-    podcast: Relation<super::podcast::PodcastEntity>,
 }

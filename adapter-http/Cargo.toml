@@ -1,0 +1,13 @@
+[package]
+name = "entertainarr-adapter-http"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+keywords.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+chrono = { version = "0.4", default-features = false, features = ["now", "serde"] }
+monostate = "1.0"
+serde.workspace = true

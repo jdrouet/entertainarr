@@ -1,4 +1,5 @@
 use axum::{Json, extract::State};
+use entertainarr_adapter_http::entity::auth::AuthenticationRequest;
 
 use crate::{
     adapter::http_server::handler::{ApiError, ApiErrorDetail},
@@ -8,12 +9,6 @@ use crate::{
     },
 };
 
-#[derive(Debug, serde::Deserialize)]
-pub struct LoginPayload {
-    email: String,
-    password: String,
-}
-
 #[derive(Debug, serde::Serialize)]
 pub struct LoginResponse {
     token: String,
@@ -21,7 +16,7 @@ pub struct LoginResponse {
 
 pub async fn handle<S>(
     State(state): State<S>,
-    Json(payload): Json<LoginPayload>,
+    Json(payload): Json<AuthenticationRequest>,
 ) -> Result<Json<LoginResponse>, ApiError>
 where
     S: crate::adapter::http_server::prelude::ServerState,
@@ -58,13 +53,12 @@ where
 #[cfg(test)]
 mod tests {
     use axum::{Json, extract::State, http::StatusCode};
+    use entertainarr_adapter_http::entity::auth::AuthenticationRequest;
 
     use crate::{
         adapter::http_server::prelude::tests::MockServerState,
         domain::auth::prelude::{LoginSuccess, MockAuthenticationService},
     };
-
-    use super::LoginPayload;
 
     #[tokio::test]
     async fn should_succeed() {
@@ -82,7 +76,7 @@ mod tests {
         let state = MockServerState::builder()
             .authentication(auth_service)
             .build();
-        let payload = LoginPayload {
+        let payload = AuthenticationRequest {
             email: String::from("user@example.com"),
             password: String::from("password"),
         };
@@ -92,7 +86,7 @@ mod tests {
     #[tokio::test]
     async fn should_fail_validation_invalid_username() {
         let state = MockServerState::default();
-        let payload = LoginPayload {
+        let payload = AuthenticationRequest {
             email: String::from("  "),
             password: String::from("password"),
         };
@@ -109,7 +103,7 @@ mod tests {
     #[tokio::test]
     async fn should_fail_validation_empty_password() {
         let state = MockServerState::default();
-        let payload = LoginPayload {
+        let payload = AuthenticationRequest {
             email: String::from("user@example.com"),
             password: String::from("          "),
         };
@@ -126,7 +120,7 @@ mod tests {
     #[tokio::test]
     async fn should_fail_validation_invalid_password() {
         let state = MockServerState::default();
-        let payload = LoginPayload {
+        let payload = AuthenticationRequest {
             email: String::from("user@example.com"),
             password: String::from("foo"),
         };

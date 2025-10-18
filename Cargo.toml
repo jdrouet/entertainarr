@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+  "adapter-http",
   "client/cli",
   "client/core",
   "server",
@@ -12,3 +13,7 @@ edition = "2024"
 license = "MIT"
 keywords = ["crux"]
 rust-version = "1.89"
+
+[workspace.dependencies]
+entertainarr-adapter-http = { path = "./adapter-http" }
+serde = { version = "1.0", features = ["derive"] }

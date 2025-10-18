@@ -1,20 +1,15 @@
 use axum::Json;
 use axum::extract::State;
+use entertainarr_adapter_http::entity::podcast::SubscriptionRequest;
 
 use crate::adapter::http_server::extractor::user::CurrentUser;
 use crate::adapter::http_server::handler::ApiError;
 use crate::domain::podcast::prelude::PodcastService;
 
-#[derive(Debug, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SubscribePayload {
-    feed_url: String,
-}
-
 pub async fn handle<S>(
     State(state): State<S>,
     CurrentUser(user_id): CurrentUser,
-    Json(payload): Json<SubscribePayload>,
+    Json(payload): Json<SubscriptionRequest>,
 ) -> Result<axum::http::StatusCode, ApiError>
 where
     S: crate::adapter::http_server::prelude::ServerState,
@@ -34,6 +29,7 @@ where
 mod tests {
     use axum::{Json, extract::State, http::StatusCode};
     use chrono::Utc;
+    use entertainarr_adapter_http::entity::podcast::SubscriptionRequest;
 
     use crate::{
         adapter::http_server::{extractor::user::CurrentUser, prelude::tests::MockServerState},
@@ -50,7 +46,7 @@ mod tests {
                 Box::pin(async move { Err(anyhow::anyhow!("oops")) })
             });
         let state = MockServerState::builder().podcast(podcast_service).build();
-        let payload = super::SubscribePayload {
+        let payload = SubscriptionRequest {
             feed_url: "http://example.org/feed.rss".into(),
         };
         let err = super::handle(State(state), CurrentUser(1), Json(payload))
@@ -82,7 +78,7 @@ mod tests {
                 })
             });
         let state = MockServerState::builder().podcast(podcast_service).build();
-        let payload = super::SubscribePayload {
+        let payload = SubscriptionRequest {
             feed_url: "http://example.org/feed.rss".into(),
         };
         let res = super::handle(State(state), CurrentUser(1), Json(payload))

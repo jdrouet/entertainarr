@@ -1,11 +1,16 @@
 use axum::Json;
 use axum::extract::State;
+use entertainarr_adapter_http::entity::ApiResource;
+use entertainarr_adapter_http::entity::podcast::PodcastDocument;
+use entertainarr_adapter_http::entity::podcast_episode::{
+    PodcastEpisodeDocument, PodcastEpisodeRelation,
+};
 use serde_qs::axum::QsQuery;
 
 use crate::adapter::http_server::extractor::user::CurrentUser;
+use crate::adapter::http_server::handler::ApiError;
 use crate::adapter::http_server::handler::podcast_episode::PodcastEpisodeField;
 use crate::adapter::http_server::handler::prelude::{Page, Sort};
-use crate::adapter::http_server::handler::{ApiError, ApiResource};
 use crate::domain::podcast::prelude::{
     ListPodcastEpisodeFilter, ListPodcastEpisodeParams, PodcastEpisodeService, PodcastService,
 };
@@ -41,10 +46,7 @@ pub async fn handle<S>(
     State(state): State<S>,
     CurrentUser(user_id): CurrentUser,
     QsQuery(params): QsQuery<QueryParams>,
-) -> Result<
-    Json<ApiResource<Vec<super::PodcastEpisodeDocument>, super::PodcastEpisodeRelation>>,
-    ApiError,
->
+) -> Result<Json<ApiResource<Vec<PodcastEpisodeDocument>, PodcastEpisodeRelation>>, ApiError>
 where
     S: crate::adapter::http_server::prelude::ServerState,
 {
@@ -78,8 +80,8 @@ where
 
     let includes = podcasts
         .into_iter()
-        .map(crate::adapter::http_server::handler::podcast::PodcastDocument::from)
-        .map(super::PodcastEpisodeRelation::Podcast)
+        .map(PodcastDocument::from)
+        .map(PodcastEpisodeRelation::Podcast)
         .collect::<Vec<_>>();
 
     Ok(Json(ApiResource { data, includes }))

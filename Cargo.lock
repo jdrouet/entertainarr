@@ -709,6 +709,7 @@ dependencies = [
  "base64ct",
  "bon",
  "chrono",
+ "entertainarr-adapter-http",
  "jsonwebtoken",
  "mockall",
  "monostate",
@@ -735,6 +736,15 @@ dependencies = [
  "tracing",
  "tracing-opentelemetry",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "entertainarr-adapter-http"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "monostate",
+ "serde",
 ]
 
 [[package]]

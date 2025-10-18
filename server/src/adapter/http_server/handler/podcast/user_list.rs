@@ -1,14 +1,16 @@
 use axum::Json;
 use axum::extract::State;
+use entertainarr_adapter_http::entity::ApiResource;
+use entertainarr_adapter_http::entity::podcast::PodcastDocument;
 
 use crate::adapter::http_server::extractor::user::CurrentUser;
-use crate::adapter::http_server::handler::{ApiError, ApiResource};
+use crate::adapter::http_server::handler::ApiError;
 use crate::domain::podcast::prelude::PodcastService;
 
 pub async fn handle<S>(
     State(state): State<S>,
     CurrentUser(user_id): CurrentUser,
-) -> Result<Json<ApiResource<Vec<super::PodcastDocument>>>, ApiError>
+) -> Result<Json<ApiResource<Vec<PodcastDocument>>>, ApiError>
 where
     S: crate::adapter::http_server::prelude::ServerState,
 {
@@ -23,7 +25,7 @@ where
     Ok(Json(ApiResource {
         data: list
             .into_iter()
-            .map(super::PodcastDocument::from)
+            .map(PodcastDocument::from)
             .collect::<Vec<_>>(),
         includes: Vec::new(),
     }))

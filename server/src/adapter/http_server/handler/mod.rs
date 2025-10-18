@@ -94,15 +94,3 @@ impl ApiErrorDetail {
         }
     }
 }
-
-#[derive(Debug, serde::Serialize)]
-pub struct ApiResource<T, I = ()> {
-    data: T,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    includes: Vec<I>,
-}
-
-#[derive(Debug, serde::Serialize)]
-pub struct Relation<T> {
-    data: T,
-}
