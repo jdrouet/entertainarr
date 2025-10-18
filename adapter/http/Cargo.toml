@@ -10,19 +10,19 @@ rust-version.workspace = true
 [features]
 default = ["server"]
 client = ["dep:anyhow", "dep:reqwest"]
-server = ["dep:anyhow"]
+server = ["dep:anyhow", "dep:axum", "dep:serde_qs", "dep:tower-http"]
 
 [dependencies]
 anyhow = { workspace = true, optional = true }
-axum = { version = "0.8", features = ["macros"] }
+axum = { version = "0.8", features = ["macros"], optional = true }
 chrono = { workspace = true, default-features = false, features = ["now", "serde"] }
 entertainarr-domain = { workspace = true }
 monostate = "1.0"
 reqwest = { version = "0.12", default-features = false, features = ["http2", "json", "rustls-tls"], optional = true }
 serde = { workspace = true }
-serde_qs = { version = "0.15", features = ["axum"] }
+serde_qs = { version = "0.15", features = ["axum"], optional = true }
 tokio = { workspace = true }
-tower-http = { version = "0.6", features = ["trace"] }
+tower-http = { version = "0.6", features = ["trace"], optional = true }
 tracing = { workspace = true }
 
 [dev-dependencies]
