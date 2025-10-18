@@ -26,12 +26,12 @@ reqwest = { version = "0.12", default-features = false, features = ["http2", "ru
 reqwest-middleware = { version = "0.4", default-features = false, features = ["http2", "rustls-tls"] }
 roxmltree = { version = "0.21" }
 serde = { version = "1.0", features = ["derive"] }
-serde_qs = { version = "0.15.0", features = ["axum"] }
+serde_qs = { version = "0.15", features = ["axum"] }
 sha2 = "0.10"
 sqlx = { version = "0.8", features = ["chrono", "runtime-tokio", "sqlite"] }
 thiserror = { version = "2.0" }
 tokio = { version = "1.47", features = ["macros", "rt-multi-thread"] }
-toml = "0.9.8"
+toml = "0.9"
 tower-http = { version = "0.6", features = ["trace"] }
 tracing = { version = "0.1" }
 tracing-opentelemetry = { version = "0.32", default-features = false, features = ["metrics"] }
@@ -39,6 +39,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "regist
 
 [dev-dependencies]
 mockall = "0.13"
+reqwest = { version = "0.12", default-features = false, features = ["json", "http2", "rustls-tls"] }
+serde_json = "1.0"
 tempfile = "3"
 tower = "0.5"
 

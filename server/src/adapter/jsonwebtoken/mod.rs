@@ -5,9 +5,9 @@ mod auth;
 #[derive(serde::Deserialize)]
 pub struct Config {
     #[serde(default = "Config::default_secret")]
-    secret: Cow<'static, str>,
+    pub secret: Cow<'static, str>,
     #[serde(default = "Config::default_duration")]
-    duration: u64,
+    pub duration: u64,
 }
 
 impl Default for Config {

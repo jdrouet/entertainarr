@@ -9,17 +9,21 @@ mod adapter;
 pub(crate) mod domain;
 pub mod tracing;
 
+pub use adapter::http_server::Config as HttpServerConfig;
+pub use adapter::jsonwebtoken::Config as JsonWebTokenConfig;
+pub use adapter::sqlite::Config as SqliteConfig;
+
 /// Entertainarr main configuration
 #[derive(serde::Deserialize)]
 pub struct Config {
     #[serde(default)]
-    http_server: adapter::http_server::Config,
+    pub http_server: HttpServerConfig,
     #[serde(default)]
-    jsonwebtoken: adapter::jsonwebtoken::Config,
+    pub jsonwebtoken: JsonWebTokenConfig,
     #[serde(default)]
-    rss: adapter::rss::Config,
+    pub rss: adapter::rss::Config,
     #[serde(default)]
-    sqlite: adapter::sqlite::Config,
+    pub sqlite: SqliteConfig,
 }
 
 impl Config {

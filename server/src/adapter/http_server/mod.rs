@@ -9,9 +9,9 @@ mod prelude;
 #[derive(serde::Deserialize)]
 pub struct Config {
     #[serde(default = "Config::default_address")]
-    address: std::net::IpAddr,
+    pub address: std::net::IpAddr,
     #[serde(default = "Config::default_port")]
-    port: u16,
+    pub port: u16,
 }
 
 const DEFAULT_ADDRESS: std::net::IpAddr = std::net::IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED);

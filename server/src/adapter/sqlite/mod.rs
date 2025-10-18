@@ -9,7 +9,7 @@ mod podcast_episode;
 #[derive(serde::Deserialize)]
 pub struct Config {
     #[serde(default = "Config::default_url")]
-    url: Cow<'static, str>,
+    pub url: Cow<'static, str>,
 }
 
 impl Default for Config {

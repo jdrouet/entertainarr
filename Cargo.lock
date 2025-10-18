@@ -722,6 +722,7 @@ dependencies = [
  "reqwest-middleware",
  "roxmltree",
  "serde",
+ "serde_json",
  "serde_qs 0.15.0",
  "sha2",
  "sqlx",
