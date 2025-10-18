@@ -102,7 +102,7 @@ impl<'r> sqlx::FromRow<'r, sqlx::sqlite::SqliteRow> for super::Wrapper<PodcastEp
             description: row.try_get(5)?,
             link: row.try_get(6)?,
             duration: row.try_get(7).map(|value: Option<u64>| {
-                value.map(|value| std::time::Duration::from_secs(value))
+                value.map(std::time::Duration::from_secs)
             })?,
             file_url: row.try_get(8)?,
             file_size: row.try_get(9)?,

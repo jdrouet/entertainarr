@@ -75,13 +75,13 @@ where
         let value = String::deserialize(deserializer)?;
         if let Some(value) = value.strip_prefix("-") {
             Ok(Self {
-                field: T::from_str(value).map_err(|err| serde::de::Error::custom(err))?,
+                field: T::from_str(value).map_err(serde::de::Error::custom)?,
                 order: SortOrder::Desc,
             })
         } else {
             let value = value.trim_start_matches("+");
             Ok(Self {
-                field: T::from_str(value).map_err(|err| serde::de::Error::custom(err))?,
+                field: T::from_str(value).map_err(serde::de::Error::custom)?,
                 order: SortOrder::Asc,
             })
         }
