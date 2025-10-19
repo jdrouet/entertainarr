@@ -17,7 +17,9 @@ fn post_auth(
         .unwrap()
         .expect_json()
         .build()
-        .then_send(|res| crate::Event::Authentication(super::Event::LoginCallback(res)))
+        .then_send(|res| {
+            crate::Event::Authentication(super::AuthenticationEvent::LoginCallback(res))
+        })
 }
 
 pub fn login(

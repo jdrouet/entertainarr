@@ -6,7 +6,7 @@ members = [
   "adapter/rss",
   "adapter/sqlite",
   "client/cli",
-  "client/core",
+  "client/core", "client/core-types",
   "domain",
   "server",
 ]
@@ -25,6 +25,7 @@ entertainarr-adapter-http = { path = "./adapter/http" }
 entertainarr-adapter-jsonwebtoken = { path = "./adapter/jsonwebtoken" }
 entertainarr-adapter-rss = { path = "./adapter/rss" }
 entertainarr-adapter-sqlite = { path = "./adapter/sqlite" }
+entertainarr-client-core = { path = "./client/core" }
 entertainarr-domain = { path = "./domain" }
 serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1.47" }

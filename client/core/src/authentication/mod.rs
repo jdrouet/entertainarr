@@ -1,7 +1,7 @@
 pub mod api;
 
-#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize)]
-pub enum Event {
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+pub enum AuthenticationEvent {
     Login {
         email: String,
         password: String,
@@ -19,5 +19,5 @@ pub struct LoginPayload {
     pub token: String,
 }
 
-#[derive(Debug, Default)]
-pub struct View {}
+#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
+pub struct AuthenticationView {}

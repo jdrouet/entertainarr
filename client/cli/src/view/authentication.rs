@@ -1,7 +1,7 @@
 use entertainarr_client_core::Event;
 use inquire::{Password, Select, Text};
 
-impl super::Render for entertainarr_client_core::authentication::View {
+impl super::Render for entertainarr_client_core::authentication::AuthenticationView {
     fn render(&self) -> inquire::error::InquireResult<Event> {
         let email = Text::new("Email:")
             .with_validator(inquire::required!("This field is required"))
@@ -16,11 +16,17 @@ impl super::Render for entertainarr_client_core::authentication::View {
 
         if kind == "Login" {
             Ok(Event::Authentication(
-                entertainarr_client_core::authentication::Event::Login { email, password },
+                entertainarr_client_core::authentication::AuthenticationEvent::Login {
+                    email,
+                    password,
+                },
             ))
         } else {
             Ok(Event::Authentication(
-                entertainarr_client_core::authentication::Event::Signup { email, password },
+                entertainarr_client_core::authentication::AuthenticationEvent::Signup {
+                    email,
+                    password,
+                },
             ))
         }
     }

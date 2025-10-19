@@ -3,6 +3,13 @@ name = "entertainarr-client-core"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+crate-type = ["cdylib", "lib", "staticlib"]
+name = "entertainarr_client_core"
+
+[features]
+typegen = ["crux_core/typegen", "crux_http/typegen"]
+
 [dependencies]
 crux_core = "0.16"
 crux_http = "0.15"

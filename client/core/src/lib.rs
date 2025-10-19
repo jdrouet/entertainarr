@@ -1,6 +1,7 @@
 #![allow(unexpected_cfgs, reason = "typegen is noisy")]
 
 use crux_core::Command;
+pub use crux_core::Core;
 use crux_core::macros::effect;
 use crux_core::render::RenderOperation;
 use crux_core::render::render;
@@ -22,17 +23,18 @@ pub struct Model {
 
 // ANCHOR_END: model
 
-#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Event {
-    Authentication(crate::authentication::Event),
-    Init(crate::init::Event),
+    Authentication(crate::authentication::AuthenticationEvent),
+    Init(crate::init::InitEvent),
     Noop,
 }
 
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub enum View {
-    Authentication(crate::authentication::View),
-    Init(crate::init::View),
-    Home(crate::home::View),
+    Authentication(crate::authentication::AuthenticationView),
+    Init(crate::init::InitView),
+    Home(crate::home::HomeView),
 }
 
 impl Default for View {
@@ -41,6 +43,7 @@ impl Default for View {
     }
 }
 
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ViewModel {
     pub view: View,
 }
@@ -48,9 +51,7 @@ pub struct ViewModel {
 #[effect(typegen)]
 #[derive(Debug)]
 pub enum Effect {
-    #[serde(skip)]
     Render(RenderOperation),
-    #[serde(skip)]
     Http(HttpRequest),
 }
 
@@ -72,7 +73,7 @@ impl crux_core::App for Application {
     ) -> Command<Self::Effect, Self::Event> {
         match msg {
             Self::Event::Noop => render(),
-            Self::Event::Authentication(crate::authentication::Event::Login {
+            Self::Event::Authentication(crate::authentication::AuthenticationEvent::Login {
                 email,
                 password,
             }) => {
@@ -81,7 +82,7 @@ impl crux_core::App for Application {
                 };
                 crate::authentication::api::login(server_url, &LoginPayload { email, password })
             }
-            Self::Event::Authentication(crate::authentication::Event::Signup {
+            Self::Event::Authentication(crate::authentication::AuthenticationEvent::Signup {
                 email,
                 password,
             }) => {
@@ -90,16 +91,16 @@ impl crux_core::App for Application {
                 };
                 crate::authentication::api::signup(server_url, &LoginPayload { email, password })
             }
-            Self::Event::Authentication(crate::authentication::Event::LoginCallback(Ok(
-                mut res,
-            ))) => {
+            Self::Event::Authentication(
+                crate::authentication::AuthenticationEvent::LoginCallback(Ok(mut res)),
+            ) => {
                 let payload = res.take_body().unwrap();
                 model.auth_token = Some(payload.token);
                 render()
             }
-            Self::Event::Authentication(crate::authentication::Event::LoginCallback(Err(_))) => {
-                render()
-            }
+            Self::Event::Authentication(
+                crate::authentication::AuthenticationEvent::LoginCallback(Err(_)),
+            ) => render(),
             Self::Event::Init(event) => {
                 model.server_url = Some(event.server_url);
                 render()
@@ -119,7 +120,7 @@ impl crux_core::App for Application {
             };
         }
         ViewModel {
-            view: View::Home(home::View::default()),
+            view: View::Home(home::HomeView::default()),
         }
     }
 }
