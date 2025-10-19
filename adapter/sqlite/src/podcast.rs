@@ -80,7 +80,7 @@ impl entertainarr_domain::podcast::prelude::PodcastRepository for super::Pool {
         let mut known = HashSet::with_capacity(podcast_ids.len());
         for id in podcast_ids {
             if !known.contains(id) {
-                if known.len() > 0 {
+                if !known.is_empty() {
                     qb.push(" and");
                 }
                 qb.push(" id = ").push_bind(*id as i64);
