@@ -16,11 +16,16 @@ impl super::Client {
         let res = self
             .inner
             .get(&url)
+            .query(&[("include", "podcast")])
             .header("Authorization", format!("Bearer {token}"))
             .send()
             .await
             .context("unable to send request")?;
-        res.error_for_status_ref()?;
-        res.json().await.context("unable to deserialize payload")
+        if let Err(err) = res.error_for_status_ref() {
+            let body = res.text().await.context("unable to read payload body")?;
+            Err(anyhow::Error::from(err).context(body))
+        } else {
+            res.json().await.context("unable to deserialize payload")
+        }
     }
 }

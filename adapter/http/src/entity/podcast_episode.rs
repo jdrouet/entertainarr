@@ -45,27 +45,7 @@ impl Default for PodcastEpisodeField {
     }
 }
 
-#[derive(Debug)]
-pub struct ParsePodcastEpisodeFieldError;
-
-impl std::fmt::Display for ParsePodcastEpisodeFieldError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("invalid podcast episode field")
-    }
-}
-
-impl std::str::FromStr for PodcastEpisodeField {
-    type Err = ParsePodcastEpisodeFieldError;
-
-    fn from_str(input: &str) -> Result<Self, Self::Err> {
-        match input {
-            "published-at" => Ok(Self::PublishedAt),
-            _ => Err(ParsePodcastEpisodeFieldError),
-        }
-    }
-}
-
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum PodcastEpisodeInclude {
     Podcast,

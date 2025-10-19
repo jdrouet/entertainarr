@@ -1,6 +1,10 @@
+use std::collections::HashSet;
+
 use crate::entity::ApiResource;
 use crate::entity::podcast::PodcastDocument;
-use crate::entity::podcast_episode::{PodcastEpisodeDocument, PodcastEpisodeRelation};
+use crate::entity::podcast_episode::{
+    PodcastEpisodeDocument, PodcastEpisodeInclude, PodcastEpisodeRelation,
+};
 use axum::Json;
 use axum::extract::State;
 use serde_qs::axum::QsQuery;
@@ -8,7 +12,7 @@ use serde_qs::axum::QsQuery;
 use crate::server::extractor::user::CurrentUser;
 use crate::server::handler::ApiError;
 use crate::server::handler::podcast_episode::PodcastEpisodeField;
-use crate::server::handler::prelude::{Page, Sort};
+use crate::server::handler::prelude::{Page, Sort, from_comma_separated};
 use entertainarr_domain::podcast::prelude::{
     ListPodcastEpisodeFilter, ListPodcastEpisodeParams, PodcastEpisodeService, PodcastService,
 };
@@ -34,6 +38,8 @@ impl From<QueryFilter> for ListPodcastEpisodeFilter {
 pub struct QueryParams {
     #[serde(default)]
     filter: QueryFilter,
+    #[serde(default, deserialize_with = "from_comma_separated")]
+    include: HashSet<PodcastEpisodeInclude>,
     #[serde(default)]
     sort: Sort<PodcastEpisodeField>,
     #[serde(default)]
@@ -61,25 +67,30 @@ where
             tracing::error!(error = ?err, "unable to list podcast episodes");
             ApiError::internal()
         })?;
-    let podcast_ids = list.iter().map(|p| p.podcast_id).collect::<Vec<_>>();
-    let podcasts = state
-        .podcast_service()
-        .list_by_ids(&podcast_ids)
-        .await
-        .map_err(|err| {
-            tracing::error!(error = ?err, "unable to list podcasts");
-            ApiError::internal()
-        })?;
+
+    let mut includes: Vec<PodcastEpisodeRelation> = Vec::new();
+
+    if params.include.contains(&PodcastEpisodeInclude::Podcast) {
+        let podcast_ids = list.iter().map(|p| p.podcast_id).collect::<Vec<_>>();
+        let podcasts = state
+            .podcast_service()
+            .list_by_ids(&podcast_ids)
+            .await
+            .map_err(|err| {
+                tracing::error!(error = ?err, "unable to list podcasts");
+                ApiError::internal()
+            })?;
+        let podcasts = podcasts
+            .into_iter()
+            .map(PodcastDocument::from)
+            .map(PodcastEpisodeRelation::Podcast)
+            .collect::<Vec<_>>();
+        includes.extend(podcasts.into_iter());
+    }
 
     let data = list
         .into_iter()
         .map(super::PodcastEpisodeDocument::from)
-        .collect::<Vec<_>>();
-
-    let includes = podcasts
-        .into_iter()
-        .map(PodcastDocument::from)
-        .map(PodcastEpisodeRelation::Podcast)
         .collect::<Vec<_>>();
 
     Ok(Json(ApiResource { data, includes }))

@@ -77,7 +77,6 @@ from podcast_episodes"#,
 
         let span = tracing::Span::current();
         span.record("db.query.text", qb.sql());
-        println!("query: {}", qb.sql());
 
         qb.build_query_as()
             .fetch_all(&self.0)
@@ -101,9 +100,9 @@ impl<'r> sqlx::FromRow<'r, sqlx::sqlite::SqliteRow> for super::Wrapper<PodcastEp
             title: row.try_get(4)?,
             description: row.try_get(5)?,
             link: row.try_get(6)?,
-            duration: row.try_get(7).map(|value: Option<u64>| {
-                value.map(std::time::Duration::from_secs)
-            })?,
+            duration: row
+                .try_get(7)
+                .map(|value: Option<u64>| value.map(std::time::Duration::from_secs))?,
             file_url: row.try_get(8)?,
             file_size: row.try_get(9)?,
             file_type: row.try_get(10)?,

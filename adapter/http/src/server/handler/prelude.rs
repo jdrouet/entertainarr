@@ -1,4 +1,5 @@
 use entertainarr_domain::prelude::SortOrder;
+use serde::Deserialize;
 
 #[derive(Clone, Copy, Debug, serde::Deserialize)]
 pub struct Page {
@@ -86,4 +87,18 @@ where
             })
         }
     }
+}
+
+pub fn from_comma_separated<'de, D, C, T>(deserializer: D) -> Result<C, D::Error>
+where
+    D: serde::de::Deserializer<'de>,
+    T: std::str::FromStr,
+    T::Err: std::fmt::Display,
+    C: FromIterator<T>,
+{
+    let input = String::deserialize(deserializer)?;
+    input
+        .split(',')
+        .map(|cell| cell.parse::<T>().map_err(serde::de::Error::custom))
+        .collect()
 }

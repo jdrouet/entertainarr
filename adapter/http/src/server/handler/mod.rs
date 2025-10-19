@@ -7,7 +7,7 @@ use axum::routing::head;
 mod auth;
 mod podcast;
 mod podcast_episode;
-mod prelude;
+pub(crate) mod prelude;
 mod status;
 
 pub fn create<S>() -> axum::Router<S>

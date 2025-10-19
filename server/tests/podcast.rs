@@ -2,6 +2,8 @@ mod shared;
 
 #[tokio::test]
 async fn workflow() {
+    tracing_subscriber::fmt::init();
+
     let server = shared::Server::new().await;
     let mut client = server.client();
 

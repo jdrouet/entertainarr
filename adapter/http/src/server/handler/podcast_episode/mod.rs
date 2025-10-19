@@ -4,7 +4,8 @@ use crate::entity::{
     Relation,
     podcast::PodcastEntity,
     podcast_episode::{
-        PodcastEpisodeAttributes, PodcastEpisodeDocument, PodcastEpisodeRelationship,
+        PodcastEpisodeAttributes, PodcastEpisodeDocument, PodcastEpisodeField,
+        PodcastEpisodeInclude, PodcastEpisodeRelationship,
     },
 };
 use axum::routing::get;
@@ -50,18 +51,6 @@ impl From<PodcastEpisode> for PodcastEpisodeDocument {
     }
 }
 
-#[derive(Clone, Copy, Debug, serde::Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum PodcastEpisodeField {
-    PublishedAt,
-}
-
-impl Default for PodcastEpisodeField {
-    fn default() -> Self {
-        Self::PublishedAt
-    }
-}
-
 impl From<PodcastEpisodeField> for entertainarr_domain::podcast::prelude::PodcastEpisodeField {
     fn from(value: PodcastEpisodeField) -> Self {
         match value {
@@ -92,8 +81,25 @@ impl FromStr for PodcastEpisodeField {
     }
 }
 
-#[derive(Clone, Copy, Debug, serde::Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum PodcastEpisodeInclude {
-    Podcast,
+#[derive(Debug)]
+pub struct ParsePodcastEpisodeIncludeError;
+
+impl std::fmt::Display for ParsePodcastEpisodeIncludeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("invalid podcast episode include")
+    }
+}
+
+impl FromStr for PodcastEpisodeInclude {
+    type Err = ParsePodcastEpisodeIncludeError;
+
+    fn from_str(input: &str) -> Result<Self, Self::Err> {
+        match input {
+            "podcast" => Ok(Self::Podcast),
+            other => {
+                tracing::warn!(value = other, "invalid podcast episode include");
+                Err(ParsePodcastEpisodeIncludeError)
+            }
+        }
+    }
 }
