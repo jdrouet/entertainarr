@@ -1,37 +1,26 @@
 use crux_http::command::Http;
 
+use crate::authentication::AuthenticationKind;
+
 #[derive(serde::Serialize)]
 pub struct LoginPayload {
     pub email: String,
     pub password: String,
 }
 
-fn post_auth(
-    server_url: &str,
-    name: &str,
+pub fn execute(
+    base_url: &str,
+    kind: AuthenticationKind,
     payload: &LoginPayload,
 ) -> crux_core::Command<crate::Effect, crate::Event> {
-    let url = format!("{server_url}/api/auth/{name}");
+    let url = format!("{base_url}/api/auth/{}", kind.as_str());
+    tracing::info!("POST {url}");
     Http::post(url)
         .body_json(payload)
-        .unwrap()
+        .expect("json body")
         .expect_json()
         .build()
         .then_send(|res| {
-            crate::Event::Authentication(super::AuthenticationEvent::LoginCallback(res))
+            crate::Event::Authentication(super::AuthenticationEvent::Callback(res.into()))
         })
-}
-
-pub fn login(
-    server_url: &str,
-    payload: &LoginPayload,
-) -> crux_core::Command<crate::Effect, crate::Event> {
-    post_auth(server_url, "login", payload)
-}
-
-pub fn signup(
-    server_url: &str,
-    payload: &LoginPayload,
-) -> crux_core::Command<crate::Effect, crate::Event> {
-    post_auth(server_url, "signup", payload)
 }

@@ -1,4 +1,4 @@
-use entertainarr_client_core::Event;
+use entertainarr_client_core::{Event, authentication::AuthenticationKind};
 use inquire::{Password, Select, Text};
 
 impl super::Render for entertainarr_client_core::authentication::AuthenticationView {
@@ -14,20 +14,18 @@ impl super::Render for entertainarr_client_core::authentication::AuthenticationV
         let options = vec!["Login", "Signup"];
         let kind = Select::new("Authentication", options).prompt()?;
 
-        if kind == "Login" {
-            Ok(Event::Authentication(
-                entertainarr_client_core::authentication::AuthenticationEvent::Login {
-                    email,
-                    password,
-                },
-            ))
+        let kind = if kind == "Login" {
+            AuthenticationKind::Login
         } else {
-            Ok(Event::Authentication(
-                entertainarr_client_core::authentication::AuthenticationEvent::Signup {
-                    email,
-                    password,
-                },
-            ))
-        }
+            AuthenticationKind::Signup
+        };
+
+        Ok(Event::Authentication(
+            entertainarr_client_core::authentication::AuthenticationEvent::Execute {
+                email,
+                password,
+                kind,
+            },
+        ))
     }
 }

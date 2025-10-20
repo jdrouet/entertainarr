@@ -23,7 +23,26 @@ pub struct Model {
 
 // ANCHOR_END: model
 
-#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, facet::Facet, serde::Serialize, serde::Deserialize)]
+#[repr(C)]
+pub enum HttpResult<T, E> {
+    Ok(T),
+    Err(E),
+}
+
+impl<T> From<crux_http::Result<crux_http::Response<T>>>
+    for HttpResult<crux_http::Response<T>, crux_http::HttpError>
+{
+    fn from(value: crux_http::Result<crux_http::Response<T>>) -> Self {
+        match value {
+            Ok(response) => HttpResult::Ok(response),
+            Err(error) => HttpResult::Err(error),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, facet::Facet, serde::Serialize, serde::Deserialize)]
+#[repr(C)]
 pub enum Event {
     Authentication(crate::authentication::AuthenticationEvent),
     Init(crate::init::InitEvent),
@@ -59,11 +78,11 @@ pub enum Effect {
 pub struct Application;
 
 impl crux_core::App for Application {
-    type Model = crate::Model;
-    type Event = crate::Event;
-    type ViewModel = crate::ViewModel;
     type Capabilities = ();
     type Effect = crate::Effect;
+    type Event = crate::Event;
+    type Model = crate::Model;
+    type ViewModel = crate::ViewModel;
 
     fn update(
         &self,
@@ -73,34 +92,30 @@ impl crux_core::App for Application {
     ) -> Command<Self::Effect, Self::Event> {
         match msg {
             Self::Event::Noop => render(),
-            Self::Event::Authentication(crate::authentication::AuthenticationEvent::Login {
+            Self::Event::Authentication(crate::authentication::AuthenticationEvent::Execute {
                 email,
                 password,
+                kind,
             }) => {
-                let Some(server_url) = model.server_url.as_ref() else {
+                let Some(base_url) = model.server_url.as_deref() else {
                     return render();
                 };
-                crate::authentication::api::login(server_url, &LoginPayload { email, password })
+                crate::authentication::api::execute(
+                    base_url,
+                    kind,
+                    &LoginPayload { email, password },
+                )
             }
-            Self::Event::Authentication(crate::authentication::AuthenticationEvent::Signup {
-                email,
-                password,
-            }) => {
-                let Some(server_url) = model.server_url.as_ref() else {
-                    return render();
-                };
-                crate::authentication::api::signup(server_url, &LoginPayload { email, password })
-            }
-            Self::Event::Authentication(
-                crate::authentication::AuthenticationEvent::LoginCallback(Ok(mut res)),
-            ) => {
+            Self::Event::Authentication(crate::authentication::AuthenticationEvent::Callback(
+                HttpResult::Ok(mut res),
+            )) => {
                 let payload = res.take_body().unwrap();
                 model.auth_token = Some(payload.token);
                 render()
             }
-            Self::Event::Authentication(
-                crate::authentication::AuthenticationEvent::LoginCallback(Err(_)),
-            ) => render(),
+            Self::Event::Authentication(crate::authentication::AuthenticationEvent::Callback(
+                HttpResult::Err(_),
+            )) => render(),
             Self::Event::Init(event) => {
                 model.server_url = Some(event.server_url);
                 render()

@@ -1,0 +1,18 @@
+[package]
+name = "entertainarr-client-web-leptos"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+keywords.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+console_error_panic_hook = "0.1"
+crux_http = "0.15"
+entertainarr-client-core = { path = "../core" }
+leptos = { version = "0.8", features = ["csr"] }
+leptos_router = { version = "0.8", features = ["tracing"] }
+tracing = { workspace = true }
+tracing-subscriber = { version = "0.3", features = ["fmt", "registry"] }
+tracing-subscriber-wasm = "0.1"

@@ -1,4 +1,4 @@
-#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, facet::Facet, serde::Serialize, serde::Deserialize)]
 pub struct InitEvent {
     pub server_url: String,
 }
