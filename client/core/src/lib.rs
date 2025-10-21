@@ -10,6 +10,7 @@ use crux_http::protocol::HttpRequest;
 use crate::authentication::api::LoginPayload;
 
 pub mod authentication;
+pub mod capability;
 pub mod home;
 pub mod init;
 
@@ -70,8 +71,9 @@ pub struct ViewModel {
 #[effect(typegen)]
 #[derive(Debug)]
 pub enum Effect {
-    Render(RenderOperation),
     Http(HttpRequest),
+    Persistence(crate::capability::persistence::Persistence),
+    Render(RenderOperation),
 }
 
 #[derive(Default)]
@@ -110,14 +112,21 @@ impl crux_core::App for Application {
                 HttpResult::Ok(mut res),
             )) => {
                 let payload = res.take_body().unwrap();
-                model.auth_token = Some(payload.token);
-                render()
+                model.auth_token = Some(payload.token.clone());
+                Command::all([
+                    capability::persistence::Persistence::store(
+                        "authentication-token",
+                        payload.token,
+                    ),
+                    render(),
+                ])
             }
             Self::Event::Authentication(crate::authentication::AuthenticationEvent::Callback(
                 HttpResult::Err(_),
             )) => render(),
             Self::Event::Init(event) => {
                 model.server_url = Some(event.server_url);
+                model.auth_token = event.authentication_token.or(model.auth_token.take());
                 render()
             }
         }

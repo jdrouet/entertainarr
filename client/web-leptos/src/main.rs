@@ -1,5 +1,5 @@
 use entertainarr_client_web_leptos::RootComponent;
-use leptos::prelude::*;
+use leptos::*;
 use leptos_router::components::*;
 use tracing_subscriber::fmt::writer::MakeWriterExt;
 
@@ -11,7 +11,7 @@ fn main() {
 
     fmt()
         .with_writer(
-            // To avoide trace events in the browser from showing their
+            // To avoid trace events in the browser from showing their
             // JS backtrace, which is very annoying, in my opinion
             MakeConsoleWriter::default().with_max_level(tracing::Level::DEBUG),
         )

@@ -120,6 +120,7 @@ impl Application {
                 Effect::Render(_) => {
                     self.handle_render()?;
                 }
+                Effect::Persistence(_) => {}
             }
         }
         Ok(())

@@ -10,6 +10,7 @@ impl super::Render for entertainarr_client_core::init::InitView {
 
         Ok(Event::Init(entertainarr_client_core::init::InitEvent {
             server_url,
+            authentication_token: None,
         }))
     }
 }
