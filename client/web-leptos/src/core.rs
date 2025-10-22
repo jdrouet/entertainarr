@@ -1,14 +1,14 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use entertainarr_client_core::{
     Application, Effect, Event, ViewModel, capability::persistence::Persistence,
 };
-use leptos::prelude::{Update as _, WriteSignal};
+use leptos::prelude::{Update, WriteSignal};
 
-pub type Core = Rc<entertainarr_client_core::Core<Application>>;
+pub type Core = Arc<entertainarr_client_core::Core<Application>>;
 
 pub fn new() -> Core {
-    Rc::new(entertainarr_client_core::Core::new())
+    Arc::new(entertainarr_client_core::Core::new())
 }
 
 pub fn update(core: &Core, event: Event, render: WriteSignal<ViewModel>) {
@@ -22,6 +22,7 @@ pub fn process_effect(core: &Core, effect: Effect, render: WriteSignal<ViewModel
     tracing::info!(?effect, "core::process_effect");
     match effect {
         Effect::Http(mut request) => {
+            tracing::warn!("effect http");
             leptos::task::spawn_local({
                 let core = core.clone();
 
@@ -39,6 +40,7 @@ pub fn process_effect(core: &Core, effect: Effect, render: WriteSignal<ViewModel
         }
         Effect::Persistence(req) => match req.operation {
             Persistence::Store(req) => {
+                tracing::warn!("effect persistence store");
                 crate::service::storage::set_local_storage(req.key.as_str(), req.value.as_str());
             }
         },

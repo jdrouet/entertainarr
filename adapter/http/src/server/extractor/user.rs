@@ -1,5 +1,6 @@
-use crate::server::handler::ApiError;
 use entertainarr_domain::auth::prelude::{AuthenticationService, VerifyError};
+
+use crate::entity::ApiError;
 
 #[derive(Clone, Copy, Debug)]
 pub struct CurrentUser(pub u64);

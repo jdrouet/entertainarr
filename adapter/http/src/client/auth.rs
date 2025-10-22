@@ -1,6 +1,11 @@
 use anyhow::Context;
 
-use crate::entity::auth::{AuthenticationRequest, AuthenticationResponse};
+use crate::entity::{
+    ApiResource,
+    auth::{
+        AuthenticationRequestAttributes, AuthenticationRequestDocument, AuthenticationTokenDocument,
+    },
+};
 
 impl super::Client {
     pub async fn auth(&self, kind: &str, email: &str, password: &str) -> anyhow::Result<String> {
@@ -8,16 +13,20 @@ impl super::Client {
         let res = self
             .inner
             .post(&url)
-            .json(&AuthenticationRequest {
-                email: email.into(),
-                password: password.into(),
+            .json(&AuthenticationRequestDocument {
+                kind: Default::default(),
+                attributes: AuthenticationRequestAttributes {
+                    email: email.into(),
+                    password: password.into(),
+                },
             })
             .send()
             .await
             .context("unable to send request")?;
         res.error_for_status_ref()?;
-        let res: AuthenticationResponse = res.json().await.context("unable to read response")?;
-        Ok(res.token)
+        let res: ApiResource<AuthenticationTokenDocument> =
+            res.json().await.context("unable to read response")?;
+        Ok(res.data.id)
     }
 
     pub async fn auth_login(&self, email: &str, password: &str) -> anyhow::Result<String> {

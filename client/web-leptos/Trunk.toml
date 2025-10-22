@@ -1,2 +1,10 @@
 [[proxy]]
 backend = "http://localhost:3000/api"
+
+[[hooks]]
+stage = "pre_build"
+command = "stylance"
+command_arguments = [".", "--output-file", "index.css"]
+
+[watch]
+ignore = ["index.css"]

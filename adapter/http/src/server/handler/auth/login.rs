@@ -5,29 +5,24 @@ use entertainarr_domain::auth::{
     prelude::{AuthenticationService, LoginError, LoginRequest},
 };
 
-use crate::entity::auth::AuthenticationRequest;
-use crate::server::handler::{ApiError, ApiErrorDetail};
-
-#[derive(Debug, serde::Serialize)]
-pub struct LoginResponse {
-    token: String,
-}
+use crate::entity::auth::{AuthenticationRequestDocument, AuthenticationTokenDocument};
+use crate::entity::{ApiError, ApiErrorDetail, ApiResource};
 
 pub async fn handle<S>(
     State(state): State<S>,
-    Json(payload): Json<AuthenticationRequest<'static>>,
-) -> Result<Json<LoginResponse>, ApiError>
+    Json(payload): Json<ApiResource<AuthenticationRequestDocument<'static>>>,
+) -> Result<Json<ApiResource<AuthenticationTokenDocument>>, ApiError>
 where
     S: crate::server::prelude::ServerState,
 {
-    let email = Email::try_new(payload.email).map_err(|err| {
+    let email = Email::try_new(payload.data.attributes.email).map_err(|err| {
         let reason = match err {
             EmailError::NotEmptyViolated => "should not be empty",
         };
         ApiError::bad_request("invalid credentials")
             .with_detail(ApiErrorDetail::new("email", reason))
     })?;
-    let password = Password::try_new(payload.password).map_err(|err| {
+    let password = Password::try_new(payload.data.attributes.password).map_err(|err| {
         let reason = match err {
             PasswordError::NotEmptyViolated => "should not be empty",
             PasswordError::LenCharMinViolated => "should be more than 8 characters",
@@ -39,7 +34,13 @@ where
         .authentication_service()
         .login(LoginRequest { email, password })
         .await
-        .map(|res| Json(LoginResponse { token: res.token }))
+        .map(|res| {
+            Json(ApiResource::new(AuthenticationTokenDocument {
+                id: res.token,
+                kind: Default::default(),
+                attributes: Default::default(),
+            }))
+        })
         .map_err(|err| match err {
             LoginError::InvalidCredentials => ApiError::bad_request("invalid credentials"),
             LoginError::Internal(err) => {
@@ -51,7 +52,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::entity::auth::AuthenticationRequest;
+    use crate::entity::auth::AuthenticationRequestDocument;
     use crate::server::prelude::tests::MockServerState;
 
     use axum::{Json, extract::State, http::StatusCode};
@@ -73,21 +74,19 @@ mod tests {
         let state = MockServerState::builder()
             .authentication(auth_service)
             .build();
-        let payload = AuthenticationRequest {
-            email: "user@example.com".into(),
-            password: "password".into(),
-        };
-        assert!(super::handle(State(state), Json(payload)).await.is_ok());
+        let payload = AuthenticationRequestDocument::new("user@example.com", "password");
+        assert!(
+            super::handle(State(state), Json(crate::entity::ApiResource::new(payload)))
+                .await
+                .is_ok()
+        );
     }
 
     #[tokio::test]
     async fn should_fail_validation_invalid_username() {
         let state = MockServerState::default();
-        let payload = AuthenticationRequest {
-            email: "  ".into(),
-            password: "password".into(),
-        };
-        let err = super::handle(State(state), Json(payload))
+        let payload = AuthenticationRequestDocument::new("  ", "password");
+        let err = super::handle(State(state), Json(crate::entity::ApiResource::new(payload)))
             .await
             .unwrap_err();
         assert_eq!(err.status_code, StatusCode::BAD_REQUEST);
@@ -100,11 +99,8 @@ mod tests {
     #[tokio::test]
     async fn should_fail_validation_empty_password() {
         let state = MockServerState::default();
-        let payload = AuthenticationRequest {
-            email: "user@example.com".into(),
-            password: "          ".into(),
-        };
-        let err = super::handle(State(state), Json(payload))
+        let payload = AuthenticationRequestDocument::new("user@example.com", "          ");
+        let err = super::handle(State(state), Json(crate::entity::ApiResource::new(payload)))
             .await
             .unwrap_err();
         assert_eq!(err.status_code, StatusCode::BAD_REQUEST);
@@ -117,11 +113,8 @@ mod tests {
     #[tokio::test]
     async fn should_fail_validation_invalid_password() {
         let state = MockServerState::default();
-        let payload = AuthenticationRequest {
-            email: "user@example.com".into(),
-            password: "foo".into(),
-        };
-        let err = super::handle(State(state), Json(payload))
+        let payload = AuthenticationRequestDocument::new("user@example.com", "foo");
+        let err = super::handle(State(state), Json(crate::entity::ApiResource::new(payload)))
             .await
             .unwrap_err();
         assert_eq!(err.status_code, StatusCode::BAD_REQUEST);

@@ -9,7 +9,7 @@ rust-version.workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
-entertainarr-adapter-http = { workspace = true }
+entertainarr-adapter-http = { workspace = true, features = ["server"] }
 entertainarr-adapter-jsonwebtoken = { workspace = true }
 entertainarr-adapter-rss = { workspace = true }
 entertainarr-adapter-sqlite = { workspace = true }

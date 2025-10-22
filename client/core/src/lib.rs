@@ -7,7 +7,7 @@ use crux_core::render::RenderOperation;
 use crux_core::render::render;
 use crux_http::protocol::HttpRequest;
 
-use crate::authentication::api::LoginPayload;
+use crate::authentication::AuthenticationView;
 
 pub mod authentication;
 pub mod capability;
@@ -20,6 +20,7 @@ pub mod init;
 pub struct Model {
     server_url: Option<String>,
     auth_token: Option<String>,
+    authentication: authentication::AuthenticationModel,
 }
 
 // ANCHOR_END: model
@@ -94,36 +95,7 @@ impl crux_core::App for Application {
     ) -> Command<Self::Effect, Self::Event> {
         match msg {
             Self::Event::Noop => render(),
-            Self::Event::Authentication(crate::authentication::AuthenticationEvent::Execute {
-                email,
-                password,
-                kind,
-            }) => {
-                let Some(base_url) = model.server_url.as_deref() else {
-                    return render();
-                };
-                crate::authentication::api::execute(
-                    base_url,
-                    kind,
-                    &LoginPayload { email, password },
-                )
-            }
-            Self::Event::Authentication(crate::authentication::AuthenticationEvent::Callback(
-                HttpResult::Ok(mut res),
-            )) => {
-                let payload = res.take_body().unwrap();
-                model.auth_token = Some(payload.token.clone());
-                Command::all([
-                    capability::persistence::Persistence::store(
-                        "authentication-token",
-                        payload.token,
-                    ),
-                    render(),
-                ])
-            }
-            Self::Event::Authentication(crate::authentication::AuthenticationEvent::Callback(
-                HttpResult::Err(_),
-            )) => render(),
+            Self::Event::Authentication(inner) => self.handle_authentication(inner, model),
             Self::Event::Init(event) => {
                 model.server_url = Some(event.server_url);
                 model.auth_token = event.authentication_token.or(model.auth_token.take());
@@ -140,7 +112,9 @@ impl crux_core::App for Application {
         }
         if model.auth_token.is_none() {
             return ViewModel {
-                view: View::Authentication(Default::default()),
+                view: View::Authentication(AuthenticationView {
+                    error: model.authentication.error.clone(),
+                }),
             };
         }
         ViewModel {

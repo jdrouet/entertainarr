@@ -1,7 +1,6 @@
 use axum::extract::{Path, State};
 
-use crate::server::extractor::user::CurrentUser;
-use crate::server::handler::ApiError;
+use crate::{entity::ApiError, server::extractor::user::CurrentUser};
 use entertainarr_domain::podcast::prelude::PodcastService;
 
 pub async fn handle<S>(

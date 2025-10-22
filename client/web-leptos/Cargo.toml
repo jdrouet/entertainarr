@@ -14,9 +14,9 @@ entertainarr-client-core = { path = "../core" }
 gloo-net = { version = "0.6.0", default-features = false, features = ["http", "json"] }
 js-sys = "0.3.81"
 leptos = { version = "0.8", features = ["csr"] }
-leptos-use = { version = "0.16", features = ["storage"] }
 leptos_router = { version = "0.8", features = ["tracing"] }
+stylance = "0.7"
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3", features = ["fmt", "registry"] }
 tracing-subscriber-wasm = "0.1"
-wasm-bindgen = "0.2"
+web-sys = { version = "0.3", features = ["RadioNodeList"] }

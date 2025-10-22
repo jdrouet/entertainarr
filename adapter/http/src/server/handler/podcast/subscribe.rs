@@ -1,9 +1,9 @@
 use axum::Json;
 use axum::extract::State;
 
+use crate::entity::ApiError;
 use crate::entity::podcast::SubscriptionRequest;
 use crate::server::extractor::user::CurrentUser;
-use crate::server::handler::ApiError;
 use entertainarr_domain::podcast::prelude::PodcastService;
 
 pub async fn handle<S>(

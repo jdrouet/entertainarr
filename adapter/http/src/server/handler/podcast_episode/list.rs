@@ -1,16 +1,15 @@
 use std::collections::HashSet;
 
-use crate::entity::ApiResource;
 use crate::entity::podcast::PodcastDocument;
 use crate::entity::podcast_episode::{
     PodcastEpisodeDocument, PodcastEpisodeInclude, PodcastEpisodeRelation,
 };
+use crate::entity::{ApiError, ApiResource};
 use axum::Json;
 use axum::extract::State;
 use serde_qs::axum::QsQuery;
 
 use crate::server::extractor::user::CurrentUser;
-use crate::server::handler::ApiError;
 use crate::server::handler::podcast_episode::PodcastEpisodeField;
 use crate::server::handler::prelude::{Page, Sort, from_comma_separated};
 use entertainarr_domain::podcast::prelude::{

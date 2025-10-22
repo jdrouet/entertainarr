@@ -2,10 +2,9 @@ use axum::Json;
 use axum::extract::State;
 use entertainarr_domain::podcast::prelude::PodcastService;
 
-use crate::entity::ApiResource;
 use crate::entity::podcast::PodcastDocument;
+use crate::entity::{ApiError, ApiResource};
 use crate::server::extractor::user::CurrentUser;
-use crate::server::handler::ApiError;
 
 pub async fn handle<S>(
     State(state): State<S>,
