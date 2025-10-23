@@ -5,7 +5,6 @@ members = [
   "adapter/jsonwebtoken",
   "adapter/rss",
   "adapter/sqlite",
-  "client/cli",
   "client/core",
   "client/core-types",
   "client/web-leptos",

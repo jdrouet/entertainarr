@@ -1,4 +1,6 @@
-use entertainarr_client_core::authentication::{AuthenticationEvent, AuthenticationKind};
+use entertainarr_client_core::domain::authentication::{
+    AuthenticationError, AuthenticationEvent, AuthenticationKind, AuthenticationRequest,
+};
 use leptos::ev::SubmitEvent;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
@@ -7,9 +9,19 @@ use crate::context::core::use_events;
 
 stylance::import_style!(style, "authentication.module.scss");
 
+fn error_message(err: AuthenticationError) -> &'static str {
+    match err {
+        AuthenticationError::EmailConflict => "Email address already used",
+        AuthenticationError::EmailTooShort => "Email address too short",
+        AuthenticationError::PasswordTooShort => "Password too short",
+        AuthenticationError::InvalidCredentials => "Invalid credentials",
+        AuthenticationError::Network => "Internal error",
+    }
+}
+
 #[component]
 pub fn AuthenticationView(
-    model: entertainarr_client_core::authentication::AuthenticationView,
+    model: entertainarr_client_core::domain::authentication::AuthenticationView,
 ) -> impl IntoView {
     let (_, on_change) = use_events();
 
@@ -39,12 +51,12 @@ pub fn AuthenticationView(
             other => panic!("invalid mode {other:?}"),
         };
 
-        let event = AuthenticationEvent::Execute {
+        let req = AuthenticationEvent::Request(AuthenticationRequest {
             email: email_input.value(),
             password: password_input.value(),
             kind,
-        };
-        on_change.set(entertainarr_client_core::Event::Authentication(event));
+        });
+        on_change.set(req.into());
     };
 
     view! {
@@ -73,9 +85,9 @@ pub fn AuthenticationView(
                         <label for="password">{"Password"}</label>
                         <input id="password" type="password" name="password" required />
                     </div>
-                    {model.error.clone().map(|message| view! {
+                    {model.error.clone().map(|err| view! {
                         <div class={style::error_message}>
-                            {message}
+                            {error_message(err)}
                         </div>
                     })}
                     <button type="submit">

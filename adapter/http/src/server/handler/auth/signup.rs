@@ -1,10 +1,13 @@
 use axum::{Json, extract::State};
 use entertainarr_domain::auth::{
-    entity::{Email, EmailError, Password, PasswordError},
+    entity::{Email, Password},
     prelude::{AuthenticationService, SignupError, SignupRequest},
 };
 
-use crate::entity::auth::{AuthenticationRequestDocument, AuthenticationTokenDocument};
+use crate::entity::auth::{
+    AuthenticationRequestDocument, AuthenticationTokenDocument,
+    errors::{CODE_EMAIL_CONFLICT, CODE_EMAIL_TOO_SHORT, CODE_PASSWORD_TOO_SHORT},
+};
 use crate::entity::{ApiError, ApiErrorDetail, ApiResource};
 
 pub async fn handle<S>(
@@ -14,20 +17,13 @@ pub async fn handle<S>(
 where
     S: crate::server::prelude::ServerState,
 {
-    let email = Email::try_new(payload.data.attributes.email).map_err(|err| {
-        let reason = match err {
-            EmailError::NotEmptyViolated => "should not be empty",
-        };
+    let email = Email::try_new(payload.data.attributes.email).map_err(|_| {
         ApiError::bad_request("invalid credentials")
-            .with_detail(ApiErrorDetail::new("email", reason))
+            .with_detail(ApiErrorDetail::new("email", CODE_EMAIL_TOO_SHORT))
     })?;
-    let password = Password::try_new(payload.data.attributes.password).map_err(|err| {
-        let reason = match err {
-            PasswordError::NotEmptyViolated => "should not be empty",
-            PasswordError::LenCharMinViolated => "should be more than 8 characters",
-        };
+    let password = Password::try_new(payload.data.attributes.password).map_err(|_| {
         ApiError::bad_request("invalid credentials")
-            .with_detail(ApiErrorDetail::new("password", reason))
+            .with_detail(ApiErrorDetail::new("password", CODE_PASSWORD_TOO_SHORT))
     })?;
     state
         .authentication_service()
@@ -42,7 +38,7 @@ where
         })
         .map_err(|err| match err {
             SignupError::EmailConflict => ApiError::conflict("user conflict")
-                .with_detail(ApiErrorDetail::new("email", "already used")),
+                .with_detail(ApiErrorDetail::new("email", CODE_EMAIL_CONFLICT)),
             SignupError::Internal(err) => {
                 tracing::error!(error = %err, error.stacktrace = ?err, "unable to login");
                 ApiError::internal()
@@ -94,7 +90,7 @@ mod tests {
         assert_eq!(err.message, "invalid credentials");
         let detail = err.detail.unwrap();
         assert_eq!(detail.attribute, "email");
-        assert_eq!(detail.reason, "should not be empty");
+        assert_eq!(detail.code, "not-empty-violated");
     }
 
     #[tokio::test]
@@ -108,7 +104,7 @@ mod tests {
         assert_eq!(err.message, "invalid credentials");
         let detail = err.detail.unwrap();
         assert_eq!(detail.attribute, "password");
-        assert_eq!(detail.reason, "should not be empty");
+        assert_eq!(detail.code, "not-empty-violated");
     }
 
     #[tokio::test]
@@ -122,7 +118,7 @@ mod tests {
         assert_eq!(err.message, "invalid credentials");
         let detail = err.detail.unwrap();
         assert_eq!(detail.attribute, "password");
-        assert_eq!(detail.reason, "should be more than 8 characters");
+        assert_eq!(detail.code, "len-char-min-violated");
     }
 
     #[tokio::test]
@@ -147,7 +143,7 @@ mod tests {
         assert_eq!(err.message, "user conflict");
         let detail = err.detail.unwrap();
         assert_eq!(detail.attribute, "email");
-        assert_eq!(detail.reason, "already used");
+        assert_eq!(detail.code, "conflict");
     }
 }
 

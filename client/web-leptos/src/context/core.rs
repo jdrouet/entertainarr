@@ -1,4 +1,4 @@
-use entertainarr_client_core::init::InitEvent;
+use entertainarr_client_core::domain::init::InitEvent;
 use entertainarr_client_core::{Event, ViewModel};
 use leptos::prelude::{
     Children, Effect, Get, ReadSignal, WithUntracked, WriteSignal, expect_context, provide_context,

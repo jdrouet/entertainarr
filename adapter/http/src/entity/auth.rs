@@ -1,5 +1,13 @@
 use std::borrow::Cow;
 
+pub mod errors {
+    pub const CODE_EMAIL_CONFLICT: &str = "email-conflict";
+    pub const CODE_EMAIL_INVALID: &str = "email-invalid";
+    pub const CODE_EMAIL_TOO_SHORT: &str = "email-too-short";
+    pub const CODE_PASSWORD_TOO_SHORT: &str = "password-too-short";
+    pub const CODE_INVALID_CREDENTIALS: &str = "invalid-credentials";
+}
+
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct AuthenticationRequestDocument<'a> {
     #[serde(rename = "type")]

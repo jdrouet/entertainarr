@@ -7,60 +7,35 @@ use crux_core::render::RenderOperation;
 use crux_core::render::render;
 use crux_http::protocol::HttpRequest;
 
-use crate::authentication::AuthenticationView;
-
-pub mod authentication;
 pub mod capability;
-pub mod home;
-pub mod init;
+pub mod domain;
 
-// ANCHOR: model
-
-#[derive(Default)]
-pub struct Model {
-    server_url: Option<String>,
-    auth_token: Option<String>,
-    authentication: authentication::AuthenticationModel,
+pub enum Model {
+    Initializing,
+    Authentication {
+        model: crate::domain::authentication::AuthenticationModel,
+        server_url: String,
+    },
+    Authenticated {
+        authentication_token: String,
+        server_url: String,
+    },
 }
 
-// ANCHOR_END: model
-
-#[derive(Debug, Clone, PartialEq, Eq, facet::Facet, serde::Serialize, serde::Deserialize)]
-#[repr(C)]
-pub enum HttpResult<T, E> {
-    Ok(T),
-    Err(E),
-}
-
-impl<T> From<crux_http::Result<crux_http::Response<T>>>
-    for HttpResult<crux_http::Response<T>, crux_http::HttpError>
-{
-    fn from(value: crux_http::Result<crux_http::Response<T>>) -> Self {
-        match value {
-            Ok(response) => HttpResult::Ok(response),
-            Err(error) => HttpResult::Err(error),
-        }
+impl Default for Model {
+    fn default() -> Self {
+        Self::Initializing
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, facet::Facet, serde::Serialize, serde::Deserialize)]
-#[repr(C)]
-pub enum Event {
-    Authentication(crate::authentication::AuthenticationEvent),
-    Init(crate::init::InitEvent),
-    Noop,
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-pub enum View {
-    Authentication(crate::authentication::AuthenticationView),
-    Init(crate::init::InitView),
-    Home(crate::home::HomeView),
-}
-
-impl Default for View {
-    fn default() -> Self {
-        Self::Init(Default::default())
+impl Model {
+    fn server_url(&self) -> Option<&str> {
+        match self {
+            Self::Initializing => None,
+            Self::Authentication { server_url, .. } | Self::Authenticated { server_url, .. } => {
+                Some(server_url.as_str())
+            }
+        }
     }
 }
 
@@ -69,12 +44,32 @@ pub struct ViewModel {
     pub view: View,
 }
 
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub enum View {
+    Authentication(crate::domain::authentication::AuthenticationView),
+    Init(crate::domain::init::InitView),
+    Home(crate::domain::home::HomeView),
+}
+
+impl Default for View {
+    fn default() -> Self {
+        Self::Init(Default::default())
+    }
+}
+
 #[effect(typegen)]
 #[derive(Debug)]
 pub enum Effect {
     Http(HttpRequest),
     Persistence(crate::capability::persistence::Persistence),
     Render(RenderOperation),
+}
+
+#[derive(Clone, Debug, derive_more::From, serde::Serialize, serde::Deserialize)]
+pub enum Event {
+    Authentication(crate::domain::authentication::AuthenticationEvent),
+    Init(crate::domain::init::InitEvent),
+    Noop,
 }
 
 #[derive(Default)]
@@ -95,30 +90,25 @@ impl crux_core::App for Application {
     ) -> Command<Self::Effect, Self::Event> {
         match msg {
             Self::Event::Noop => render(),
-            Self::Event::Authentication(inner) => self.handle_authentication(inner, model),
-            Self::Event::Init(event) => {
-                model.server_url = Some(event.server_url);
-                model.auth_token = event.authentication_token.or(model.auth_token.take());
-                render()
-            }
+            Self::Event::Authentication(event) => self.update_authentication(event, model),
+            Self::Event::Init(event) => self.update_init(event, model),
         }
     }
 
     fn view(&self, model: &Self::Model) -> Self::ViewModel {
-        if model.server_url.is_none() {
-            return ViewModel {
+        match model {
+            Model::Initializing => ViewModel {
                 view: View::Init(Default::default()),
-            };
-        }
-        if model.auth_token.is_none() {
-            return ViewModel {
-                view: View::Authentication(AuthenticationView {
-                    error: model.authentication.error.clone(),
+            },
+            Model::Authentication { model, .. } => ViewModel {
+                view: View::Authentication(crate::domain::authentication::AuthenticationView {
+                    error: model.error.clone(),
+                    loading: model.loading,
                 }),
-            };
-        }
-        ViewModel {
-            view: View::Home(home::HomeView::default()),
+            },
+            Model::Authenticated { .. } => ViewModel {
+                view: View::Home(crate::domain::home::HomeView {}),
+            },
         }
     }
 }

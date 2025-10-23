@@ -1,5 +1,6 @@
 use crux_core::typegen::TypeGen;
-use entertainarr_client_core::{Application, View, authentication::AuthenticationEvent};
+use entertainarr_client_core::domain::authentication::AuthenticationEvent;
+use entertainarr_client_core::{Application, View};
 use std::path::PathBuf;
 
 fn main() -> anyhow::Result<()> {

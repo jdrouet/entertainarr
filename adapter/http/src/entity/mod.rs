@@ -84,17 +84,17 @@ impl ApiError {
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct ApiErrorDetail {
     pub attribute: Cow<'static, str>,
-    pub reason: Cow<'static, str>,
+    pub code: Cow<'static, str>,
 }
 
 impl ApiErrorDetail {
     pub fn new(
         attribute: impl Into<Cow<'static, str>>,
-        reason: impl Into<Cow<'static, str>>,
+        code: impl Into<Cow<'static, str>>,
     ) -> Self {
         Self {
             attribute: attribute.into(),
-            reason: reason.into(),
+            code: code.into(),
         }
     }
 }
