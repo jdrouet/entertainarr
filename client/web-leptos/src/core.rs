@@ -37,7 +37,6 @@ pub fn process_effect(core: &Core, effect: Effect, render: WriteSignal<ViewModel
         }
         Effect::Persistence(req) => match req.operation {
             Persistence::Store(req) => {
-                tracing::warn!("effect persistence store");
                 crate::service::storage::set_local_storage(req.key.as_str(), req.value.as_str());
             }
         },

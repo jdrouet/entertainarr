@@ -60,41 +60,39 @@ pub fn AuthenticationView(
     };
 
     view! {
-        <div class="content">
-            <div class={style::form_container}>
-                <h1>{"Welcome to Entertainarr"}</h1>
-                <form
-                    novalidate
-                    on:submit=handle_submit
-                >
-                    <h2 class={style::toggle_tabs}>
-                        <label>
-                            <input type="radio" name="mode" value="login" checked />
-                            <span>{"Login"}</span>
-                        </label>
-                        <label>
-                            <input type="radio" name="mode" value="signup" />
-                            <span>{"Signup"}</span>
-                        </label>
-                    </h2>
-                    <div class={style::form_group}>
-                        <label for="email">{"Email"}</label>
-                        <input id="email" type="email" name="email" required />
+        <crate::component::form_layout::FormLayout classname={style::authentication}>
+            <h1>{"Welcome to Entertainarr"}</h1>
+            <form
+                novalidate
+                on:submit=handle_submit
+            >
+                <h2 class={style::toggle_tabs}>
+                    <label>
+                        <input type="radio" name="mode" value="login" checked />
+                        <span>{"Login"}</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="mode" value="signup" />
+                        <span>{"Signup"}</span>
+                    </label>
+                </h2>
+                <div class={style::form_group}>
+                    <label for="email">{"Email"}</label>
+                    <input id="email" type="email" name="email" required />
+                </div>
+                <div class={style::form_group}>
+                    <label for="password">{"Password"}</label>
+                    <input id="password" type="password" name="password" required />
+                </div>
+                {model.error.clone().map(|err| view! {
+                    <div class={style::error_message}>
+                        {error_message(err)}
                     </div>
-                    <div class={style::form_group}>
-                        <label for="password">{"Password"}</label>
-                        <input id="password" type="password" name="password" required />
-                    </div>
-                    {model.error.clone().map(|err| view! {
-                        <div class={style::error_message}>
-                            {error_message(err)}
-                        </div>
-                    })}
-                    <button type="submit">
-                        {"Continue"}
-                    </button>
-                </form>
-            </div>
-        </div>
+                })}
+                <button type="submit">
+                    {"Continue"}
+                </button>
+            </form>
+        </crate::component::form_layout::FormLayout>
     }
 }
