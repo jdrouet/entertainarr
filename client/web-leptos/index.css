@@ -94,3 +94,127 @@
         background-color: #1d4ed8;
     }
 }
+
+
+.header-2367639 {
+    align-items: center;
+    background-color: var(--background-color);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    padding: 1rem;
+
+    .burger-2367639 {
+        cursor: pointer;
+        padding: 0.5rem;
+        margin-right: 1rem;
+    }
+
+    .burger-2367639 span {
+        display: block;
+        width: 24px;
+        height: 2px;
+        background-color: var(--text-color);
+        margin: 4px 0;
+        transition: 0.3s;
+    }
+
+    .profile-2367639 {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .profile-picture-2367639 {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+}
+
+
+.container-eec80db {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.main-content-eec80db {
+    flex: 1;
+    padding: 2rem;
+}
+
+.episodes-grid-eec80db {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.episode-card-eec80db {
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: transform 0.2s;
+}
+
+.episode-card-eec80db:hover {
+    transform: translateY(-4px);
+}
+
+.episode-image-eec80db {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+}
+
+.episode-details-eec80db {
+    padding: 1rem;
+}
+
+.episode-title-eec80db {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.episode-date-eec80db {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+
+.overlay-7f46108 {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    z-index: 999;
+}
+
+.overlay-7f46108[data-visible] {
+    display: block;
+}
+
+.sidebar-7f46108 {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 250px;
+    background-color: var(--background-color);
+    border-right: 1px solid var(--border-color);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+.sidebar-7f46108[data-visible] {
+    transform: translateX(0);
+}

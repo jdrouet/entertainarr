@@ -2,6 +2,7 @@ use leptos::prelude::*;
 
 use crate::context::core::CoreContext;
 
+mod component;
 mod context;
 mod core;
 mod service;

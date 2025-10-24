@@ -1,5 +1,10 @@
 use crux_core::{Command, render::render};
 
+use crate::{
+    capability::persistence::Persistence,
+    domain::{AuthenticatedModel, home::HomeEvent},
+};
+
 impl crate::Application {
     pub fn update_authentication(
         &self,
@@ -29,16 +34,23 @@ impl crate::Application {
                 render()
             }
             super::AuthenticationEvent::Success(authentication_token) => {
+                let effect =
+                    Persistence::store("authentication-token", authentication_token.clone());
                 if let Some(server_url) = model.server_url().map(String::from) {
                     let _ = std::mem::replace(
                         model,
                         crate::Model::Authenticated {
                             authentication_token,
+                            model: AuthenticatedModel::default(),
                             server_url,
                         },
                     );
                 }
-                render()
+                Command::all([
+                    Command::event(HomeEvent::Initialize.into()),
+                    effect,
+                    render(),
+                ])
             }
         }
     }

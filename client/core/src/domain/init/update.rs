@@ -1,5 +1,7 @@
 use crux_core::{Command, render::render};
 
+use crate::domain::{AuthenticatedModel, home::HomeEvent};
+
 impl crate::Application {
     pub fn update_init(
         &self,
@@ -11,19 +13,25 @@ impl crate::Application {
             return render();
         }
 
-        let next = match event.authentication_token {
-            Some(authentication_token) => crate::Model::Authenticated {
-                authentication_token,
-                server_url: event.server_url,
-            },
-            None => crate::Model::Authentication {
-                model: Default::default(),
-                server_url: event.server_url,
-            },
-        };
-
-        let _ = std::mem::replace(model, next);
-        render()
+        match event.authentication_token {
+            Some(authentication_token) => {
+                let next = crate::Model::Authenticated {
+                    authentication_token,
+                    model: AuthenticatedModel::default(),
+                    server_url: event.server_url,
+                };
+                let _ = std::mem::replace(model, next);
+                Command::all([Command::event(HomeEvent::Initialize.into()), render()])
+            }
+            None => {
+                let next = crate::Model::Authentication {
+                    model: Default::default(),
+                    server_url: event.server_url,
+                };
+                let _ = std::mem::replace(model, next);
+                render()
+            }
+        }
     }
 }
 
@@ -36,6 +44,7 @@ mod tests {
         let app = crate::Application;
         let mut root = crate::Model::Authenticated {
             authentication_token: String::from("DATA"),
+            model: Default::default(),
             server_url: String::from("DATA"),
         };
         let mut res = app.update_init(
@@ -47,6 +56,7 @@ mod tests {
         );
         let crate::Model::Authenticated {
             authentication_token,
+            model: _,
             server_url,
         } = &root
         else {
@@ -96,6 +106,7 @@ mod tests {
         );
         let crate::Model::Authenticated {
             authentication_token,
+            model: _,
             server_url,
         } = &root
         else {

@@ -2,6 +2,7 @@
     --primary-color: #2563eb;
     --background-color: #f8fafc;
     --panel-bg: white;
+    --border-color: #cacaca;
     --text-color: #1e293b;
     --error-color: #dc2626;
 }
@@ -16,9 +17,7 @@ body {
     background-color: var(--background-color);
     color: var(--text-color);
     min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 100vw;
 }
 .content {
     background: var(--panel-bg);

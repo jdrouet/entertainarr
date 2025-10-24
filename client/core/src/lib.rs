@@ -7,6 +7,8 @@ use crux_core::render::RenderOperation;
 use crux_core::render::render;
 use crux_http::protocol::HttpRequest;
 
+use crate::domain::AuthenticatedModel;
+
 pub mod capability;
 pub mod domain;
 
@@ -18,6 +20,7 @@ pub enum Model {
     },
     Authenticated {
         authentication_token: String,
+        model: AuthenticatedModel,
         server_url: String,
     },
 }
@@ -68,6 +71,7 @@ pub enum Effect {
 #[derive(Clone, Debug, derive_more::From, serde::Serialize, serde::Deserialize)]
 pub enum Event {
     Authentication(crate::domain::authentication::AuthenticationEvent),
+    Home(crate::domain::home::HomeEvent),
     Init(crate::domain::init::InitEvent),
     Noop,
 }
@@ -91,6 +95,7 @@ impl crux_core::App for Application {
         match msg {
             Self::Event::Noop => render(),
             Self::Event::Authentication(event) => self.update_authentication(event, model),
+            Self::Event::Home(event) => self.update_home(event, model),
             Self::Event::Init(event) => self.update_init(event, model),
         }
     }
@@ -106,8 +111,12 @@ impl crux_core::App for Application {
                     loading: model.loading,
                 }),
             },
-            Model::Authenticated { .. } => ViewModel {
-                view: View::Home(crate::domain::home::HomeView {}),
+            Model::Authenticated { model, .. } => ViewModel {
+                view: match model {
+                    AuthenticatedModel::Home(inner) => View::Home(crate::domain::home::HomeView {
+                        podcasts_loading: inner.podcasts_loading,
+                    }),
+                },
             },
         }
     }
