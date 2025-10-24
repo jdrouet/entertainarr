@@ -11,6 +11,7 @@ use crate::domain::AuthenticatedModel;
 
 pub mod capability;
 pub mod domain;
+pub mod entity;
 
 pub enum Model {
     Initializing,
@@ -76,6 +77,17 @@ pub enum Event {
     Noop,
 }
 
+impl Event {
+    fn name(&self) -> &'static str {
+        match self {
+            Self::Authentication(inner) => inner.name(),
+            Self::Home(inner) => inner.name(),
+            Self::Init(inner) => inner.name(),
+            Self::Noop => "noop",
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct Application;
 
@@ -92,6 +104,7 @@ impl crux_core::App for Application {
         model: &mut Self::Model,
         _caps: &(),
     ) -> Command<Self::Effect, Self::Event> {
+        tracing::info!(name = msg.name(), "handle event");
         match msg {
             Self::Event::Noop => render(),
             Self::Event::Authentication(event) => self.update_authentication(event, model),
@@ -114,7 +127,8 @@ impl crux_core::App for Application {
             Model::Authenticated { model, .. } => ViewModel {
                 view: match model {
                     AuthenticatedModel::Home(inner) => View::Home(crate::domain::home::HomeView {
-                        podcasts_loading: inner.podcasts_loading,
+                        podcast_episodes: inner.podcast_episodes.clone(),
+                        podcast_episodes_loading: inner.podcast_episodes_loading,
                     }),
                 },
             },

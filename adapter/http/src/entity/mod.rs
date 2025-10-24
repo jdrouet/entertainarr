@@ -8,7 +8,7 @@ fn default_includes<T>() -> Vec<T> {
     Vec::new()
 }
 
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ApiResource<T, I = ()> {
     pub data: T,
@@ -25,7 +25,7 @@ impl<T> ApiResource<T> {
     }
 }
 
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Relation<T> {
     pub data: T,

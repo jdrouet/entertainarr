@@ -25,13 +25,7 @@ pub fn CoreContext(children: Children) -> impl IntoView {
 
     Effect::new(move |_| {
         let current_event = event.get();
-        tracing::warn!(?current_event, "event updated");
         crate::core::update(&core, current_event, render);
-    });
-
-    Effect::new(move |_| {
-        let current_view = view.get();
-        tracing::warn!(?current_view, "view updated");
     });
 
     children()

@@ -12,17 +12,14 @@ pub fn new() -> Core {
 }
 
 pub fn update(core: &Core, event: Event, render: WriteSignal<ViewModel>) {
-    tracing::info!(?event, "core::update");
     for effect in core.process_event(event) {
         process_effect(core, effect, render);
     }
 }
 
 pub fn process_effect(core: &Core, effect: Effect, render: WriteSignal<ViewModel>) {
-    tracing::info!(?effect, "core::process_effect");
     match effect {
         Effect::Http(mut request) => {
-            tracing::warn!("effect http");
             leptos::task::spawn_local({
                 let core = core.clone();
 

@@ -6,7 +6,7 @@ pub struct SubscriptionRequest<'a> {
     pub feed_url: Cow<'a, str>,
 }
 
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PodcastDocument {
     pub id: u64,
@@ -15,7 +15,7 @@ pub struct PodcastDocument {
     pub attributes: PodcastAttributes,
 }
 
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PodcastEntity {
     pub id: u64,
@@ -23,7 +23,7 @@ pub struct PodcastEntity {
     pub kind: monostate::MustBe!("podcasts"),
 }
 
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PodcastAttributes {
     pub title: String,

@@ -152,38 +152,39 @@
     margin-top: 2rem;
 }
 
-.episode-card-eec80db {
+
+.podcast-episode-cardlet-2437e07 {
     background-color: var(--background-color);
     border: 1px solid var(--border-color);
     border-radius: 0.5rem;
     overflow: hidden;
     transition: transform 0.2s;
-}
 
-.episode-card-eec80db:hover {
-    transform: translateY(-4px);
-}
+    .episode-image-2437e07 {
+        width: 100%;
+        aspect-ratio: 16/9;
+        object-fit: cover;
+    }
 
-.episode-image-eec80db {
-    width: 100%;
-    aspect-ratio: 16/9;
-    object-fit: cover;
-}
+    .episode-details-2437e07 {
+        padding: 1rem;
+    }
 
-.episode-details-eec80db {
-    padding: 1rem;
-}
+    .episode-title-2437e07 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--text-color);
+    }
 
-.episode-title-eec80db {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: var(--text-color);
-}
+    .episode-date-2437e07 {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
 
-.episode-date-eec80db {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
+    &:hover {
+        transform: translateY(-4px);
+    }
 }
 
 

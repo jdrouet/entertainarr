@@ -28,6 +28,7 @@ entertainarr-adapter-rss = { path = "./adapter/rss" }
 entertainarr-adapter-sqlite = { path = "./adapter/sqlite" }
 entertainarr-client-core = { path = "./client/core" }
 entertainarr-domain = { path = "./domain" }
+facet = { version = "0.28" }
 serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1.47" }
 tracing = { version = "0.1" }

@@ -932,6 +932,7 @@ dependencies = [
 name = "entertainarr-client-core"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "crux_core",
  "crux_http",
  "derive_more",
@@ -1072,6 +1073,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d53f437ef568ab97c56f53561b21facc5999fe97eb4b4360c932a110d00a2a9"
 dependencies = [
  "bitflags",
+ "chrono",
  "impls",
 ]
 

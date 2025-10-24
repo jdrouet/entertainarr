@@ -15,37 +15,3 @@
     gap: 2rem;
     margin-top: 2rem;
 }
-
-.episode-card {
-    background-color: var(--background-color);
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    overflow: hidden;
-    transition: transform 0.2s;
-}
-
-.episode-card:hover {
-    transform: translateY(-4px);
-}
-
-.episode-image {
-    width: 100%;
-    aspect-ratio: 16/9;
-    object-fit: cover;
-}
-
-.episode-details {
-    padding: 1rem;
-}
-
-.episode-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: var(--text-color);
-}
-
-.episode-date {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-}

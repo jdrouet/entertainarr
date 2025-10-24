@@ -11,11 +11,12 @@ name = "entertainarr_client_core"
 typegen = ["crux_core/typegen", "crux_http/typegen"]
 
 [dependencies]
+chrono = { workspace = true, default-features = false }
 crux_core = "0.16"
 crux_http = "0.15"
 derive_more = { version = "2.0", features = ["from"] }
 entertainarr-adapter-http = { workspace = true }
-facet = { version = "0.28" }
+facet = { workspace = true, features = ["chrono"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.145"
 tracing = { workspace = true }

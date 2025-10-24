@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PodcastEpisodeDocument {
     pub id: u64,
@@ -10,7 +10,7 @@ pub struct PodcastEpisodeDocument {
     pub relationship: PodcastEpisodeRelationship,
 }
 
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PodcastEpisodeAttributes {
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -57,7 +57,15 @@ pub enum PodcastEpisodeRelation {
     Podcast(super::podcast::PodcastDocument),
 }
 
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+impl PodcastEpisodeRelation {
+    pub fn into_podcast(self) -> Option<super::podcast::PodcastDocument> {
+        match self {
+            Self::Podcast(inner) => Some(inner),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
 pub struct PodcastEpisodeRelationship {
     pub podcast: super::Relation<super::podcast::PodcastEntity>,
 }

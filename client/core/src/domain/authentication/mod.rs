@@ -35,6 +35,16 @@ pub enum AuthenticationEvent {
     Error(AuthenticationError),
 }
 
+impl AuthenticationEvent {
+    pub fn name(&self) -> &'static str {
+        match self {
+            Self::Request(_) => "authentication.request",
+            Self::Success(_) => "authentication.success",
+            Self::Error(_) => "authentication.error",
+        }
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq, facet::Facet, serde::Serialize, serde::Deserialize)]
 #[repr(C)]
 pub struct AuthenticationRequest {
