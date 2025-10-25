@@ -16,7 +16,7 @@ pub mod entity;
 pub enum Model {
     Initializing,
     Authentication {
-        model: crate::domain::authentication::AuthenticationModel,
+        model: crate::domain::authentication::Model,
         server_url: String,
     },
     Authenticated {
@@ -50,9 +50,10 @@ pub struct ViewModel {
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub enum View {
-    Authentication(crate::domain::authentication::AuthenticationView),
-    Init(crate::domain::init::InitView),
-    Home(crate::domain::home::HomeView),
+    Authentication(crate::domain::authentication::View),
+    Init(crate::domain::init::View),
+    Home(crate::domain::home::View),
+    PodcastSubscription(crate::domain::podcast_subscription::View),
 }
 
 impl Default for View {
@@ -71,9 +72,10 @@ pub enum Effect {
 
 #[derive(Clone, Debug, derive_more::From, serde::Serialize, serde::Deserialize)]
 pub enum Event {
-    Authentication(crate::domain::authentication::AuthenticationEvent),
-    Home(crate::domain::home::HomeEvent),
-    Init(crate::domain::init::InitEvent),
+    Authentication(crate::domain::authentication::Event),
+    Home(crate::domain::home::Event),
+    Init(crate::domain::init::Event),
+    PodcastSubscription(crate::domain::podcast_subscription::Event),
     Noop,
 }
 
@@ -83,6 +85,7 @@ impl Event {
             Self::Authentication(inner) => inner.name(),
             Self::Home(inner) => inner.name(),
             Self::Init(inner) => inner.name(),
+            Self::PodcastSubscription(inner) => inner.name(),
             Self::Noop => "noop",
         }
     }
@@ -109,6 +112,9 @@ impl crux_core::App for Application {
             Self::Event::Noop => render(),
             Self::Event::Authentication(event) => self.update_authentication(event, model),
             Self::Event::Home(event) => self.update_home(event, model),
+            Self::Event::PodcastSubscription(event) => {
+                self.update_podcast_subscription(event, model)
+            }
             Self::Event::Init(event) => self.update_init(event, model),
         }
     }
@@ -119,17 +125,22 @@ impl crux_core::App for Application {
                 view: View::Init(Default::default()),
             },
             Model::Authentication { model, .. } => ViewModel {
-                view: View::Authentication(crate::domain::authentication::AuthenticationView {
+                view: View::Authentication(crate::domain::authentication::View {
                     error: model.error.clone(),
                     loading: model.loading,
                 }),
             },
             Model::Authenticated { model, .. } => ViewModel {
                 view: match model {
-                    AuthenticatedModel::Home(inner) => View::Home(crate::domain::home::HomeView {
+                    AuthenticatedModel::Home(inner) => View::Home(crate::domain::home::View {
                         podcast_episodes: inner.podcast_episodes.clone(),
                         podcast_episodes_loading: inner.podcast_episodes_loading,
                     }),
+                    AuthenticatedModel::PodcastSubscription(inner) => {
+                        View::PodcastSubscription(crate::domain::podcast_subscription::View {
+                            loading: inner.loading,
+                        })
+                    }
                 },
             },
         }

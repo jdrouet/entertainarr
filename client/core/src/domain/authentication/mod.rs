@@ -3,7 +3,7 @@ mod update;
 
 #[derive(Clone, Debug, Eq, PartialEq, facet::Facet, serde::Serialize, serde::Deserialize)]
 #[repr(C)]
-pub enum AuthenticationError {
+pub enum Error {
     EmailConflict,
     EmailTooShort,
     PasswordTooShort,
@@ -29,13 +29,13 @@ impl AuthenticationKind {
 
 #[derive(Clone, Debug, Eq, PartialEq, facet::Facet, serde::Serialize, serde::Deserialize)]
 #[repr(C)]
-pub enum AuthenticationEvent {
-    Request(AuthenticationRequest),
+pub enum Event {
+    Request(Request),
     Success(String),
-    Error(AuthenticationError),
+    Error(Error),
 }
 
-impl AuthenticationEvent {
+impl Event {
     pub fn name(&self) -> &'static str {
         match self {
             Self::Request(_) => "authentication.request",
@@ -47,20 +47,20 @@ impl AuthenticationEvent {
 
 #[derive(Clone, Debug, Eq, PartialEq, facet::Facet, serde::Serialize, serde::Deserialize)]
 #[repr(C)]
-pub struct AuthenticationRequest {
+pub struct Request {
     pub email: String,
     pub password: String,
     pub kind: AuthenticationKind,
 }
 
 #[derive(Default)]
-pub struct AuthenticationModel {
+pub struct Model {
     pub loading: bool,
-    pub error: Option<AuthenticationError>,
+    pub error: Option<Error>,
 }
 
 #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
-pub struct AuthenticationView {
+pub struct View {
     pub loading: bool,
-    pub error: Option<AuthenticationError>,
+    pub error: Option<Error>,
 }

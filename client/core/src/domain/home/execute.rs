@@ -19,11 +19,11 @@ pub fn list_podcast_episodes(
             match res {
                 Ok(mut res) => {
                     let payload = res.take_body().unwrap();
-                    super::HomeEvent::ListPodcastEpisodesSuccess(
+                    super::Event::ListPodcastEpisodesSuccess(
                         PodcastEpisode::from_episode_document_list(payload),
                     )
                 }
-                Err(err) => super::HomeEvent::ListPodcastEpisodesError(err),
+                Err(err) => super::Event::ListPodcastEpisodesError(err),
             }
             .into()
         })

@@ -3,7 +3,7 @@ use leptos::prelude::*;
 stylance::import_style!(style, "fullscreen_layout.module.scss");
 
 #[component]
-pub fn FormLayout(children: Children, classname: &'static str) -> impl IntoView {
+pub fn FullscreenLayout(children: Children, classname: &'static str) -> impl IntoView {
     let (sidebar_opened, sidebar_toggle) = signal(false);
 
     let on_toggle_sidebar = move || sidebar_toggle.update(|prev| *prev = !*prev);

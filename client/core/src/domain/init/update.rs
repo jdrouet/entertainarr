@@ -1,11 +1,11 @@
 use crux_core::{Command, render::render};
 
-use crate::domain::{AuthenticatedModel, home::HomeEvent};
+use crate::domain::{AuthenticatedModel, home::Event};
 
 impl crate::Application {
     pub fn update_init(
         &self,
-        event: super::InitEvent,
+        event: super::Event,
         model: &mut crate::Model,
     ) -> Command<crate::Effect, crate::Event> {
         // if not on initializing state, ignore events
@@ -21,7 +21,7 @@ impl crate::Application {
                     server_url: event.server_url,
                 };
                 let _ = std::mem::replace(model, next);
-                Command::all([Command::event(HomeEvent::Initialize.into()), render()])
+                Command::all([Command::event(Event::Initialize.into()), render()])
             }
             None => {
                 let next = crate::Model::Authentication {
@@ -37,7 +37,7 @@ impl crate::Application {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::init::InitEvent;
+    use crate::domain::init::Event;
 
     #[test]
     fn should_ignore_events_if_initialized() {
@@ -48,7 +48,7 @@ mod tests {
             server_url: String::from("DATA"),
         };
         let mut res = app.update_init(
-            InitEvent {
+            Event {
                 server_url: "http://localhost:1234".into(),
                 authentication_token: None,
             },
@@ -75,7 +75,7 @@ mod tests {
         let app = crate::Application;
         let mut root = crate::Model::Initializing;
         let mut res = app.update_init(
-            InitEvent {
+            Event {
                 server_url: "http://localhost:1234".into(),
                 authentication_token: None,
             },
@@ -98,7 +98,7 @@ mod tests {
         let app = crate::Application;
         let mut root = crate::Model::Initializing;
         let mut res = app.update_init(
-            InitEvent {
+            Event {
                 server_url: "http://localhost:1234".into(),
                 authentication_token: Some("token".into()),
             },

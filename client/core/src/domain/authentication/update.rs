@@ -2,17 +2,17 @@ use crux_core::{Command, render::render};
 
 use crate::{
     capability::persistence::Persistence,
-    domain::{AuthenticatedModel, home::HomeEvent},
+    domain::{AuthenticatedModel, home::Event},
 };
 
 impl crate::Application {
     pub fn update_authentication(
         &self,
-        event: super::AuthenticationEvent,
+        event: super::Event,
         model: &mut crate::Model,
     ) -> Command<crate::Effect, crate::Event> {
         match event {
-            super::AuthenticationEvent::Request(req) => {
+            super::Event::Request(req) => {
                 let crate::Model::Authentication { model, server_url } = model else {
                     return render();
                 };
@@ -20,7 +20,7 @@ impl crate::Application {
                 model.loading = true;
                 Command::all([req.execute(&server_url), render()])
             }
-            super::AuthenticationEvent::Error(err) => {
+            super::Event::Error(err) => {
                 let crate::Model::Authentication {
                     model,
                     server_url: _,
@@ -33,7 +33,7 @@ impl crate::Application {
                 model.error = Some(err);
                 render()
             }
-            super::AuthenticationEvent::Success(authentication_token) => {
+            super::Event::Success(authentication_token) => {
                 let effect =
                     Persistence::store("authentication-token", authentication_token.clone());
                 if let Some(server_url) = model.server_url().map(String::from) {
@@ -46,11 +46,7 @@ impl crate::Application {
                         },
                     );
                 }
-                Command::all([
-                    Command::event(HomeEvent::Initialize.into()),
-                    effect,
-                    render(),
-                ])
+                Command::all([Command::event(Event::Initialize.into()), effect, render()])
             }
         }
     }
@@ -58,17 +54,14 @@ impl crate::Application {
 
 #[cfg(test)]
 mod tests {
-    use crate::domain::authentication::{
-        AuthenticationError, AuthenticationEvent, AuthenticationKind, AuthenticationModel,
-        AuthenticationRequest,
-    };
+    use crate::domain::authentication::{AuthenticationKind, Error, Event, Model, Request};
 
     #[test]
     fn request_should_be_ignored_if_not_authentication() {
         let app = crate::Application;
         let mut root = crate::Model::Initializing;
         let mut res = app.update_authentication(
-            AuthenticationEvent::Request(AuthenticationRequest {
+            Event::Request(Request {
                 email: "user@example.com".into(),
                 password: "password".into(),
                 kind: AuthenticationKind::Login,
@@ -92,7 +85,7 @@ mod tests {
             server_url: String::from("http://server"),
         };
         let mut res = app.update_authentication(
-            AuthenticationEvent::Request(AuthenticationRequest {
+            Event::Request(Request {
                 email: "user@example.com".into(),
                 password: "password".into(),
                 kind: AuthenticationKind::Login,
@@ -117,23 +110,20 @@ mod tests {
     fn error_should_reset_loading() {
         let app = crate::Application;
         let mut root = crate::Model::Authentication {
-            model: AuthenticationModel {
+            model: Model {
                 loading: true,
                 error: None,
             },
             server_url: String::from("http://server"),
         };
-        let mut res = app.update_authentication(
-            AuthenticationEvent::Error(AuthenticationError::EmailConflict),
-            &mut root,
-        );
+        let mut res = app.update_authentication(Event::Error(Error::EmailConflict), &mut root);
         let crate::Model::Authentication { model, server_url } = &root else {
             panic!("should be authentication state");
         };
         assert_eq!(server_url, "http://server");
         assert!(!model.loading);
         let error = model.error.as_ref().unwrap();
-        assert!(matches!(error, AuthenticationError::EmailConflict));
+        assert!(matches!(error, Error::EmailConflict));
         let mut effects: Vec<_> = res.effects().collect();
         assert_eq!(effects.len(), 1);
         let effect = effects.pop().unwrap();

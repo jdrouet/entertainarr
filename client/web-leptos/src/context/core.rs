@@ -1,5 +1,5 @@
-use entertainarr_client_core::domain::init::InitEvent;
-use entertainarr_client_core::{Event, ViewModel};
+use entertainarr_client_core::ViewModel;
+use entertainarr_client_core::domain::init::Event;
 use leptos::prelude::{
     Children, Effect, Get, ReadSignal, WithUntracked, WriteSignal, expect_context, provide_context,
     signal,
@@ -15,10 +15,15 @@ pub fn CoreContext(children: Children) -> impl IntoView {
     let base_url = url.with_untracked(|value| value.origin().to_string());
 
     let (view, render) = signal(core.view());
-    let (event, set_event) = signal(Event::Init(InitEvent {
-        server_url: base_url,
-        authentication_token: crate::service::storage::get_local_storage("authentication-token"),
-    }));
+    let (event, set_event) = signal(
+        Event {
+            server_url: base_url,
+            authentication_token: crate::service::storage::get_local_storage(
+                "authentication-token",
+            ),
+        }
+        .into(),
+    );
 
     provide_context((event.clone(), set_event));
     provide_context(view);
@@ -35,6 +40,9 @@ pub fn use_view_model() -> ReadSignal<ViewModel> {
     expect_context()
 }
 
-pub fn use_events() -> (ReadSignal<Event>, WriteSignal<Event>) {
+pub fn use_events() -> (
+    ReadSignal<entertainarr_client_core::Event>,
+    WriteSignal<entertainarr_client_core::Event>,
+) {
     expect_context()
 }

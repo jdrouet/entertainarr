@@ -3,7 +3,7 @@ use crux_core::{Command, render::render};
 impl crate::Application {
     pub fn update_home(
         &self,
-        event: super::HomeEvent,
+        event: super::Event,
         root: &mut crate::Model,
     ) -> Command<crate::Effect, crate::Event> {
         let crate::Model::Authenticated {
@@ -16,22 +16,22 @@ impl crate::Application {
         };
 
         match event {
-            super::HomeEvent::Initialize => Command::all([Command::event(
-                super::HomeEvent::ListPodcastEpisodesRequest.into(),
+            super::Event::Initialize => Command::all([Command::event(
+                super::Event::ListPodcastEpisodesRequest.into(),
             )]),
-            super::HomeEvent::ListPodcastEpisodesRequest => {
+            super::Event::ListPodcastEpisodesRequest => {
                 model.podcast_episodes_loading = true;
                 Command::all([
                     super::execute::list_podcast_episodes(&server_url, &authentication_token),
                     render(),
                 ])
             }
-            super::HomeEvent::ListPodcastEpisodesSuccess(podcasts) => {
+            super::Event::ListPodcastEpisodesSuccess(podcasts) => {
                 model.podcast_episodes_loading = false;
                 model.podcast_episodes = podcasts;
                 render()
             }
-            super::HomeEvent::ListPodcastEpisodesError(_) => {
+            super::Event::ListPodcastEpisodesError(_) => {
                 model.podcast_episodes_loading = false;
                 render()
             }

@@ -1,6 +1,4 @@
-use entertainarr_client_core::domain::authentication::{
-    AuthenticationError, AuthenticationEvent, AuthenticationKind, AuthenticationRequest,
-};
+use entertainarr_client_core::domain::authentication::{AuthenticationKind, Error, Event, Request};
 use leptos::ev::SubmitEvent;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
@@ -9,20 +7,18 @@ use crate::context::core::use_events;
 
 stylance::import_style!(style, "authentication.module.scss");
 
-fn error_message(err: AuthenticationError) -> &'static str {
+fn error_message(err: Error) -> &'static str {
     match err {
-        AuthenticationError::EmailConflict => "Email address already used",
-        AuthenticationError::EmailTooShort => "Email address too short",
-        AuthenticationError::PasswordTooShort => "Password too short",
-        AuthenticationError::InvalidCredentials => "Invalid credentials",
-        AuthenticationError::Network => "Internal error",
+        Error::EmailConflict => "Email address already used",
+        Error::EmailTooShort => "Email address too short",
+        Error::PasswordTooShort => "Password too short",
+        Error::InvalidCredentials => "Invalid credentials",
+        Error::Network => "Internal error",
     }
 }
 
 #[component]
-pub fn AuthenticationView(
-    model: entertainarr_client_core::domain::authentication::AuthenticationView,
-) -> impl IntoView {
+pub fn View(model: entertainarr_client_core::domain::authentication::View) -> impl IntoView {
     let (_, on_change) = use_events();
 
     let handle_submit = move |ev: SubmitEvent| {
@@ -51,7 +47,7 @@ pub fn AuthenticationView(
             other => panic!("invalid mode {other:?}"),
         };
 
-        let req = AuthenticationEvent::Request(AuthenticationRequest {
+        let req = Event::Request(Request {
             email: email_input.value(),
             password: password_input.value(),
             kind,

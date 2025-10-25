@@ -157,16 +157,6 @@
 }
 
 
-.home-8b181f8 {
-    .episodes-grid-8b181f8 {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 2rem;
-        margin-top: 2rem;
-    }
-}
-
-
 .podcast-episode-cardlet-2437e07 {
     background-color: var(--background-color);
     border: 1px solid var(--border-color);
