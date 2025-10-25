@@ -34,7 +34,7 @@ pub struct PodcastEpisodeAttributes {
 }
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "snake_case")]
 pub enum PodcastEpisodeField {
     PublishedAt,
 }

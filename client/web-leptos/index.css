@@ -118,9 +118,11 @@
     border-radius: 0.5rem;
     overflow: hidden;
     transition: transform 0.2s;
+    max-width: 300px;
 }
 
 .podcast-episode-cardlet-2437e07 .episode-image-2437e07 {
+    height: 200px;
     width: 100%;
     aspect-ratio: 16/9;
     object-fit: cover;

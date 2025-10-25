@@ -34,9 +34,8 @@ pub(crate) enum ApplicationState {
 impl ApplicationState {
     pub fn on_mount(&self) -> crate::ApplicationCommand {
         match self {
-            Self::Initialization => render(),
-            Self::Authentication(_) => render(),
-            Self::Authenticated(_) => render(), // TODO
+            Self::Initialization | Self::Authentication(_) => render(),
+            Self::Authenticated(inner) => inner.on_mount(), // TODO
         }
     }
 
@@ -68,6 +67,7 @@ impl ApplicationState {
 pub enum ApplicationEvent {
     Authentication(authentication::AuthenticationEvent),
     Authenticated,
+    Home(authenticated::home::HomeEvent),
     Initialization(InitializationEvent),
     Noop, // does nothing
     PodcastSubscribe(authenticated::podcast::subscribe::PodcastSubscribeEvent),
@@ -114,6 +114,7 @@ impl ApplicationModel {
 
         match event {
             ApplicationEvent::Authentication(event) => self.handle_authentication_event(event),
+            ApplicationEvent::Home(event) => self.handle_home_event(event),
             ApplicationEvent::Initialization(_) => render(),
             ApplicationEvent::Authenticated => render(),
             ApplicationEvent::PodcastSubscribe(event) => self.handle_podcast_subscribe_event(event),

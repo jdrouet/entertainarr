@@ -1,3 +1,5 @@
+use crux_core::render::render;
+
 pub mod home;
 pub mod podcast;
 
@@ -10,6 +12,13 @@ pub enum AuthenticatedModel {
 impl AuthenticatedModel {
     pub fn home() -> AuthenticatedModel {
         Self::Home(Default::default())
+    }
+
+    pub fn on_mount(&self) -> crate::ApplicationCommand {
+        match self {
+            Self::Home(inner) => inner.on_mount(),
+            Self::PodcastSubscribe(_) => render(),
+        }
     }
 }
 
