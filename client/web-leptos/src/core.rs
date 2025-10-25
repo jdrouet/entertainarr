@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
-use entertainarr_client_core::{
-    Application, Effect, Event, ViewModel, capability::persistence::Persistence,
-};
+use entertainarr_client_core::Application;
+use entertainarr_client_core::application::{ApplicationEvent, ApplicationViewModel};
+use entertainarr_client_core::effect::Effect;
+use entertainarr_client_core::effect::persistence::Persistence;
 use leptos::prelude::{Update, WriteSignal};
 
 pub type Core = Arc<entertainarr_client_core::Core<Application>>;
@@ -11,13 +12,13 @@ pub fn new() -> Core {
     Arc::new(entertainarr_client_core::Core::new())
 }
 
-pub fn update(core: &Core, event: Event, render: WriteSignal<ViewModel>) {
+pub fn update(core: &Core, event: ApplicationEvent, render: WriteSignal<ApplicationViewModel>) {
     for effect in core.process_event(event) {
         process_effect(core, effect, render);
     }
 }
 
-pub fn process_effect(core: &Core, effect: Effect, render: WriteSignal<ViewModel>) {
+pub fn process_effect(core: &Core, effect: Effect, render: WriteSignal<ApplicationViewModel>) {
     match effect {
         Effect::Http(mut request) => {
             leptos::task::spawn_local({

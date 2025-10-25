@@ -7,10 +7,7 @@ pub enum Persistence {
 }
 
 impl Persistence {
-    pub fn store(
-        key: impl Into<String>,
-        value: impl Into<String>,
-    ) -> Command<crate::Effect, crate::Event> {
+    pub fn store(key: impl Into<String>, value: impl Into<String>) -> crate::ApplicationCommand {
         Command::notify_shell(Self::Store(StoreEffect {
             key: key.into(),
             value: value.into(),

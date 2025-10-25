@@ -1,6 +1,7 @@
 use crux_core::typegen::TypeGen;
-use entertainarr_client_core::domain::authentication::Event;
-use entertainarr_client_core::{Application, View};
+use entertainarr_client_core::Application;
+use entertainarr_client_core::application::ApplicationViewModel;
+use entertainarr_client_core::application::authentication::AuthenticationEvent;
 use std::path::PathBuf;
 
 fn main() -> anyhow::Result<()> {
@@ -9,8 +10,8 @@ fn main() -> anyhow::Result<()> {
     let mut tgen = TypeGen::new();
 
     tgen.register_app::<Application>()?;
-    tgen.register_type::<Event>()?;
-    tgen.register_type::<View>()?;
+    tgen.register_type::<AuthenticationEvent>()?;
+    tgen.register_type::<ApplicationViewModel>()?;
 
     let output_root = PathBuf::from("./generated");
 

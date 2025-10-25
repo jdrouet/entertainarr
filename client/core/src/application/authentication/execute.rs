@@ -8,8 +8,17 @@ use entertainarr_adapter_http::entity::{
     },
 };
 
-impl super::Request {
-    pub fn execute(self, base_url: &str) -> crux_core::Command<crate::Effect, crate::Event> {
+impl super::AuthenticationKind {
+    const fn as_str(&self) -> &'static str {
+        match self {
+            Self::Login => "login",
+            Self::Signup => "signup",
+        }
+    }
+}
+
+impl super::AuthenticationRequest {
+    pub fn execute(self, base_url: &str) -> crate::ApplicationCommand {
         let url = format!("{base_url}/api/auth/{}", self.kind.as_str());
         Http::post(url)
             .body_json(&ApiResource::new(AuthenticationRequestDocument {
@@ -26,16 +35,20 @@ impl super::Request {
                 match res {
                     Ok(mut res) => {
                         let payload = res.take_body().unwrap();
-                        super::Event::Success(payload.data.id)
+                        super::AuthenticationEvent::Success(super::AuthenticationSuccess {
+                            token: payload.data.id,
+                        })
                     }
-                    Err(err) => super::Event::Error(super::Error::from(err)),
+                    Err(err) => {
+                        super::AuthenticationEvent::Error(super::AuthenticationError::from(err))
+                    }
                 }
                 .into()
             })
     }
 }
 
-impl From<crux_http::HttpError> for super::Error {
+impl From<crux_http::HttpError> for super::AuthenticationError {
     fn from(err: crux_http::HttpError) -> Self {
         match err {
             crux_http::HttpError::Http {
@@ -78,7 +91,7 @@ mod tests {
         CODE_EMAIL_CONFLICT, CODE_EMAIL_TOO_SHORT, CODE_PASSWORD_TOO_SHORT,
     };
 
-    use crate::domain::authentication::Error;
+    use crate::application::authentication::AuthenticationError;
 
     #[test]
     fn should_decode_email_too_short() {
@@ -96,8 +109,8 @@ mod tests {
                 .unwrap(),
             ),
         };
-        let decoded = Error::from(err);
-        assert_eq!(decoded, Error::EmailTooShort);
+        let decoded = AuthenticationError::from(err);
+        assert_eq!(decoded, AuthenticationError::EmailTooShort);
     }
 
     #[test]
@@ -116,8 +129,8 @@ mod tests {
                 .unwrap(),
             ),
         };
-        let decoded = Error::from(err);
-        assert_eq!(decoded, Error::EmailConflict);
+        let decoded = AuthenticationError::from(err);
+        assert_eq!(decoded, AuthenticationError::EmailConflict);
     }
 
     #[test]
@@ -136,8 +149,8 @@ mod tests {
                 .unwrap(),
             ),
         };
-        let decoded = Error::from(err);
-        assert_eq!(decoded, Error::PasswordTooShort);
+        let decoded = AuthenticationError::from(err);
+        assert_eq!(decoded, AuthenticationError::PasswordTooShort);
     }
 
     #[test]
@@ -152,8 +165,8 @@ mod tests {
                 .unwrap(),
             ),
         };
-        let decoded = Error::from(err);
-        assert_eq!(decoded, Error::InvalidCredentials);
+        let decoded = AuthenticationError::from(err);
+        assert_eq!(decoded, AuthenticationError::InvalidCredentials);
     }
 
     #[test]
@@ -163,14 +176,14 @@ mod tests {
             message: String::default(),
             body: None,
         };
-        let decoded = Error::from(err);
-        assert_eq!(decoded, Error::Network);
+        let decoded = AuthenticationError::from(err);
+        assert_eq!(decoded, AuthenticationError::Network);
     }
 
     #[test]
     fn should_decode_network_error_from_io_error() {
         let err = HttpError::Io(String::default());
-        let decoded = Error::from(err);
-        assert_eq!(decoded, Error::Network);
+        let decoded = AuthenticationError::from(err);
+        assert_eq!(decoded, AuthenticationError::Network);
     }
 }

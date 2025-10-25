@@ -8,3 +8,4 @@ command_arguments = [".", "--output-file", "index.css"]
 
 [watch]
 ignore = ["index.css"]
+watch = ["src", "../core/src"]

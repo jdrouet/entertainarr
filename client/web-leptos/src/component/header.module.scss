@@ -4,33 +4,33 @@
     border-bottom: 1px solid var(--border-color);
     display: flex;
     padding: 1rem;
+}
 
-    .burger {
-        cursor: pointer;
-        padding: 0.5rem;
-        margin-right: 1rem;
-    }
+.header .burger {
+    cursor: pointer;
+    padding: 0.5rem;
+    margin-right: 1rem;
+}
 
-    .burger span {
-        display: block;
-        width: 24px;
-        height: 2px;
-        background-color: var(--text-color);
-        margin: 4px 0;
-        transition: 0.3s;
-    }
+.header .burger span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background-color: var(--text-color);
+    margin: 4px 0;
+    transition: 0.3s;
+}
 
-    .profile {
-        margin-left: auto;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
+.header .profile {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
 
-    .profile-picture {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
+.header .profile-picture {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
 }

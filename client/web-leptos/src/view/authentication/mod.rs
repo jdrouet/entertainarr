@@ -1,24 +1,42 @@
-use entertainarr_client_core::domain::authentication::{AuthenticationKind, Error, Event, Request};
+use entertainarr_client_core::application::authentication::AuthenticationModel;
+use entertainarr_client_core::application::authentication::{
+    AuthenticationError, AuthenticationEvent, AuthenticationKind, AuthenticationRequest,
+};
 use leptos::ev::SubmitEvent;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsCast;
 
+use crate::component::form::button::Button;
+use crate::component::form::error_message::ErrorMessage;
+use crate::component::form::form_group::FormGroup;
+use crate::component::form::layout::FormLayout;
+use crate::component::form::title::Title;
+use crate::component::toggle_tabs::{ToggleTabOption, ToggleTabs};
 use crate::context::core::use_events;
 
-stylance::import_style!(style, "authentication.module.scss");
+const TOGGLE_TAB_OPTIONS: [ToggleTabOption; 2] = [
+    ToggleTabOption {
+        label: "Login",
+        value: "login",
+    },
+    ToggleTabOption {
+        label: "Signup",
+        value: "signup",
+    },
+];
 
-fn error_message(err: Error) -> &'static str {
+fn error_message(err: AuthenticationError) -> &'static str {
     match err {
-        Error::EmailConflict => "Email address already used",
-        Error::EmailTooShort => "Email address too short",
-        Error::PasswordTooShort => "Password too short",
-        Error::InvalidCredentials => "Invalid credentials",
-        Error::Network => "Internal error",
+        AuthenticationError::EmailConflict => "Email address already used",
+        AuthenticationError::EmailTooShort => "Email address too short",
+        AuthenticationError::PasswordTooShort => "Password too short",
+        AuthenticationError::InvalidCredentials => "Invalid credentials",
+        AuthenticationError::Network => "Internal error",
     }
 }
 
 #[component]
-pub fn View(model: entertainarr_client_core::domain::authentication::View) -> impl IntoView {
+pub fn View(model: AuthenticationModel) -> impl IntoView {
     let (_, on_change) = use_events();
 
     let handle_submit = move |ev: SubmitEvent| {
@@ -47,7 +65,7 @@ pub fn View(model: entertainarr_client_core::domain::authentication::View) -> im
             other => panic!("invalid mode {other:?}"),
         };
 
-        let req = Event::Request(Request {
+        let req = AuthenticationEvent::Submit(AuthenticationRequest {
             email: email_input.value(),
             password: password_input.value(),
             kind,
@@ -56,39 +74,28 @@ pub fn View(model: entertainarr_client_core::domain::authentication::View) -> im
     };
 
     view! {
-        <crate::component::form_layout::FormLayout classname={style::authentication}>
-            <h1>{"Welcome to Entertainarr"}</h1>
+        <FormLayout>
+            <Title label={"Welcome to Entertainarr"} />
             <form
                 novalidate
                 on:submit=handle_submit
             >
-                <h2 class={style::toggle_tabs}>
-                    <label>
-                        <input type="radio" name="mode" value="login" checked />
-                        <span>{"Login"}</span>
-                    </label>
-                    <label>
-                        <input type="radio" name="mode" value="signup" />
-                        <span>{"Signup"}</span>
-                    </label>
-                </h2>
-                <div class={style::form_group}>
+                <ToggleTabs name="mode" options={&TOGGLE_TAB_OPTIONS} index={0} />
+                <FormGroup>
                     <label for="email">{"Email"}</label>
                     <input id="email" type="email" name="email" required />
-                </div>
-                <div class={style::form_group}>
+                </FormGroup>
+                <FormGroup>
                     <label for="password">{"Password"}</label>
                     <input id="password" type="password" name="password" required />
-                </div>
+                </FormGroup>
                 {model.error.clone().map(|err| view! {
-                    <div class={style::error_message}>
+                    <ErrorMessage>
                         {error_message(err)}
-                    </div>
+                    </ErrorMessage>
                 })}
-                <button type="submit">
-                    {"Continue"}
-                </button>
+                <Button disabled={model.loading} label="Continue" />
             </form>
-        </crate::component::form_layout::FormLayout>
+        </FormLayout>
     }
 }

@@ -1,4 +1,6 @@
-use entertainarr_client_core::Event;
+use entertainarr_client_core::application::ApplicationEvent;
+use entertainarr_client_core::application::authenticated::home::HomeModel;
+use entertainarr_client_core::application::router::Route;
 use leptos::prelude::*;
 
 use crate::context::core::use_events;
@@ -6,13 +8,11 @@ use crate::context::core::use_events;
 stylance::import_style!(style, "style.scss");
 
 #[component]
-pub fn View(model: entertainarr_client_core::domain::home::View) -> impl IntoView {
+pub fn View(model: HomeModel) -> impl IntoView {
     let (_, on_change) = use_events();
 
     let on_subscribe = move |_| {
-        on_change.set(Event::PodcastSubscription(
-            entertainarr_client_core::domain::podcast_subscription::Event::Open,
-        ));
+        on_change.set(ApplicationEvent::RouteChange(Route::PodcastSubscribe));
     };
 
     view! {
