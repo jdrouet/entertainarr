@@ -1,11 +1,3 @@
-use std::borrow::Cow;
-
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SubscriptionRequest<'a> {
-    pub feed_url: Cow<'a, str>,
-}
-
 #[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PodcastDocument {
@@ -38,4 +30,29 @@ pub struct PodcastAttributes {
     pub website: Option<String>,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub updated_at: chrono::DateTime<chrono::Utc>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PodcastSubscribeDocument {
+    #[serde(rename = "type")]
+    pub kind: monostate::MustBe!("podcasts"),
+    pub attributes: PodcastSubscribeAttributes,
+}
+
+impl PodcastSubscribeDocument {
+    pub fn new(feed_url: impl Into<String>) -> Self {
+        Self {
+            kind: Default::default(),
+            attributes: PodcastSubscribeAttributes {
+                feed_url: feed_url.into(),
+            },
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PodcastSubscribeAttributes {
+    pub feed_url: String,
 }

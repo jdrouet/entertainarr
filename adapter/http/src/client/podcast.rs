@@ -1,6 +1,7 @@
 use anyhow::Context;
 
-use crate::entity::podcast::SubscriptionRequest;
+use crate::entity::ApiResource;
+use crate::entity::podcast::PodcastSubscribeDocument;
 
 impl super::Client {
     pub async fn podcast_subscribe(&self, feed_url: &str) -> anyhow::Result<()> {
@@ -12,9 +13,7 @@ impl super::Client {
             .inner
             .post(&url)
             .header("Authorization", format!("Bearer {token}"))
-            .json(&SubscriptionRequest {
-                feed_url: feed_url.into(),
-            })
+            .json(&ApiResource::new(PodcastSubscribeDocument::new(feed_url)))
             .send()
             .await
             .context("unable to send request")?;

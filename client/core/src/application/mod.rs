@@ -70,6 +70,7 @@ pub enum ApplicationEvent {
     Authenticated,
     Initialization(InitializationEvent),
     Noop, // does nothing
+    PodcastSubscribe(authenticated::podcast::subscribe::PodcastSubscribeEvent),
     RouteChange(router::Route),
 }
 
@@ -115,6 +116,7 @@ impl ApplicationModel {
             ApplicationEvent::Authentication(event) => self.handle_authentication_event(event),
             ApplicationEvent::Initialization(_) => render(),
             ApplicationEvent::Authenticated => render(),
+            ApplicationEvent::PodcastSubscribe(event) => self.handle_podcast_subscribe_event(event),
             ApplicationEvent::RouteChange(route) => self.handle_router_event(route),
             ApplicationEvent::Noop => render(),
         }

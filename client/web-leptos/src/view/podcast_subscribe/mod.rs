@@ -1,5 +1,7 @@
-use entertainarr_client_core::application::authenticated::podcast::subscribe::PodcastSubscribeModel;
-// use js_sys::wasm_bindgen::JsCast;
+use entertainarr_client_core::application::authenticated::podcast::subscribe::{
+    PodcastSubscribeEvent, PodcastSubscribeModel, PodcastSubscribeRequest,
+};
+use js_sys::wasm_bindgen::JsCast;
 use leptos::prelude::*;
 use web_sys::SubmitEvent;
 
@@ -7,23 +9,26 @@ use crate::component::form::button::Button;
 use crate::component::form::form_group::FormGroup;
 use crate::component::form::layout::FormLayout;
 use crate::component::form::title::Title;
-// use crate::context::core::use_events;
+use crate::context::core::use_events;
 
 #[component]
 pub fn View(model: PodcastSubscribeModel) -> impl IntoView {
-    // let (_, on_change) = use_events();
+    let (_, on_change) = use_events();
 
     let handle_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
-        // let form = event_target::<web_sys::HtmlFormElement>(&ev);
+        let form = event_target::<web_sys::HtmlFormElement>(&ev);
 
-        // let url_input = form
-        //     .get_with_name("url")
-        //     .expect("url input")
-        //     .dyn_into::<web_sys::HtmlInputElement>()
-        //     .expect("input element");
+        let url_input = form
+            .get_with_name("url")
+            .expect("url input")
+            .dyn_into::<web_sys::HtmlInputElement>()
+            .expect("input element");
 
-        // on_change.set(req.into());
+        let req = PodcastSubscribeEvent::Submit(PodcastSubscribeRequest {
+            url: url_input.value(),
+        });
+        on_change.set(req.into());
     };
 
     view! {
