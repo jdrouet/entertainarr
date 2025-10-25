@@ -11,6 +11,7 @@ pub fn list_podcast_episodes(base_url: &str, token: &str) -> crate::ApplicationC
     Http::get(url)
         .query(&serde_json::json!({
             "include": "podcast",
+            "sort": "-published_at",
         }))
         .unwrap()
         .header("Authorization", format!("Bearer {token}"))

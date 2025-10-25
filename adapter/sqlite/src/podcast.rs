@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 use anyhow::Context;
 use tracing::Instrument;
@@ -77,15 +77,12 @@ impl entertainarr_domain::podcast::prelude::PodcastRepository for super::Pool {
         let mut qb = sqlx::QueryBuilder::new(
             "select podcasts.id, podcasts.feed_url, podcasts.title, podcasts.description, podcasts.image_url, podcasts.language, podcasts.website, podcasts.created_at, podcasts.updated_at from podcasts where",
         );
-        let mut known = HashSet::with_capacity(podcast_ids.len());
-        for id in podcast_ids {
-            if !known.contains(id) {
-                if !known.is_empty() {
-                    qb.push(" and");
-                }
-                qb.push(" id = ").push_bind(*id as i64);
-                known.insert(id);
+        let podcast_ids = BTreeSet::from_iter(podcast_ids.iter().copied());
+        for (index, id) in podcast_ids.iter().enumerate() {
+            if index > 0 {
+                qb.push(" or");
             }
+            qb.push(" id = ").push_bind(*id as i64);
         }
         qb.build_query_as()
             .fetch_all(&self.0)

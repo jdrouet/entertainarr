@@ -39,8 +39,8 @@ impl From<Page> for entertainarr_domain::prelude::Page {
 
 #[derive(Clone, Debug)]
 pub struct Sort<T> {
-    field: T,
-    order: SortOrder,
+    pub field: T,
+    pub order: SortOrder,
 }
 
 impl<A, B> From<Sort<A>> for entertainarr_domain::prelude::Sort<B>

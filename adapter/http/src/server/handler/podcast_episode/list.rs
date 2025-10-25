@@ -94,3 +94,19 @@ where
 
     Ok(Json(ApiResource { data, includes }))
 }
+
+#[cfg(test)]
+mod tests {
+    use entertainarr_domain::prelude::SortOrder;
+
+    use crate::entity::podcast_episode::PodcastEpisodeField;
+
+    #[test]
+    fn should_deserialize_sort_and_include() {
+        let payload: super::QueryParams =
+            serde_qs::from_str("include=podcast&sort=-published_at").unwrap();
+        assert_eq!(payload.include.len(), 1);
+        assert_eq!(payload.sort.field, PodcastEpisodeField::PublishedAt);
+        assert_eq!(payload.sort.order, SortOrder::Desc);
+    }
+}

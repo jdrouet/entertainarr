@@ -90,7 +90,7 @@ mod tests {
         assert_eq!(err.message, "invalid credentials");
         let detail = err.detail.unwrap();
         assert_eq!(detail.attribute, "email");
-        assert_eq!(detail.code, "not-empty-violated");
+        assert_eq!(detail.code, "email-too-short");
     }
 
     #[tokio::test]
@@ -104,7 +104,7 @@ mod tests {
         assert_eq!(err.message, "invalid credentials");
         let detail = err.detail.unwrap();
         assert_eq!(detail.attribute, "password");
-        assert_eq!(detail.code, "not-empty-violated");
+        assert_eq!(detail.code, "password-too-short");
     }
 
     #[tokio::test]
@@ -118,7 +118,7 @@ mod tests {
         assert_eq!(err.message, "invalid credentials");
         let detail = err.detail.unwrap();
         assert_eq!(detail.attribute, "password");
-        assert_eq!(detail.code, "len-char-min-violated");
+        assert_eq!(detail.code, "password-too-short");
     }
 
     #[tokio::test]
@@ -143,7 +143,7 @@ mod tests {
         assert_eq!(err.message, "user conflict");
         let detail = err.detail.unwrap();
         assert_eq!(detail.attribute, "email");
-        assert_eq!(detail.code, "conflict");
+        assert_eq!(detail.code, "email-conflict");
     }
 }
 
@@ -179,7 +179,7 @@ mod integration {
                     .method(axum::http::Method::POST)
                     .header("Content-Type", "application/json")
                     .body(axum::body::Body::from(
-                        r#"{"email":"user@example.com","password":"password"}"#,
+                        r#"{"data":{"attributes":{"email":"user@example.com","password":"password"},"type":"authentication-requests"}}"#,
                     ))
                     .unwrap(),
             )

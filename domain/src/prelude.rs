@@ -4,7 +4,7 @@ pub struct Page {
     pub offset: u32,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SortOrder {
     Asc,
     Desc,

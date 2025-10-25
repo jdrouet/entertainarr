@@ -75,7 +75,7 @@ impl FromStr for PodcastEpisodeField {
 
     fn from_str(input: &str) -> Result<Self, Self::Err> {
         match input {
-            "published-at" => Ok(Self::PublishedAt),
+            "published_at" => Ok(Self::PublishedAt),
             _ => Err(ParsePodcastEpisodeFieldError),
         }
     }
