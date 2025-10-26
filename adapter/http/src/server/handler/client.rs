@@ -33,7 +33,7 @@ where
     handle(State(state), Path(Cow::Borrowed("index.html"))).await
 }
 
-pub async fn handle<'a, S>(
+pub async fn handle<S>(
     State(state): State<S>,
     Path(fname): Path<Cow<'static, str>>,
 ) -> Result<([(HeaderName, HeaderValue); 1], Vec<u8>), axum::http::StatusCode>
