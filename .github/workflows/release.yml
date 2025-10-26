@@ -1,0 +1,67 @@
+name: Perform Release
+
+on:
+  # push:
+  #   branches:
+  #     - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+          cargo install release-plz
+
+      - name: configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: run release-plz
+        uses: release-plz/action@v0.5
+        with:
+          command: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: package & publish to local registry
+        run: bash scripts/package-local.sh
+
+      - name: push registry index to branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd .registry/index
+          git add .
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(registry): update local index"
+
+            # Create or update branch locally
+            git branch -M registry-index
+            git push origin registry-index --force
+
+            echo "Creating or updating PR..."
+            # Create a PR if it doesn’t exist
+            gh pr create \
+              --base main \
+              --head registry-index \
+              --title "chore(registry): update local registry index" \
+              --body "Automated update of the local Cargo registry index" \
+              --repo ${{ github.repository }} \
+              || echo "ℹ️ PR already exists, updating..."
+          fi
