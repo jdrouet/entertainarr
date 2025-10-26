@@ -945,16 +945,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "entertainarr-client-core-types"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "crux_core",
- "entertainarr-client-core",
- "facet",
-]
-
-[[package]]
 name = "entertainarr-client-web-leptos"
 version = "0.1.0"
 dependencies = [

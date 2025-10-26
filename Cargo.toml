@@ -6,7 +6,6 @@ members = [
   "adapter/rss",
   "adapter/sqlite",
   "client/core",
-  "client/core-types",
   "client/web-leptos",
   "domain",
   "server",
