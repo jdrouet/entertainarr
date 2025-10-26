@@ -951,6 +951,7 @@ dependencies = [
  "anyhow",
  "crux_core",
  "entertainarr-client-core",
+ "facet",
 ]
 
 [[package]]

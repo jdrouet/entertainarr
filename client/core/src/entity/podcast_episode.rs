@@ -9,8 +9,11 @@ use entertainarr_adapter_http::entity::podcast_episode::{
 pub struct PodcastEpisode {
     pub id: u64,
     pub title: String,
+    // TODO fix chrono usage
+    // #[serde(default, skip_serializing_if = "Option::is_none")]
+    // pub published_at: Option<chrono::DateTime<chrono::Utc>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub published_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub published_at: Option<i64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub podcast_title: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -26,7 +29,7 @@ impl PodcastEpisode {
         Self {
             id: item.id,
             title: item.attributes.title,
-            published_at: item.attributes.published_at,
+            published_at: item.attributes.published_at.map(|dt| dt.timestamp()),
             podcast_title: podcast.map(|item| item.attributes.title.clone()),
             podcast_image_url: podcast.and_then(|item| item.attributes.image_url.clone()),
         }
