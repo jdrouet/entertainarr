@@ -28,24 +28,30 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
-      - name: configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
       - name: fetch local registry index
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p .registry
-          if [ ! -d .registry/index/.git ]; then
-            echo "🔄 Cloning registry-index branch..."
+
+          echo "🔍 Checking if remote branch 'registry-index' exists..."
+          if git ls-remote --exit-code \
+              https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} \
+              refs/heads/registry-index > /dev/null 2>&1; then
+            echo "✅ Found 'registry-index' branch. Cloning..."
             git clone \
               --depth 1 \
               --branch registry-index \
               https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} \
-              .registry/index || echo "ℹ️ No registry-index branch yet"
+              .registry/index
           else
-            echo "✅ Local registry already exists"
+            echo "🆕 No 'registry-index' branch found. Initializing new index repo..."
+            mkdir -p .registry/index
+            git -C .registry/index init -q
+            git -C .registry/index config user.name "github-actions[bot]"
+            git -C .registry/index config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           fi
+          echo "✅ Registry index ready at .registry/index"
 
       - name: run release-plz
         uses: release-plz/action@v0.5

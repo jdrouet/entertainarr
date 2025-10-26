@@ -1,0 +1,83 @@
+name: Perform Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write
+
+jobs:
+  release:
+    # Only run if the commit message starts with "chore: release" or if manually triggered
+    if: >
+      github.event_name == 'workflow_dispatch'
+      || startsWith(github.event.head_commit.message, 'chore: release')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: run release-plz
+        uses: release-plz/action@v0.5
+        with:
+          command: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: sync local registry index before packaging
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p .registry
+          if [ ! -d .registry/index/.git ]; then
+            echo "🧩 Cloning registry-index branch (or creating new)..."
+            if git ls-remote --exit-code \
+                https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} \
+                refs/heads/registry-index >/dev/null 2>&1; then
+              git clone \
+                --depth 1 \
+                --branch registry-index \
+                https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} \
+                .registry/index
+            else
+              echo "🆕 No registry-index branch yet. Initializing..."
+              mkdir -p .registry/index
+              git -C .registry/index init -q
+              git -C .registry/index config user.name "github-actions[bot]"
+              git -C .registry/index config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            fi
+          else
+            echo "✅ Local registry index already present."
+          fi
+
+      - name: package & publish to local registry
+        run: bash scripts/package-local.sh
+
+      - name: push registry index to branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd .registry/index
+          git add .
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(registry): update local index" || echo "ℹ️ Nothing new to commit"
+            git branch -M registry-index
+            git push \
+              https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} \
+              registry-index --force
+          else
+            echo "ℹ️ No changes to push."
+          fi
