@@ -20,14 +20,13 @@ use std::borrow::Cow;
 use axum::{
     extract::{Path, State},
     http::{HeaderName, HeaderValue},
-    response::AppendHeaders,
 };
 
 use crate::server::handler::client::prelude::ClientService;
 
 pub async fn handle_index<S>(
     State(state): State<S>,
-) -> Result<(AppendHeaders<[(HeaderName, HeaderValue); 1]>, Vec<u8>), axum::http::StatusCode>
+) -> Result<([(HeaderName, HeaderValue); 1], Vec<u8>), axum::http::StatusCode>
 where
     S: crate::server::prelude::ServerState,
 {
@@ -37,7 +36,7 @@ where
 pub async fn handle<'a, S>(
     State(state): State<S>,
     Path(fname): Path<Cow<'static, str>>,
-) -> Result<(AppendHeaders<[(HeaderName, HeaderValue); 1]>, Vec<u8>), axum::http::StatusCode>
+) -> Result<([(HeaderName, HeaderValue); 1], Vec<u8>), axum::http::StatusCode>
 where
     S: crate::server::prelude::ServerState,
 {
@@ -47,10 +46,11 @@ where
     let Some(slice) = state.client_service().get_file(fname.as_ref()) else {
         return Err(axum::http::StatusCode::NOT_FOUND);
     };
-    let headers = AppendHeaders([(HeaderName::from_static("Content-Type"), content_type)]);
+    let headers = [(CONTENT_TYPE, content_type)];
     Ok((headers, slice.to_vec()))
 }
 
+const CONTENT_TYPE: HeaderName = HeaderName::from_static("content-type");
 const CONTENT_TYPE_HTML: HeaderValue = HeaderValue::from_static("text/html");
 const CONTENT_TYPE_CSS: HeaderValue = HeaderValue::from_static("text/css");
 const CONTENT_TYPE_JS: HeaderValue = HeaderValue::from_static("text/javascript");
