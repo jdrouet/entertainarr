@@ -1,5 +1,8 @@
 use anyhow::Context;
 
+// used for publishing frontend;
+pub use handler::client::prelude::ClientService;
+
 mod extractor;
 mod handler;
 mod middleware;
@@ -34,43 +37,63 @@ impl Config {
         3000
     }
 
-    pub fn builder(self) -> anyhow::Result<HttpServerBuilder<(), (), ()>> {
+    pub fn builder(self) -> anyhow::Result<HttpServerBuilder<(), (), (), ()>> {
         Ok(HttpServerBuilder {
             socket_address: std::net::SocketAddr::from((self.address, self.port)),
             authentication_service: (),
+            client_service: (),
             podcast_service: (),
             podcast_episode_service: (),
         })
     }
 }
 
-pub struct HttpServerBuilder<AS, PS, PES> {
+pub struct HttpServerBuilder<AS, CS, PS, PES> {
     socket_address: std::net::SocketAddr,
     authentication_service: AS,
+    client_service: CS,
     podcast_service: PS,
     podcast_episode_service: PES,
 }
 
-impl<AS, PS, PES> HttpServerBuilder<AS, PS, PES> {
-    pub fn with_authentication_service<AS2>(self, service: AS2) -> HttpServerBuilder<AS2, PS, PES>
+impl<AS, CS, PS, PES> HttpServerBuilder<AS, CS, PS, PES> {
+    pub fn with_authentication_service<AS2>(
+        self,
+        service: AS2,
+    ) -> HttpServerBuilder<AS2, CS, PS, PES>
     where
         AS2: entertainarr_domain::auth::prelude::AuthenticationService,
     {
         HttpServerBuilder {
             socket_address: self.socket_address,
             authentication_service: service,
+            client_service: self.client_service,
             podcast_service: self.podcast_service,
             podcast_episode_service: self.podcast_episode_service,
         }
     }
 
-    pub fn with_podcast_service<PS2>(self, service: PS2) -> HttpServerBuilder<AS, PS2, PES>
+    pub fn with_client_service<CS2>(self, service: CS2) -> HttpServerBuilder<AS, CS2, PS, PES>
+    where
+        CS2: crate::server::handler::client::prelude::ClientService,
+    {
+        HttpServerBuilder {
+            socket_address: self.socket_address,
+            authentication_service: self.authentication_service,
+            client_service: service,
+            podcast_service: self.podcast_service,
+            podcast_episode_service: self.podcast_episode_service,
+        }
+    }
+
+    pub fn with_podcast_service<PS2>(self, service: PS2) -> HttpServerBuilder<AS, CS, PS2, PES>
     where
         PS2: entertainarr_domain::podcast::prelude::PodcastService,
     {
         HttpServerBuilder {
             socket_address: self.socket_address,
             authentication_service: self.authentication_service,
+            client_service: self.client_service,
             podcast_service: service,
             podcast_episode_service: self.podcast_episode_service,
         }
@@ -79,32 +102,35 @@ impl<AS, PS, PES> HttpServerBuilder<AS, PS, PES> {
     pub fn with_podcast_episode_service<PES2>(
         self,
         service: PES2,
-    ) -> HttpServerBuilder<AS, PS, PES2>
+    ) -> HttpServerBuilder<AS, CS, PS, PES2>
     where
         PES2: entertainarr_domain::podcast::prelude::PodcastEpisodeService,
     {
         HttpServerBuilder {
             socket_address: self.socket_address,
             authentication_service: self.authentication_service,
+            client_service: self.client_service,
             podcast_service: self.podcast_service,
             podcast_episode_service: service,
         }
     }
 }
 
-impl<AS, PS, PES> HttpServerBuilder<AS, PS, PES>
+impl<AS, CS, PS, PES> HttpServerBuilder<AS, CS, PS, PES>
 where
     AS: entertainarr_domain::auth::prelude::AuthenticationService + Clone,
+    CS: crate::server::handler::client::prelude::ClientService + Clone,
     PS: entertainarr_domain::podcast::prelude::PodcastService + Clone,
     PES: entertainarr_domain::podcast::prelude::PodcastEpisodeService + Clone,
 {
     pub fn router(self) -> axum::Router {
         let state = ServerState {
             authentication_service: self.authentication_service,
+            client_service: self.client_service,
             podcast_service: self.podcast_service,
             podcast_episode_service: self.podcast_episode_service,
         };
-        handler::create::<ServerState<AS, PS, PES>>()
+        handler::create::<ServerState<AS, CS, PS, PES>>()
             .layer(middleware::tracing::layer())
             .with_state(state)
     }
@@ -121,15 +147,17 @@ where
 }
 
 #[derive(Clone, Debug)]
-pub struct ServerState<AS, PS, PES> {
+pub struct ServerState<AS, CS, PS, PES> {
     authentication_service: AS,
+    client_service: CS,
     podcast_service: PS,
     podcast_episode_service: PES,
 }
 
-impl<AS, PS, PES> prelude::ServerState for ServerState<AS, PS, PES>
+impl<AS, CS, PS, PES> prelude::ServerState for ServerState<AS, CS, PS, PES>
 where
     AS: entertainarr_domain::auth::prelude::AuthenticationService,
+    CS: crate::server::handler::client::prelude::ClientService,
     PS: entertainarr_domain::podcast::prelude::PodcastService,
     PES: entertainarr_domain::podcast::prelude::PodcastEpisodeService,
 {
@@ -137,6 +165,10 @@ where
         &self,
     ) -> &impl entertainarr_domain::auth::prelude::AuthenticationService {
         &self.authentication_service
+    }
+
+    fn client_service(&self) -> &impl handler::client::prelude::ClientService {
+        &self.client_service
     }
 
     fn podcast_service(&self) -> &impl entertainarr_domain::podcast::prelude::PodcastService {

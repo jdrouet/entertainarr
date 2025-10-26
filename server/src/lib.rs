@@ -4,6 +4,7 @@ use entertainarr_domain::{
     podcast::{PodcastEpisodeService, PodcastService},
 };
 
+mod client;
 pub mod tracing;
 
 /// Entertainarr main configuration
@@ -45,6 +46,7 @@ impl Config {
             .build();
         let http_server = http_server
             .with_authentication_service(authentication_service)
+            .with_client_service(crate::client::ClientService)
             .with_podcast_service(podcast_service)
             .with_podcast_episode_service(podcast_episode_service)
             .build()?;

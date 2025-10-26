@@ -14,6 +14,7 @@ entertainarr-adapter-jsonwebtoken = { workspace = true }
 entertainarr-adapter-rss = { workspace = true }
 entertainarr-adapter-sqlite = { workspace = true }
 entertainarr-domain = { workspace = true }
+include_dir = "0.7"
 opentelemetry = { version = "0.31", default-features = false }
 opentelemetry-appender-tracing = { version = "0.31", default-features = false }
 opentelemetry-otlp = { version = "0.31", features = ["grpc-tonic", "tls-roots"] }

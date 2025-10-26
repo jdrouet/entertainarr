@@ -17,6 +17,7 @@ mod integration {
     use tower::ServiceExt;
 
     use crate::server::ServerState;
+    use crate::server::handler::client::prelude::MockClientService;
 
     #[tokio::test]
     async fn should_answer() {
@@ -24,6 +25,7 @@ mod integration {
             authentication_service: Arc::new(
                 entertainarr_domain::auth::prelude::MockAuthenticationService::new(),
             ),
+            client_service: MockClientService::default(),
             podcast_service: Arc::new(
                 entertainarr_domain::podcast::prelude::MockPodcastService::new(),
             ),
