@@ -1,0 +1,49 @@
+name: create release pull request
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # release-plz needs full history
+          fetch-depth: 0
+
+      - name: fetch local registry index
+        run: |
+          mkdir -p .registry
+          if [ ! -d .registry/index/.git ]; then
+            echo "🔄 Cloning registry-index branch..."
+            git clone \
+              --depth 1 \
+              --branch registry-index \
+              https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} \
+              .registry/index || echo "ℹ️ No registry-index branch yet"
+          else
+            echo "✅ Local registry already exists"
+          fi
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: run release-plz
+        uses: release-plz/action@v0.5
+        with:
+          command: release-pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

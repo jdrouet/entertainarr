@@ -1,0 +1,9 @@
+# .release-plz.toml
+[workspace]
+publish = false
+
+[hooks]
+post-release-commit = """
+cargo package --no-verify --allow-dirty --target-dir .registry/packages
+cargo publish --registry local --no-verify
+"""
