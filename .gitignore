@@ -1,2 +1,5 @@
 /target
-/server/assets
+/server/assets/*.css
+/server/assets/*.html
+/server/assets/*.js
+/server/assets/*.wasm
