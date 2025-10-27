@@ -1,0 +1,58 @@
+name: releasing
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  RUSTFLAGS: "-Dwarnings"
+
+jobs:
+  release-plz:
+    runs-on: ubuntu-latest
+    # Used to push tags, and create releases.
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: run release-plz
+        uses: release-plz/action@v0.5
+        with:
+          command: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-plz-pr:
+    name: Release-plz PR
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    concurrency:
+      group: release-plz-${{ github.ref }}
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: run release-plz
+        uses: release-plz/action@v0.5
+        with:
+          command: release-pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
