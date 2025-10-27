@@ -1,15 +1,25 @@
+use std::borrow::Cow;
+
 use leptos::prelude::*;
 
 stylance::import_style!(style, "fullscreen_layout.module.scss");
 
 #[component]
-pub fn FullscreenLayout(children: Children, classname: &'static str) -> impl IntoView {
+pub fn FullscreenLayout(
+    children: Children,
+    #[prop(optional)] classname: Option<&'static str>,
+) -> impl IntoView {
     let (sidebar_opened, sidebar_toggle) = signal(false);
 
     let on_toggle_sidebar = move || sidebar_toggle.update(|prev| *prev = !*prev);
 
+    let cname = classname
+        .map(|c| format!("{} {c}", style::container))
+        .map(Cow::Owned)
+        .unwrap_or(Cow::Borrowed(style::container));
+
     view! {
-        <div class={format!("{} {classname}", style::container)}>
+        <div class={cname}>
             <crate::component::header::Header on_toggle_sidebar />
             <crate::component::sidebar::Sidebar
                 visible={sidebar_opened}
