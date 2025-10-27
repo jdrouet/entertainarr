@@ -29,5 +29,5 @@ entertainarr-client-core = { path = "./client/core" }
 entertainarr-domain = { path = "./domain" }
 facet = { version = "0.28" }
 serde = { version = "1.0", features = ["derive"] }
-tokio = { version = "1.47" }
+tokio = { version = "1.48" }
 tracing = { version = "0.1" }
