@@ -4,6 +4,7 @@ use entertainarr_adapter_http::entity::{
     podcast_episode::{PodcastEpisodeDocument, PodcastEpisodeRelation},
 };
 
+use crate::effect::http::HttpError;
 use crate::entity::podcast_episode::PodcastEpisode;
 
 pub fn list_podcast_episodes(base_url: &str, token: &str) -> crate::ApplicationCommand {
@@ -24,7 +25,7 @@ pub fn list_podcast_episodes(base_url: &str, token: &str) -> crate::ApplicationC
                     let episodes = PodcastEpisode::from_episode_document_list(payload);
                     super::HomeEvent::ListPodcastEpisodesSuccess(episodes)
                 }
-                Err(_err) => super::HomeEvent::ListPodcastEpisodesError,
+                Err(err) => super::HomeEvent::ListPodcastEpisodesError(HttpError::from(err)),
             }
             .into()
         })

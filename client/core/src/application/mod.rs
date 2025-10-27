@@ -113,6 +113,17 @@ impl ApplicationModel {
         }
 
         match event {
+            ApplicationEvent::Home(authenticated::home::HomeEvent::ListPodcastEpisodesError(
+                ref err,
+            )) if err.is_token_expired() => {
+                return crate::ApplicationCommand::event(
+                    authentication::AuthenticationEvent::Logout.into(),
+                );
+            }
+            _ => {}
+        }
+
+        match event {
             ApplicationEvent::Authentication(event) => self.handle_authentication_event(event),
             ApplicationEvent::Home(event) => self.handle_home_event(event),
             ApplicationEvent::Initialization(_) => render(),

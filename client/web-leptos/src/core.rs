@@ -40,6 +40,9 @@ pub fn process_effect(core: &Core, effect: Effect, render: WriteSignal<Applicati
             Persistence::Store(req) => {
                 crate::service::storage::set_local_storage(req.key.as_str(), req.value.as_str());
             }
+            Persistence::Clear(req) => {
+                crate::service::storage::remove_local_storage(req.key.as_str());
+            }
         },
         Effect::Render(_) => {
             render.update(|view| *view = core.view());

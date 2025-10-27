@@ -30,6 +30,7 @@ pub enum AuthenticationEvent {
     Submit(AuthenticationRequest),
     Success(AuthenticationSuccess),
     Error(AuthenticationError),
+    Logout,
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, facet::Facet, serde::Serialize, serde::Deserialize)]
@@ -61,6 +62,13 @@ impl crate::application::ApplicationModel {
         let Some(server_url) = self.server_url.as_deref() else {
             return render();
         };
+        if let AuthenticationEvent::Logout = event {
+            return ApplicationCommand::all([
+                Route::Authentication.into(),
+                Persistence::clear("authentication-token"),
+                render(),
+            ]);
+        };
         match &mut self.state {
             ApplicationState::Authentication(model) => match event {
                 AuthenticationEvent::Submit(req) => {
@@ -83,6 +91,7 @@ impl crate::application::ApplicationModel {
                     model.error = Some(err);
                     render()
                 }
+                AuthenticationEvent::Logout => render(),
             },
             _ => render(),
         }

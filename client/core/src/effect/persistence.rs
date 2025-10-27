@@ -3,6 +3,7 @@ use crux_core::Command;
 #[derive(Clone, Debug, facet::Facet, serde::Serialize, serde::Deserialize)]
 #[repr(C)]
 pub enum Persistence {
+    Clear(ClearEffect),
     Store(StoreEffect),
 }
 
@@ -13,6 +14,9 @@ impl Persistence {
             value: value.into(),
         }))
         .into()
+    }
+    pub fn clear(key: impl Into<String>) -> crate::ApplicationCommand {
+        Command::notify_shell(Self::Clear(ClearEffect { key: key.into() })).into()
     }
 }
 
@@ -31,6 +35,12 @@ impl crux_core::capability::Operation for Persistence {
         generator.register_type::<Self>()?;
         Ok(())
     }
+}
+
+#[derive(facet::Facet, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]
+#[repr(C)]
+pub struct ClearEffect {
+    pub key: String,
 }
 
 #[derive(facet::Facet, serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq, Eq)]

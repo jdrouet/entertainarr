@@ -1,4 +1,4 @@
-use crate::entity::podcast_episode::PodcastEpisode;
+use crate::{effect::http::HttpError, entity::podcast_episode::PodcastEpisode};
 
 mod execute;
 mod update;
@@ -30,5 +30,5 @@ impl HomeModel {
 pub enum HomeEvent {
     ListPodcastEpisodesRequest,
     ListPodcastEpisodesSuccess(Vec<PodcastEpisode>),
-    ListPodcastEpisodesError,
+    ListPodcastEpisodesError(HttpError),
 }

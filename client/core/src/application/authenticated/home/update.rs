@@ -29,7 +29,7 @@ impl crate::application::ApplicationModel {
                 model.podcast_episodes_loading = false;
                 render()
             }
-            super::HomeEvent::ListPodcastEpisodesError => {
+            super::HomeEvent::ListPodcastEpisodesError(_err) => {
                 model.podcast_episodes_loading = false;
                 model.podcast_episodes_error = true;
                 render()
