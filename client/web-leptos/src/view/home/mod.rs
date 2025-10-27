@@ -36,7 +36,7 @@ pub fn View(model: HomeModel) -> impl IntoView {
     };
 
     view! {
-        <crate::component::fullscreen_layout::FullscreenLayout>
+        <crate::component::fullscreen::layout::FullscreenLayout>
             <Section title="Podcast Episodes" on_subscribe>
                 {model.podcast_episodes.into_iter().map(|episode| {
                     view! {
@@ -44,6 +44,6 @@ pub fn View(model: HomeModel) -> impl IntoView {
                     }
                 }).collect::<Vec<_>>()}
             </Section>
-        </crate::component::fullscreen_layout::FullscreenLayout>
+        </crate::component::fullscreen::layout::FullscreenLayout>
     }
 }

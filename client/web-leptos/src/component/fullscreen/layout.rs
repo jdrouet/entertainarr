@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use leptos::prelude::*;
 
-stylance::import_style!(style, "fullscreen_layout.module.scss");
+stylance::import_style!(style, "layout.module.scss");
 
 #[component]
 pub fn FullscreenLayout(
@@ -20,8 +20,8 @@ pub fn FullscreenLayout(
 
     view! {
         <div class={cname}>
-            <crate::component::header::Header on_toggle_sidebar />
-            <crate::component::sidebar::Sidebar
+            <super::header::Header on_toggle_sidebar />
+            <super::sidebar::Sidebar
                 visible={sidebar_opened}
                 on_close={move || sidebar_toggle.set(false)}
             />
