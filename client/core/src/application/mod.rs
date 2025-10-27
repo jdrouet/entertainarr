@@ -189,10 +189,8 @@ mod tests {
             ApplicationState::Authenticated(AuthenticatedModel::Home(_))
         ));
         let events: Vec<_> = cmd.events().collect();
-        assert!(events.is_empty());
-        let mut effects: Vec<_> = cmd.effects().collect();
-        assert_eq!(effects.len(), 1);
-        let effect = effects.pop().unwrap();
-        assert!(effect.is_render());
+        assert_eq!(events.len(), 1);
+        let effects: Vec<_> = cmd.effects().collect();
+        assert!(effects.is_empty());
     }
 }

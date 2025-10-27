@@ -13,13 +13,13 @@ impl super::Client {
         let res = self
             .inner
             .post(&url)
-            .json(&AuthenticationRequestDocument {
+            .json(&ApiResource::new(AuthenticationRequestDocument {
                 kind: Default::default(),
                 attributes: AuthenticationRequestAttributes {
                     email: email.into(),
                     password: password.into(),
                 },
-            })
+            }))
             .send()
             .await
             .context("unable to send request")?;
