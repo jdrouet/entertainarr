@@ -35,7 +35,7 @@ pub fn CoreContext(children: Children) -> impl IntoView {
         .into(),
     );
 
-    provide_context((event.clone(), set_event));
+    provide_context((event, set_event));
     provide_context(view);
 
     Effect::new(move |_| {

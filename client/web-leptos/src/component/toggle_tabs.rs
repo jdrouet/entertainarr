@@ -16,7 +16,7 @@ pub fn ToggleTabs(
 ) -> impl IntoView {
     view! {
         <h2 class={style::toggle_tabs}>
-            {options.into_iter().enumerate().map(|(idx, option)| view! {
+            {options.iter().enumerate().map(|(idx, option)| view! {
                 <label>
                     <input type="radio" name={name} value={option.value} checked={idx == index} />
                     <span>{option.label}</span>

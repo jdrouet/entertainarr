@@ -25,7 +25,7 @@ mod integration {
             authentication_service: Arc::new(
                 entertainarr_domain::auth::prelude::MockAuthenticationService::new(),
             ),
-            client_service: MockClientService::default(),
+            client_service: MockClientService,
             podcast_service: Arc::new(
                 entertainarr_domain::podcast::prelude::MockPodcastService::new(),
             ),
