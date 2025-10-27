@@ -12,7 +12,6 @@ RUN cargo init --lib --vcs none --name entertainarr-adapter-jsonwebtoken /code/a
 RUN cargo init --lib --vcs none --name entertainarr-adapter-rss /code/adapter/rss
 RUN cargo init --lib --vcs none --name entertainarr-adapter-sqlite /code/adapter/sqlite
 RUN cargo init --lib --vcs none --name entertainarr-client-core /code/client/core
-RUN cargo init --lib --vcs none --name entertainarr-client-core-types /code/client/core-types
 RUN cargo init --bin --vcs none --name entertainarr-client-web-leptos /code/client/web-leptos
 RUN cargo init --lib --vcs none --name entertainarr-domain /code/domain
 
@@ -23,7 +22,6 @@ COPY adapter/jsonwebtoken/Cargo.toml /code/adapter/jsonwebtoken/Cargo.toml
 COPY adapter/rss/Cargo.toml /code/adapter/rss/Cargo.toml
 COPY adapter/sqlite/Cargo.toml /code/adapter/sqlite/Cargo.toml
 COPY client/core/Cargo.toml /code/client/core/Cargo.toml
-COPY client/core-types/Cargo.toml /code/client/core-types/Cargo.toml
 COPY client/web-leptos/Cargo.toml /code/client/web-leptos/Cargo.toml
 COPY domain/Cargo.toml /code/domain/Cargo.toml
 COPY server/Cargo.toml /code/server/Cargo.toml
@@ -64,9 +62,6 @@ COPY adapter/http/src /code/adapter/http/src
 
 COPY client/core/Cargo.toml /code/client/core/Cargo.toml
 COPY client/core/src /code/client/core/src
-
-COPY client/core-types/Cargo.toml /code/client/core-types/Cargo.toml
-COPY client/core-types/src /code/client/core-types/src
 
 COPY client/web-leptos/Cargo.toml /code/client/web-leptos/Cargo.toml
 COPY client/web-leptos/src /code/client/web-leptos/src
