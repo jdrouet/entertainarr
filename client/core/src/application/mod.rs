@@ -1,5 +1,7 @@
 use crux_core::render::render;
 
+use crate::effect::http::Operation;
+
 pub mod authenticated;
 pub mod authentication;
 pub mod router;
@@ -46,6 +48,9 @@ impl ApplicationState {
             Self::Authenticated(authenticated::AuthenticatedModel::Home(inner)) => {
                 ApplicationView::Home(inner.clone())
             }
+            Self::Authenticated(authenticated::AuthenticatedModel::PodcastDashboard(inner)) => {
+                ApplicationView::PodcastDashboard(inner.clone())
+            }
             Self::Authenticated(authenticated::AuthenticatedModel::PodcastSubscribe(inner)) => {
                 ApplicationView::PodcastSubscribe(inner.clone())
             }
@@ -70,8 +75,59 @@ pub enum ApplicationEvent {
     Home(authenticated::home::HomeEvent),
     Initialization(InitializationEvent),
     Noop, // does nothing
+    PodcastDashboard(authenticated::podcast::dashboard::PodcastDashboardEvent),
     PodcastSubscribe(authenticated::podcast::subscribe::PodcastSubscribeEvent),
     RouteChange(router::Route),
+}
+
+impl ApplicationEvent {
+    pub fn name(&self) -> &'static str {
+        use crate::application::authenticated::home::HomeEvent;
+        use crate::application::authenticated::podcast::dashboard::PodcastDashboardEvent;
+        use crate::application::authenticated::podcast::subscribe::PodcastSubscribeEvent;
+        use crate::application::authentication::AuthenticationEvent;
+
+        match self {
+            Self::Authenticated => "authenticated",
+            Self::Authentication(AuthenticationEvent::Submit(_)) => "authentication.submit",
+            Self::Authentication(AuthenticationEvent::Success(_)) => "authentication.success",
+            Self::Authentication(AuthenticationEvent::Error(_)) => "authentication.error",
+            Self::Authentication(AuthenticationEvent::Logout) => "authentication.logout",
+            Self::Home(HomeEvent::ListPodcastEpisodesRequest) => {
+                "authenticated.home.list-podcast-episodes.request"
+            }
+            Self::Home(HomeEvent::ListPodcastEpisodesSuccess(_)) => {
+                "authenticated.home.list-podcast-episodes.success"
+            }
+            Self::Home(HomeEvent::ListPodcastEpisodesError(_)) => {
+                "authenticated.home.list-podcast-episodes.error"
+            }
+            Self::Initialization(_) => "initialization",
+            Self::Noop => "noop",
+            Self::PodcastDashboard(PodcastDashboardEvent::ListPodcastSubscription(
+                Operation::Request(_),
+            )) => "authenticated.podcast-dashboard.list-podcast-subscription.request",
+            Self::PodcastDashboard(PodcastDashboardEvent::ListPodcastSubscription(
+                Operation::Success(_),
+            )) => "authenticated.podcast-dashboard.list-podcast-subscription.success",
+            Self::PodcastDashboard(PodcastDashboardEvent::ListPodcastSubscription(
+                Operation::Error(_),
+            )) => "authenticated.podcast-dashboard.list-podcast-subscription.error",
+            Self::PodcastSubscribe(PodcastSubscribeEvent::Submit(_)) => {
+                "authenticated.podcast-subscribe.submit"
+            }
+            Self::PodcastSubscribe(PodcastSubscribeEvent::Success) => {
+                "authenticated.podcast-subscribe.success"
+            }
+            Self::PodcastSubscribe(PodcastSubscribeEvent::Error(_)) => {
+                "authenticated.podcast-subscribe.error"
+            }
+            Self::RouteChange(router::Route::Authentication) => "route.change.authentication",
+            Self::RouteChange(router::Route::Home) => "route.change.home",
+            Self::RouteChange(router::Route::PodcastDashboard) => "route.change.podcast-dashboard",
+            Self::RouteChange(router::Route::PodcastSubscribe) => "route.change.podcast-subscribe",
+        }
+    }
 }
 
 #[derive(
@@ -128,6 +184,7 @@ impl ApplicationModel {
             ApplicationEvent::Home(event) => self.handle_home_event(event),
             ApplicationEvent::Initialization(_) => render(),
             ApplicationEvent::Authenticated => render(),
+            ApplicationEvent::PodcastDashboard(event) => self.handle_podcast_dashboard_event(event),
             ApplicationEvent::PodcastSubscribe(event) => self.handle_podcast_subscribe_event(event),
             ApplicationEvent::RouteChange(route) => self.handle_router_event(route),
             ApplicationEvent::Noop => render(),
@@ -155,6 +212,7 @@ pub enum ApplicationView {
     Initialization,
     Authentication(self::authentication::AuthenticationModel),
     Home(self::authenticated::home::HomeModel),
+    PodcastDashboard(self::authenticated::podcast::dashboard::PodcastDashboardModel),
     PodcastSubscribe(self::authenticated::podcast::subscribe::PodcastSubscribeModel),
 }
 

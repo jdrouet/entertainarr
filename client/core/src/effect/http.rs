@@ -66,3 +66,11 @@ pub struct ApiErrorDetail {
     pub attribute: String,
     pub code: String,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, facet::Facet, serde::Serialize, serde::Deserialize)]
+#[repr(C)]
+pub enum Operation<Req, Res> {
+    Request(Req),
+    Success(Res),
+    Error(HttpError),
+}

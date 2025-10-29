@@ -6,6 +6,7 @@ pub mod podcast;
 #[derive(Debug)]
 pub enum AuthenticatedModel {
     Home(home::HomeModel),
+    PodcastDashboard(podcast::dashboard::PodcastDashboardModel),
     PodcastSubscribe(podcast::subscribe::PodcastSubscribeModel),
 }
 
@@ -17,6 +18,7 @@ impl AuthenticatedModel {
     pub fn on_mount(&self) -> crate::ApplicationCommand {
         match self {
             Self::Home(inner) => inner.on_mount(),
+            Self::PodcastDashboard(inner) => inner.on_mount(),
             Self::PodcastSubscribe(_) => render(),
         }
     }

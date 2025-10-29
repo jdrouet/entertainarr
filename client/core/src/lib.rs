@@ -23,7 +23,7 @@ impl crux_core::App for Application {
         model: &mut Self::Model,
         _caps: &(),
     ) -> Command<Self::Effect, Self::Event> {
-        tracing::info!(event = ?event, "handle event");
+        tracing::info!(event = %event.name(), "handle event");
         model.update(event)
     }
 

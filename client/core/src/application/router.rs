@@ -8,6 +8,7 @@ pub enum Route {
     Authentication,
     Home,
     PodcastSubscribe,
+    PodcastDashboard,
 }
 
 impl Route {
@@ -32,6 +33,11 @@ impl super::ApplicationModel {
             Route::Home => {
                 self.state = ApplicationState::Authenticated(
                     super::authenticated::AuthenticatedModel::Home(Default::default()),
+                );
+            }
+            Route::PodcastDashboard => {
+                self.state = ApplicationState::Authenticated(
+                    super::authenticated::AuthenticatedModel::PodcastDashboard(Default::default()),
                 );
             }
             Route::PodcastSubscribe => {
