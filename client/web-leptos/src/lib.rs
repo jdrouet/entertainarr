@@ -12,6 +12,7 @@ mod view;
 pub fn RootComponent() -> impl IntoView {
     view! {
         <CoreContext>
+            <context::router::RouterManager />
             <view::RouterView />
         </CoreContext>
     }

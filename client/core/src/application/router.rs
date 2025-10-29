@@ -1,4 +1,4 @@
-use crux_core::Command;
+use crux_core::{Command, render::render};
 
 use crate::application::ApplicationState;
 
@@ -53,6 +53,9 @@ impl super::ApplicationModel {
         authenticated: bool,
         route: Route,
     ) -> crate::ApplicationCommand {
+        if self.route == route {
+            return render();
+        }
         if route.requires_authentication() && !authenticated {
             self.update_route(Route::Authentication)
         } else {
