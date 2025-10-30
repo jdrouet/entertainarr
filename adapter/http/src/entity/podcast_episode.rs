@@ -33,17 +33,12 @@ pub struct PodcastEpisodeAttributes {
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, Default, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "snake_case")]
 #[cfg_attr(test, derive(PartialEq, Eq))]
 pub enum PodcastEpisodeField {
+    #[default]
     PublishedAt,
-}
-
-impl Default for PodcastEpisodeField {
-    fn default() -> Self {
-        Self::PublishedAt
-    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Deserialize, serde::Serialize)]
