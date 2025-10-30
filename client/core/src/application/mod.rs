@@ -128,6 +128,20 @@ impl ApplicationEvent {
             Self::RouteChange(router::Route::PodcastSubscribe) => "route.change.podcast-subscribe",
         }
     }
+
+    fn is_token_expired(&self) -> bool {
+        match self {
+            ApplicationEvent::PodcastDashboard(
+                authenticated::podcast::dashboard::PodcastDashboardEvent::ListPodcastSubscription(
+                    Operation::Error(err),
+                ),
+            )
+            | ApplicationEvent::Home(authenticated::home::HomeEvent::ListPodcastEpisodesError(
+                err,
+            )) => err.is_token_expired(),
+            _ => false,
+        }
+    }
 }
 
 #[derive(
@@ -168,15 +182,10 @@ impl ApplicationModel {
             };
         }
 
-        match event {
-            ApplicationEvent::Home(authenticated::home::HomeEvent::ListPodcastEpisodesError(
-                ref err,
-            )) if err.is_token_expired() => {
-                return crate::ApplicationCommand::event(
-                    authentication::AuthenticationEvent::Logout.into(),
-                );
-            }
-            _ => {}
+        if event.is_token_expired() {
+            return crate::ApplicationCommand::event(
+                authentication::AuthenticationEvent::Logout.into(),
+            );
         }
 
         match event {

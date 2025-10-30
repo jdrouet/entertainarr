@@ -10,6 +10,7 @@ pub fn PodcastCard(podcast: Podcast) -> impl IntoView {
             <img src={podcast.image_url.clone()} alt={podcast.title.clone()} />
             <div class={style::podcast_card_content}>
                 <h3>{podcast.title}</h3>
+                {podcast.description.map(|value| view!{ <div>{value}</div>})}
             </div>
         </div>
     }
