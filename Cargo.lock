@@ -2209,9 +2209,9 @@ dependencies = [
 
 [[package]]
 name = "leptos_router"
-version = "0.8.8"
+version = "0.8.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfd675546710e67855983437202e09b137ea60588dbb86e7fc0671f618577b73"
+checksum = "21f482679fc1856ca368560fe7d827d7a34b5bbaa12c8b7c4daf1c02eaf8f09a"
 dependencies = [
  "any_spawner",
  "either_of",
